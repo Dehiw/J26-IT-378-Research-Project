@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# AI datasets
+dataset/
+datasets/
+
+# Model weights
+*.pt
+*.pth
+*.h5
+
+# YOLO outputs
+runs/
+
+# Mobile application
+node_modules/
+
+# IDE
+.vscode/
+
+# Operating system
+.DS_Store
+Thumbs.db
