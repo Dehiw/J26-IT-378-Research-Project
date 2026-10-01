@@ -28,3 +28,10 @@ node_modules/
 # Operating system
 .DS_Store
 Thumbs.db
+
+# Flutter
+frontend/.dart_tool/
+frontend/build/
+frontend/.idea/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
