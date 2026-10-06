@@ -36,3 +36,6 @@ frontend/build/
 frontend/.idea/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
+
+# Firebase service account credentials
+backend/firebase-service-account.json
