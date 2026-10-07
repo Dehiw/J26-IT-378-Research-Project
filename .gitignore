@@ -29,6 +29,8 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Firebase service account credentials
+backend/firebase-service-account.json
 
 # Flutter
 frontend/.dart_tool/
