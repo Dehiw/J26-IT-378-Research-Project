@@ -1,0 +1,10 @@
+{
+  "classes": [
+    "Healthy Colony",
+    "Stressed Colony",
+    "Disease Signs",
+    "Empty / Other"
+  ],
+  "image_size": 224,
+  "note": "Place hive_model.onnx, feature_extractor.onnx and ood_config.json in this folder, then restart the app."
+}

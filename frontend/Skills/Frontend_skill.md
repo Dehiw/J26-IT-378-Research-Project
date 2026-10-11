@@ -8,7 +8,7 @@ Read this file before writing any new screen or widget.
 
 ---
 
-## 1. Project structure (everyone follows this)
+## 1. Project structure 
 
 ```
 frontend/
@@ -314,3 +314,19 @@ and `labels.json` together and tell the group.
 - [ ] Reused an existing widget from `lib/widgets/` before building new?
 
 When in doubt, copy `home_screen.dart` — it shows all the patterns above.
+
+---Where each UI goes
+
+frontend/lib/
+  screens/          ← full pages go here
+    onboarding_screen.dart    (exists)
+    home_screen.dart          (exists)
+    health_screen.dart        ← you/your teammates create these
+    detection_screen.dart
+    acoustic_screen.dart
+    environment_screen.dart
+  widgets/          ← reusable pieces go here
+    hero_art.dart             (exists)
+    result_card.dart          (exists)
+    ...
+    health_chart.dart         ← only if 2+ screens reuse it
