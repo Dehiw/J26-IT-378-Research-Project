@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Windows desktop (auto-generated, not needed for mobile project)
+/windows/
