@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../utils/theme.dart';
 import '../services/inference_service.dart';
 import '../widgets/hero_art.dart';
-import 'home_screen.dart';
+import 'register_screen.dart';
 
 /// 3-page onboarding flow matching the reference (cream bg, black hero panel,
 /// honey-gold CTA). Page 0 reproduces the screenshot 1:1.
@@ -44,18 +44,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _goHome() {
+  void _goToRegister() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) =>
-            HomeScreen(inferenceService: widget.inferenceService),
+            RegisterScreen(inferenceService: widget.inferenceService),
       ),
     );
   }
 
   void _next() {
     if (_page == _pages.length - 1) {
-      _goHome();
+      _goToRegister();
     } else {
       _controller.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -85,7 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: _goHome,
+                    onPressed: _goToRegister,
                     child: Text(
                       'Skip',
                       style: GoogleFonts.inter(
