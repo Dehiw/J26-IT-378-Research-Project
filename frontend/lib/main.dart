@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'utils/theme.dart';
+import 'services/auth_service.dart';
 import 'services/inference_service.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,17 +64,20 @@ class _AppLoaderState extends State<_AppLoader> {
   }
 
   Future<void> _init() async {
+    // Keep splash screen visible for at least 2.2 seconds for branding
+    final splashTimer = Future.delayed(const Duration(milliseconds: 2200));
+
     try {
       await _inferenceService.init();
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _readyService = _inferenceService;
-        });
-      }
+      _readyService = _inferenceService;
     } catch (_) {
       // Model files not bundled yet — continue in demo mode.
-      if (mounted) setState(() => _loading = false);
+    }
+
+    await splashTimer;
+
+    if (mounted) {
+      setState(() => _loading = false);
     }
   }
 
@@ -84,6 +90,8 @@ class _AppLoaderState extends State<_AppLoader> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return const _SplashScreen();
+
+    // App always begins with the 3 Onboarding Pages
     return OnboardingScreen(
       key: ValueKey(_readyService != null),
       inferenceService: _readyService,
@@ -122,7 +130,10 @@ class _SplashScreen extends StatelessWidget {
                 color: Color(0xFF211D16),
                 size: 44,
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(duration: 600.ms)
+                .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
             const SizedBox(height: 28),
             ShaderMask(
               shaderCallback: (bounds) =>
@@ -135,15 +146,19 @@ class _SplashScreen extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-            ),
+            )
+                .animate()
+                .fadeIn(delay: 200.ms, duration: 600.ms)
+                .slideY(begin: 0.2, end: 0),
             const SizedBox(height: 8),
             Text(
-              'Loading hive-health model…',
+              'Smart Beehive Intelligence',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppColors.textSecondary,
+                letterSpacing: 0.3,
               ),
-            ),
+            ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
             const SizedBox(height: 40),
             SizedBox(
               width: 180,
@@ -154,7 +169,7 @@ class _SplashScreen extends StatelessWidget {
                 minHeight: 3,
                 borderRadius: BorderRadius.circular(2),
               ),
-            ),
+            ).animate().fadeIn(delay: 450.ms, duration: 500.ms),
           ],
         ),
       ),
