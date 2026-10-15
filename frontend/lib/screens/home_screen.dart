@@ -1,683 +1,612 @@
-import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
-import '../utils/theme.dart';
-import '../services/inference_service.dart';
-import '../widgets/result_card.dart';
-import '../widgets/image_source_sheet.dart';
 
+import '../models/user_model.dart';
+import '../models/apiary_model.dart';
+import '../services/auth_service.dart';
+import '../services/apiary_service.dart';
+import '../services/inference_service.dart';
+import '../utils/theme.dart';
+import 'login_screen.dart';
+import 'apiary_management_screen.dart';
+
+/// Home Page for Hive Sense App.
+/// - Left-side hamburger menu / drawer.
+/// - Brand title 'Hive Sense'.
+/// - Selected Apiary section with dropdown and Manage button.
+/// - Summary stat cards, quick actions, hive overview, recent activity.
+/// - 5-item bottom navigation bar.
 class HomeScreen extends StatefulWidget {
-  /// Null when the ONNX models are not bundled yet — analysis UI
-  /// degrades to a "model not bundled" banner instead of crashing.
   final InferenceService? inferenceService;
 
-  const HomeScreen({super.key, required this.inferenceService});
+  const HomeScreen({
+    super.key,
+    this.inferenceService,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  final _picker = ImagePicker();
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
 
-  File? _selectedImage;
-  PredictionResult? _result;
-  bool _isAnalyzing = false;
-  String? _errorMessage;
+  // Apiary data
+  List<ApiaryModel> _apiaries = [];
+  ApiaryModel? _selectedApiary;
+  List<HiveModel> _hives = [];
+  bool _loadingApiaries = true;
 
-  bool get _modelReady => widget.inferenceService?.isReady ?? false;
-
-  // ── Image picking ─────────────────────────────────────────
-  Future<void> _pickFromCamera() async {
-    try {
-      final xFile = await _picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice: CameraDevice.rear,
-        imageQuality: 90,
-      );
-      if (xFile != null) await _analyse(xFile);
-    } catch (e) {
-      _showError('Camera error: $e');
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadApiaries();
   }
 
-  Future<void> _pickFromGallery() async {
+  Future<void> _loadApiaries() async {
+    setState(() => _loadingApiaries = true);
     try {
-      final xFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 90,
-      );
-      if (xFile != null) await _analyse(xFile);
-    } catch (e) {
-      _showError('Gallery error: $e');
-    }
-  }
-
-  Future<void> _analyse(XFile xFile) async {
-    if (!_modelReady) {
-      _showError(
-        'AI model not bundled yet. Add hive_model.onnx to assets/models/ '
-        'and restart the app.',
-      );
-      return;
-    }
-    setState(() {
-      _selectedImage = File(xFile.path);
-      _result = null;
-      _isAnalyzing = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final bytes = await xFile.readAsBytes();
-      final result = await widget.inferenceService!.predict(bytes);
+      final list = await ApiaryService.instance.fetchApiaries();
+      final selected = ApiaryService.instance.selectedApiary;
       if (mounted) {
         setState(() {
-          _result = result;
-          _isAnalyzing = false;
+          _apiaries = list;
+          _selectedApiary = selected ?? (list.isNotEmpty ? list.first : null);
+          _loadingApiaries = false;
         });
+        if (_selectedApiary != null) _loadHives(_selectedApiary!.id);
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isAnalyzing = false;
-          _errorMessage = 'Analysis failed: $e';
-        });
-      }
+      developer.log('Load apiaries error: $e', name: 'HomeScreen');
+      if (mounted) setState(() => _loadingApiaries = false);
     }
   }
 
-  void _showError(String msg) {
-    if (mounted) setState(() => _errorMessage = msg);
+  Future<void> _loadHives(String apiaryId) async {
+    try {
+      final hives = await ApiaryService.instance.fetchHives(apiaryId);
+      if (mounted) setState(() => _hives = hives);
+    } catch (e) {
+      developer.log('Load hives error: $e', name: 'HomeScreen');
+    }
+  }
+
+  void _onNavTapped(int index) {
+    setState(() => _currentIndex = index);
+  }
+
+  void _onMenuItemTapped(String title) {
+    Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg),
-        backgroundColor: AppColors.error,
+        content: Text('$title will be available in the next update.',
+          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500,
+            color: AppColors.bgSecondary)),
+        backgroundColor: AppColors.panelBlack,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _openSourceSheet() {
-    ImageSourceSheet.show(
-      context,
-      onCamera: _pickFromCamera,
-      onGallery: _pickFromGallery,
+  Future<void> _handleLogout() async {
+    Navigator.of(context).pop();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgSecondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Log Out', style: GoogleFonts.inter(
+          fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        content: Text('Are you sure you want to log out of Hive Sense?',
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Cancel', style: GoogleFonts.inter(
+              fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error,
+              elevation: 0, shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10))),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('Log Out', style: GoogleFonts.inter(
+              fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.bgSecondary)),
+          ),
+        ],
+      ),
     );
-  }
-
-  // ── Build helpers ─────────────────────────────────────────
-  Widget _buildHeroSection() {
-    return Column(
-      children: [
-        // Gradient icon
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            gradient: AppColors.accentGradient,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child:
-              const Icon(Icons.hive_outlined, color: Color(0xFF211D16), size: 36),
-        ),
-        const SizedBox(height: 16),
-        ShaderMask(
-          shaderCallback: (bounds) =>
-              AppColors.accentGradient.createShader(bounds),
-          child: Text(
-            'Hive Health Scanner',
-            style: GoogleFonts.inter(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'On-device AI · 4-class · OOD Detection',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ],
-    ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1, end: 0);
-  }
-
-  Widget _buildClassBadges() {
-    const classes = [
-      ('Healthy', AppColors.success),
-      ('Stressed', AppColors.warning),
-      ('Disease', AppColors.error),
-      ('Empty', AppColors.blue),
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
-      children: classes.map((c) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-          decoration: BoxDecoration(
-            color: c.$2.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: c.$2.withValues(alpha: 0.3)),
-          ),
-          child: Text(
-            c.$1,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: c.$2,
-            ),
-          ),
+    if (confirmed == true && mounted) {
+      await AuthService.instance.logout();
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) =>
+              LoginScreen(inferenceService: widget.inferenceService)),
+          (route) => false,
         );
-      }).toList(),
-    ).animate().fadeIn(delay: 200.ms, duration: 400.ms);
-  }
-
-  Widget _buildModelBanner() {
-    if (_modelReady) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline_rounded,
-              color: AppColors.warning, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Demo mode — no AI model bundled. Add hive_model.onnx + '
-              'feature_extractor.onnx to assets/models/ to enable analysis.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.warning,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImagePreview() {
-    if (_selectedImage == null) {
-      return GestureDetector(
-        onTap: _openSourceSheet,
-        child: Container(
-          width: double.infinity,
-          height: 240,
-          decoration: BoxDecoration(
-            color: AppColors.bgCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.border,
-              width: 1.5,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.add_photo_alternate_outlined,
-                  color: AppColors.accent,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Tap to add hive image',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Camera or Gallery',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ).animate().fadeIn(delay: 300.ms);
+      }
     }
-
-    return GestureDetector(
-      onTap: _openSourceSheet,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            Image.file(
-              _selectedImage!,
-              width: double.infinity,
-              height: 280,
-              fit: BoxFit.cover,
-            ),
-            // Overlay tap hint
-            Positioned(
-              right: 12,
-              bottom: 12,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.bgPrimary.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.refresh_rounded,
-                        size: 14, color: AppColors.accent),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Change',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn().scale(begin: const Offset(0.97, 0.97));
-  }
-
-  Widget _buildAnalysisButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: (_selectedImage == null || _isAnalyzing || !_modelReady)
-            ? null
-            : () async {
-                if (_selectedImage != null) {
-                  await _analyse(
-                    XFile(_selectedImage!.path),
-                  );
-                }
-              },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
-          foregroundColor: Colors.black,
-          disabledBackgroundColor: AppColors.bgElevated,
-          disabledForegroundColor: AppColors.textMuted,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        icon: _isAnalyzing
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.black,
-                ),
-              )
-            : const Icon(Icons.search_rounded, size: 20),
-        label: Text(
-          _isAnalyzing ? 'Analysing…' : 'Analyse Hive',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
-            strokeWidth: 3,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Running hive-health inference…',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Computing OOD score via Mahalanobis distance',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.textMuted,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn();
   }
 
   @override
   Widget build(BuildContext context) {
+    final UserModel? user = AuthService.instance.currentUser;
+    final String initial =
+        (user?.name.isNotEmpty == true) ? user!.name[0].toUpperCase() : 'B';
+
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
+      drawer: _buildSidebar(user, initial),
       appBar: AppBar(
         backgroundColor: AppColors.bgPrimary,
         elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                gradient: AppColors.accentGradient,
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: const Icon(Icons.hive_outlined,
-                  color: Color(0xFF211D16), size: 16),
+        centerTitle: false,
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: 26),
+            tooltip: 'Open menu',
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        title: Text('Hive Sense', style: GoogleFonts.inter(
+          fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined,
+                color: AppColors.textPrimary, size: 22),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: AppColors.hiveLow,
+          onRefresh: _loadApiaries,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 16),
+                _buildGreeting(user),
+                const SizedBox(height: 20),
+                _buildApiarySelector(),
+                const SizedBox(height: 20),
+                _buildSummaryCards(),
+                const SizedBox(height: 20),
+                Text('Quick Actions', style: GoogleFonts.inter(
+                  fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                const SizedBox(height: 12),
+                _buildQuickActions(),
+                const SizedBox(height: 20),
+                if (_hives.isNotEmpty) ...[
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text('Hive Boxes', style: GoogleFonts.inter(
+                      fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    Text('${_hives.length} total', style: GoogleFonts.inter(
+                      fontSize: 12, color: AppColors.textSecondary)),
+                  ]),
+                  const SizedBox(height: 12),
+                  _buildHiveOverview(),
+                  const SizedBox(height: 20),
+                ],
+                Text('Recent Activity', style: GoogleFonts.inter(
+                  fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                const SizedBox(height: 12),
+                _buildRecentActivity(),
+                const SizedBox(height: 32),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              'Hive Sense',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildGreeting(UserModel? user) {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    final name = user?.name.split(' ').first ?? 'Beekeeper';
+    return Text('$greeting, $name', style: GoogleFonts.inter(
+      fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary));
+  }
+
+  Widget _buildApiarySelector() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [BoxShadow(
+          color: AppColors.textPrimary.withValues(alpha: 0.04),
+          blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Selected Apiary', style: GoogleFonts.inter(
+              fontSize: 11, fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary, letterSpacing: 0.5)),
+            GestureDetector(
+              onTap: () async {
+                await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const ApiaryManagementScreen()));
+                _loadApiaries();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: AppColors.accentGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text('Manage', style: GoogleFonts.inter(
+                  fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.panelBlack)),
               ),
             ),
           ],
         ),
-        actions: [
-          // Model info chip
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border:
-                  Border.all(color: AppColors.accent.withValues(alpha: 0.3), width: 1),
-            ),
-            child: Text(
-              _modelReady ? 'AI Ready' : 'Demo',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.accent,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 16),
-
-              // Hero
-              _buildHeroSection(),
-              const SizedBox(height: 16),
-
-              // Class badges
-              _buildClassBadges(),
-              const SizedBox(height: 16),
-
-              // Model banner (demo mode notice)
-              _buildModelBanner(),
-              if (!_modelReady) const SizedBox(height: 16),
-              const SizedBox(height: 8),
-
-              // Image preview
-              _buildImagePreview(),
-              const SizedBox(height: 16),
-
-              // Source selection buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSourceButton(
-                      icon: Icons.camera_alt_rounded,
-                      label: 'Camera',
-                      color: AppColors.accent,
-                      onTap: _pickFromCamera,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSourceButton(
-                      icon: Icons.photo_library_rounded,
-                      label: 'Gallery',
-                      color: AppColors.blue,
-                      onTap: _pickFromGallery,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Analyse button (shown only when image selected and not already loading)
-              if (_selectedImage != null) ...[
-                _buildAnalysisButton(),
-                const SizedBox(height: 24),
-              ],
-
-              // Loading
-              if (_isAnalyzing) ...[
-                _buildLoadingIndicator(),
-                const SizedBox(height: 24),
-              ],
-
-              // Error
-              if (_errorMessage != null) ...[
-                _ErrorBanner(message: _errorMessage!),
-                const SizedBox(height: 24),
-              ],
-
-              // Result
-              if (_result != null) ...[
-                _SectionHeader(title: 'Analysis Result'),
-                const SizedBox(height: 12),
-                ResultCard(result: _result!),
-                const SizedBox(height: 32),
-              ],
-
-              // Getting started hint (when no image)
-              if (_selectedImage == null) ...[
-                const SizedBox(height: 8),
-                _buildGettingStartedTips(),
-                const SizedBox(height: 32),
-              ],
-            ],
-          ),
-        ),
-      ),
-
-      // FAB for quick image source selection
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openSourceSheet,
-        backgroundColor: AppColors.accent,
-        foregroundColor: Colors.black,
-        icon: const Icon(Icons.add_a_photo_rounded),
-        label: Text(
-          'New Scan',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSourceButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.4)),
-        backgroundColor: color.withValues(alpha: 0.06),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      icon: Icon(icon, size: 18),
-      label: Text(
-        label,
-        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  Widget _buildGettingStartedTips() {
-    const tips = [
-      (Icons.center_focus_strong_rounded, 'Hold the camera steady, close to the hive entrance'),
-      (Icons.wb_sunny_outlined, 'Use good natural or indoor lighting'),
-      (Icons.crop_rounded, 'Keep the hive frames centred in the frame'),
-      (Icons.visibility_outlined, 'Ensure bees and comb are clearly visible'),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Tips for best results',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...tips.map(
-            (t) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Icon(t.$1, size: 16, color: AppColors.accent),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      t.$2,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
+        const SizedBox(height: 8),
+        Row(children: [
+          const Icon(Icons.location_on_rounded, color: AppColors.hiveLow, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _loadingApiaries
+                ? Container(height: 16, decoration: BoxDecoration(
+                    color: AppColors.bgElevated,
+                    borderRadius: BorderRadius.circular(8)))
+                : _apiaries.isEmpty
+                    ? Text('No apiary added yet', style: GoogleFonts.inter(
+                        fontSize: 14, color: AppColors.textMuted))
+                    : DropdownButtonHideUnderline(
+                        child: DropdownButton<ApiaryModel>(
+                          value: _selectedApiary,
+                          isExpanded: true,
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.textSecondary, size: 18),
+                          style: GoogleFonts.inter(fontSize: 15,
+                              fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                          dropdownColor: AppColors.bgSecondary,
+                          items: _apiaries.map((a) => DropdownMenuItem(
+                            value: a,
+                            child: Text(a.locationName,
+                              style: GoogleFonts.inter(fontSize: 15,
+                                  fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                              overflow: TextOverflow.ellipsis),
+                          )).toList(),
+                          onChanged: (apiary) async {
+                            if (apiary == null) return;
+                            await ApiaryService.instance.selectApiary(apiary);
+                            setState(() { _selectedApiary = apiary; _hives = []; });
+                            _loadHives(apiary.id);
+                          },
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ),
+        ]),
+        if (_selectedApiary != null) ...[
+          const SizedBox(height: 6),
+          Text(_selectedApiary!.areaAddress, style: GoogleFonts.inter(
+            fontSize: 12, color: AppColors.textSecondary),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
-      ),
-    ).animate().fadeIn(delay: 400.ms);
+      ]),
+    );
   }
-}
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  const _SectionHeader({required this.title});
+  Widget _buildSummaryCards() {
+    final totalHives = _selectedApiary?.totalHives ?? 0;
+    final totalFrames = _selectedApiary?.totalFrames ?? 0;
+    final healthyHives = _hives.where((h) => h.status == 'Healthy').length;
+    return Row(children: [
+      Expanded(child: _StatCard(icon: Icons.hive_outlined, label: 'Hive Boxes',
+          value: '$totalHives', color: AppColors.hiveLow, bg: AppColors.badgeBeeBg)),
+      const SizedBox(width: 10),
+      Expanded(child: _StatCard(icon: Icons.grid_view_rounded, label: 'Frames',
+          value: '$totalFrames', color: AppColors.accent3, bg: AppColors.badgeLeafBg)),
+      const SizedBox(width: 10),
+      Expanded(child: _StatCard(icon: Icons.favorite_rounded, label: 'Healthy',
+          value: totalHives == 0 ? '-' : '$healthyHives/$totalHives',
+          color: AppColors.success, bg: AppColors.badgeLeafBg)),
+    ]);
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 3,
-          height: 18,
-          decoration: BoxDecoration(
-            gradient: AppColors.accentGradient,
-            borderRadius: BorderRadius.circular(2),
+  Widget _buildQuickActions() {
+    return Row(children: [
+      Expanded(child: _QuickAction(icon: Icons.add_box_outlined, label: 'Add Hive',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const ApiaryManagementScreen())))),
+      const SizedBox(width: 10),
+      Expanded(child: _QuickAction(icon: Icons.bar_chart_rounded, label: 'Inspect', onTap: () {})),
+      const SizedBox(width: 10),
+      Expanded(child: _QuickAction(icon: Icons.notifications_active_outlined,
+          label: 'Alerts', onTap: () {})),
+      const SizedBox(width: 10),
+      Expanded(child: _QuickAction(icon: Icons.share_outlined, label: 'Report', onTap: () {})),
+    ]);
+  }
+
+  Widget _buildHiveOverview() {
+    final visible = _hives.take(3).toList();
+    return Column(children: [
+      ...visible.map((h) => _HiveRow(hive: h)),
+      if (_hives.length > 3)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const ApiaryManagementScreen())),
+            child: Text('+${_hives.length - 3} more hive boxes',
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600,
+                color: AppColors.hiveLow, decoration: TextDecoration.underline,
+                decorationColor: AppColors.hiveLow),
+              textAlign: TextAlign.center),
           ),
         ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+    ]);
+  }
+
+  Widget _buildRecentActivity() {
+    final items = [
+      _ActivityItem(icon: Icons.sensors_rounded, title: 'Sensor data synced',
+          subtitle: 'All hives reported — 2 min ago', color: AppColors.info),
+      _ActivityItem(icon: Icons.thermostat_rounded, title: 'Temperature normal',
+          subtitle: 'Hive Box #01 — 35°C — 15 min ago', color: AppColors.success),
+      _ActivityItem(icon: Icons.volume_up_outlined, title: 'Acoustic scan complete',
+          subtitle: 'No abnormal patterns detected', color: AppColors.accent3),
+    ];
+    return Container(
+      decoration: BoxDecoration(color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border)),
+      child: Column(
+        children: List.generate(items.length, (i) => Column(children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(children: [
+              Container(width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: items[i].color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10)),
+                child: Icon(items[i].icon, size: 18, color: items[i].color)),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(items[i].title, style: GoogleFonts.inter(
+                    fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(items[i].subtitle, style: GoogleFonts.inter(
+                    fontSize: 11, color: AppColors.textSecondary)),
+                ])),
+            ]),
           ),
-        ),
+          if (i < items.length - 1)
+            const Divider(height: 1, color: AppColors.border, indent: 64),
+        ])),
+      ),
+    );
+  }
+
+  Widget _buildSidebar(UserModel? user, String initial) {
+    final String displayName = user?.name ?? 'Beekeeper';
+    final String displayEmail = user?.email ?? 'beekeeper@hivesense.org';
+    return Drawer(
+      backgroundColor: AppColors.bgSecondary,
+      child: SafeArea(
+        top: false,
+        child: Column(children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+            decoration: const BoxDecoration(gradient: AppColors.accentGradient),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Container(
+                  padding: const EdgeInsets.all(2.5),
+                  decoration: BoxDecoration(shape: BoxShape.circle,
+                    color: AppColors.bgSecondary.withValues(alpha: 0.3),
+                    border: Border.all(color: AppColors.bgSecondary, width: 2)),
+                  child: CircleAvatar(radius: 26,
+                    backgroundColor: AppColors.panelBlack,
+                    child: Text(initial, style: GoogleFonts.inter(
+                      fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.bgPrimary))),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary, size: 22),
+                  onPressed: () => Navigator.of(context).pop()),
+              ]),
+              const SizedBox(height: 14),
+              Text(displayName, style: GoogleFonts.inter(
+                fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 2),
+              Text(displayEmail, style: GoogleFonts.inter(
+                fontSize: 13, fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary.withValues(alpha: 0.8)),
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+            ]),
+          ),
+          Expanded(child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: [
+              _buildDrawerItem(icon: Icons.person_outline_rounded, title: 'Profile',
+                subtitle: 'Personal details and credentials',
+                onTap: () => _onMenuItemTapped('Profile')),
+              _buildDrawerItem(icon: Icons.settings_outlined, title: 'Settings',
+                subtitle: 'Preferences and configurations',
+                onTap: () => _onMenuItemTapped('Settings')),
+              _buildDrawerItem(icon: Icons.notifications_outlined,
+                title: 'Notification Settings',
+                subtitle: 'Alerts, thresholds and push notices',
+                onTap: () => _onMenuItemTapped('Notification Settings')),
+              _buildDrawerItem(icon: Icons.help_outline_rounded, title: 'Help & Support',
+                subtitle: 'Guides, documentation and contact',
+                onTap: () => _onMenuItemTapped('Help & Support')),
+            ],
+          )),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: SizedBox(width: double.infinity, height: 46,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                icon: const Icon(Icons.logout_rounded, color: AppColors.textPrimary, size: 18),
+                label: Text('Log Out', style: GoogleFonts.inter(
+                  fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                onPressed: _handleLogout,
+              )),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text('Hive Sense • v1.0.0', style: GoogleFonts.inter(
+              fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.textMuted)),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon, required String title,
+    String? subtitle, required VoidCallback onTap,
+    Color iconColor = AppColors.hiveLow, Color textColor = AppColors.textPrimary,
+  }) {
+    return ListTile(
+      leading: Container(width: 38, height: 38,
+        decoration: BoxDecoration(color: AppColors.bgElevated,
+            borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: iconColor, size: 20)),
+      title: Text(title, style: GoogleFonts.inter(
+        fontSize: 14, fontWeight: FontWeight.w600, color: textColor)),
+      subtitle: subtitle != null ? Text(subtitle, style: GoogleFonts.inter(
+        fontSize: 11, color: AppColors.textSecondary)) : null,
+      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted, size: 18),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: AppColors.bgPrimary,
+      selectedItemColor: AppColors.hiveLow,
+      unselectedItemColor: AppColors.textSecondary,
+      showUnselectedLabels: true,
+      selectedFontSize: 11,
+      unselectedFontSize: 11,
+      currentIndex: _currentIndex,
+      onTap: _onNavTapped,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.monitor_heart_outlined), label: 'Health'),
+        BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), label: 'Relocate'),
+        BottomNavigationBarItem(icon: Icon(Icons.graphic_eq_rounded), label: 'Acoustic'),
+        BottomNavigationBarItem(icon: Icon(Icons.eco_outlined), label: 'Environment'),
       ],
     );
   }
 }
 
-class _ErrorBanner extends StatelessWidget {
-  final String message;
-  const _ErrorBanner({required this.message});
+// ── Supporting sub-widgets ─────────────────────────────────────────
 
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final Color bg;
+  const _StatCard({required this.icon, required this.label,
+      required this.value, required this.color, required this.bg});
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.error.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(color: AppColors.bgSecondary,
+      borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(width: 32, height: 32,
+        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+        child: Icon(icon, size: 17, color: color)),
+      const SizedBox(height: 10),
+      Text(value, style: GoogleFonts.inter(
+        fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+      const SizedBox(height: 2),
+      Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary)),
+    ]),
+  );
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _QuickAction({required this.icon, required this.label, required this.onTap});
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+      child: Column(children: [
+        Icon(icon, size: 22, color: AppColors.hiveLow),
+        const SizedBox(height: 6),
+        Text(label, style: GoogleFonts.inter(
+          fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+      ]),
+    ),
+  );
+}
+
+class _HiveRow extends StatelessWidget {
+  final HiveModel hive;
+  const _HiveRow({required this.hive});
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(color: AppColors.bgSecondary,
+      borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+    child: Row(children: [
+      Container(width: 40, height: 40,
+        decoration: BoxDecoration(color: AppColors.bgElevated,
+            borderRadius: BorderRadius.circular(10)),
+        child: Center(child: Text(
+          '#${hive.boxNumber.toString().padLeft(2, '0')}',
+          style: GoogleFonts.inter(
+            fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.hiveLow)))),
+      const SizedBox(width: 12),
+      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(hive.name, style: GoogleFonts.inter(
+          fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        Text('${hive.numFrames} frames',
+          style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary)),
+      ])),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: hive.status == 'Healthy' ? AppColors.badgeLeafBg : AppColors.badgeTempBg,
+          borderRadius: BorderRadius.circular(8)),
+        child: Text(hive.status, style: GoogleFonts.inter(
+          fontSize: 11, fontWeight: FontWeight.w700,
+          color: hive.status == 'Healthy' ? AppColors.success : AppColors.error)),
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.error_outline_rounded,
-              color: AppColors.error, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.error,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    ]),
+  );
+}
+
+class _ActivityItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  const _ActivityItem({required this.icon, required this.title,
+      required this.subtitle, required this.color});
 }

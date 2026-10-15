@@ -143,8 +143,8 @@ OOD row + per-class `ConfidenceBar`s. Pass a `PredictionResult`.
 
 ## 5. Footer / bottom navigation — keep it identical on every screen
 
-All "main" screens (Home, Health, Detection, Environment — your four research
-modules) share the same bottom nav. Copy this pattern exactly:
+All "main" screens (Home, Health, Relocate, Acoustic, Environment)
+share the same bottom nav. Copy this pattern exactly:
 
 ```dart
 bottomNavigationBar: BottomNavigationBar(
@@ -153,12 +153,15 @@ bottomNavigationBar: BottomNavigationBar(
   selectedItemColor: AppColors.hiveLow,
   unselectedItemColor: AppColors.textSecondary,
   showUnselectedLabels: true,
+  selectedFontSize: 11,
+  unselectedFontSize: 11,
   currentIndex: 0, // change per screen
   onTap: (i) { /* navigate */ },
   items: const [
     BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
     BottomNavigationBarItem(icon: Icon(Icons.monitor_heart_outlined), label: 'Health'),
-    BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Detection'),
+    BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), label: 'Relocate'),
+    BottomNavigationBarItem(icon: Icon(Icons.graphic_eq_rounded), label: 'Acoustic'),
     BottomNavigationBarItem(icon: Icon(Icons.eco_outlined), label: 'Environment'),
   ],
 )
@@ -168,7 +171,7 @@ Rules for the footer:
 - `type: BottomNavigationBarType.fixed` — always, so icons stay evenly spaced.
 - `selectedItemColor` uses `AppColors.hiveLow` (deep gold), not `accent`.
 - Icons are `Outlined` variants (`_outlined`), labels in Inter via the theme.
-- Keep the same 4 items in the same order — it's the app's main navigation.
+- Keep the same 5 items in the same order — it's the app's main navigation.
 
 Onboarding and splash do **not** have a footer (they're full-bleed flows).
 
@@ -224,12 +227,15 @@ class MyModuleScreen extends StatelessWidget {
       selectedItemColor: AppColors.hiveLow,
       unselectedItemColor: AppColors.textSecondary,
       showUnselectedLabels: true,
+      selectedFontSize: 11,
+      unselectedFontSize: 11,
       currentIndex: 0,
       onTap: (i) {/* navigate */},
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.monitor_heart_outlined), label: 'Health'),
-        BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Detection'),
+        BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), label: 'Relocate'),
+        BottomNavigationBarItem(icon: Icon(Icons.graphic_eq_rounded), label: 'Acoustic'),
         BottomNavigationBarItem(icon: Icon(Icons.eco_outlined), label: 'Environment'),
       ],
     );
