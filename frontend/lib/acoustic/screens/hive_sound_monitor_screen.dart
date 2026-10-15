@@ -1,0 +1,316 @@
+import 'dart:developer' as developer;
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../utils/theme.dart';
+import '../acoustic_strings.dart';
+import '../models/acoustic_result.dart';
+import '../models/hive_option.dart';
+import '../services/acoustic_service.dart';
+import '../services/mock_acoustic_service.dart';
+import '../widgets/hive_picker_sheet.dart';
+import '../widgets/hive_selector_card.dart';
+import '../widgets/latest_status_card.dart';
+import '../widgets/recent_analysis_tile.dart';
+
+/// Hive Sound Monitor: pick a hive, see its latest sound state, and start
+/// a recording or upload. Record and upload are disabled until their
+/// callbacks are supplied (Stage 3 and 4).
+class HiveSoundMonitorScreen extends StatefulWidget {
+  const HiveSoundMonitorScreen({
+    super.key,
+    this.service,
+    this.onRecordPressed,
+    this.onUploadPressed,
+    this.onHistoryPressed,
+  });
+
+  /// Defaults to [MockAcousticService] when not supplied.
+  final AcousticService? service;
+  final VoidCallback? onRecordPressed;
+  final VoidCallback? onUploadPressed;
+  final VoidCallback? onHistoryPressed;
+
+  @override
+  State<HiveSoundMonitorScreen> createState() => _HiveSoundMonitorScreenState();
+}
+
+class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
+  static const int _recentLimit = 5;
+
+  late final AcousticService _service =
+      widget.service ?? MockAcousticService();
+
+  List<HiveOption> _hives = const [];
+  List<AcousticResult> _history = const [];
+  String? _selectedHiveId;
+  List<double>? _waveform;
+  bool _loading = true;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
+    try {
+      final hives = await _service.getHives();
+      final history = await _service.getHistory();
+      if (!mounted) return;
+      setState(() {
+        _hives = hives;
+        _history = history;
+        _loading = false;
+        final stillValid = hives.any((h) => h.id == _selectedHiveId);
+        if (!stillValid) {
+          _selectedHiveId = hives.isEmpty ? null : hives.first.id;
+        }
+      });
+      await _loadWaveform();
+    } catch (error, stack) {
+      developer.log(
+        'Failed to load hive sounds',
+        name: 'AcousticMonitor',
+        error: error,
+        stackTrace: stack,
+      );
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _failed = true;
+        });
+      }
+    }
+  }
+
+  /// The waveform preview is optional: any failure just hides it.
+  Future<void> _loadWaveform() async {
+    final latest = _latestForSelectedHive;
+    if (latest == null) {
+      if (mounted) setState(() => _waveform = null);
+      return;
+    }
+    try {
+      final samples = await _service.getWaveform(latest.id);
+      if (mounted && latest.id == _latestForSelectedHive?.id) {
+        setState(() => _waveform = samples);
+      }
+    } catch (error, stack) {
+      developer.log(
+        'Failed to load waveform preview',
+        name: 'AcousticMonitor',
+        error: error,
+        stackTrace: stack,
+      );
+      if (mounted) setState(() => _waveform = null);
+    }
+  }
+
+  Future<void> _pickHive() async {
+    final id = await HivePickerSheet.show(
+      context,
+      hives: _hives,
+      selectedId: _selectedHiveId,
+    );
+    if (id == null || id == _selectedHiveId) return;
+    setState(() => _selectedHiveId = id);
+    await _loadWaveform();
+  }
+
+  List<AcousticResult> get _hiveHistory =>
+      _history.where((r) => r.hiveId == _selectedHiveId).toList();
+
+  AcousticResult? get _latestForSelectedHive {
+    final forHive = _hiveHistory;
+    return forHive.isEmpty ? null : forHive.first;
+  }
+
+  HiveOption? get _selectedHive {
+    for (final hive in _hives) {
+      if (hive.id == _selectedHiveId) return hive;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgPrimary,
+        elevation: 0,
+        title: Text(
+          AcousticStrings.appBarMonitorTitle,
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_outlined),
+            tooltip: AcousticStrings.soundHistoryTooltip,
+            onPressed: widget.onHistoryPressed,
+          ),
+        ],
+      ),
+      body: SafeArea(child: _buildBody()),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: AppColors.accent),
+            const SizedBox(height: 16),
+            Text(
+              AcousticStrings.loadingHiveSounds,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_failed) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AcousticStrings.loadFailed,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _load,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(44, 48),
+                  elevation: 0,
+                ),
+                child: Text(AcousticStrings.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final now = DateTime.now();
+    final hive = _selectedHive;
+    final recent = _hiveHistory.take(_recentLimit).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 8),
+          HiveSelectorCard(
+            hive: hive,
+            onTap: _hives.isEmpty ? null : _pickHive,
+          ),
+          const SizedBox(height: 16),
+          LatestStatusCard(
+            result: _latestForSelectedHive,
+            waveform: _waveform,
+            now: now,
+          ),
+          const SizedBox(height: 16),
+          _buildRecordButton(),
+          const SizedBox(height: 12),
+          _buildUploadButton(),
+          const SizedBox(height: 24),
+          Text(
+            AcousticStrings.recentAnalyses,
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (recent.isEmpty)
+            Text(
+              hive == null
+                  ? AcousticStrings.noHivesFound
+                  : AcousticStrings.noAnalysesForHive,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            )
+          else
+            for (final result in recent)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: RecentAnalysisTile(result: result, now: now),
+              ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecordButton() {
+    return ElevatedButton.icon(
+      onPressed: widget.onRecordPressed,
+      icon: const Icon(Icons.mic_outlined),
+      label: Text(
+        AcousticStrings.recordHiveSound,
+        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+      ),
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(56),
+        elevation: 0,
+        backgroundColor: AppColors.accent,
+        foregroundColor: AppColors.textPrimary,
+        disabledBackgroundColor: AppColors.bgElevated,
+        disabledForegroundColor: AppColors.textMuted,
+        shape: const StadiumBorder(),
+      ),
+    );
+  }
+
+  Widget _buildUploadButton() {
+    return OutlinedButton.icon(
+      onPressed: widget.onUploadPressed,
+      icon: const Icon(Icons.file_upload_outlined),
+      label: Text(
+        AcousticStrings.uploadAudio,
+        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+      ),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(56),
+        foregroundColor: AppColors.textPrimary,
+        disabledForegroundColor: AppColors.textMuted,
+        side: BorderSide(
+          color: widget.onUploadPressed == null
+              ? AppColors.border
+              : AppColors.accent,
+        ),
+        shape: const StadiumBorder(),
+      ),
+    );
+  }
+}
