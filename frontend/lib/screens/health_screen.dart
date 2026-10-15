@@ -425,7 +425,7 @@ class _HealthScreenState extends State<HealthScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        const BeeIllustration(size: 72),
+        const BeeIllustration(size: 80),
       ],
     );
   }
