@@ -510,89 +510,6 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 20),
-          Text(
-            'Hive Box Type',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: AppColors.bgSecondary,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: _selectedHiveType,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-                items: const [
-                  DropdownMenuItem(
-                      value: 'Langstroth', child: Text('Langstroth Box')),
-                  DropdownMenuItem(
-                      value: 'Top-Bar', child: Text('Top-Bar Hive')),
-                  DropdownMenuItem(
-                      value: 'Warre', child: Text('Warré Hive')),
-                  DropdownMenuItem(
-                      value: 'Traditional', child: Text('Traditional Clay/Log')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedHiveType = val);
-                },
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Bee Species',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: AppColors.bgSecondary,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: _selectedSpecies,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-                items: const [
-                  DropdownMenuItem(
-                      value: 'Apis cerana',
-                      child: Text('Apis cerana (Asian Honeybee)')),
-                  DropdownMenuItem(
-                      value: 'Apis mellifera',
-                      child: Text('Apis mellifera (Western Honeybee)')),
-                  DropdownMenuItem(
-                      value: 'Tetragonula',
-                      child: Text('Tetragonula iridipennis (Stingless Bee)')),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _selectedSpecies = val);
-                },
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -744,7 +661,7 @@ class _FirstTimeSetupScreenState extends State<FirstTimeSetupScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Location: ${_locationNameController.text}\nHive: ${_hiveNameController.text} (${_selectedHiveType}, $_numFrames frames)',
+                'Location: ${_locationNameController.text}\nHive: ${_hiveNameController.text} ($_numFrames frames)',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   color: AppColors.textPrimary,
