@@ -15,6 +15,8 @@ class AppColors {
   static const Color accent = Color(0xFFD8A93D); // honey-gold
   static const Color accent2 = Color(0xFFB25A3C); // terracotta
   static const Color accent3 = Color(0xFF5F7F5A); // leaf green
+  static const Color darkGreen = Color(0xFF2C5E43); // forest/apiary green
+  static const Color lightGreenCard = Color(0xFFEAF2EC); // soft green badge fill
   static const Color blue = Color(0xFF3A4A63);
   static const Color purple = Color(0xFF6B5B3E);
 

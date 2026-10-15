@@ -10,6 +10,7 @@ import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
+import 'health_screen.dart';
 
 /// Home Page for Hive Sense App.
 /// - Left-side hamburger menu / drawer.
@@ -73,6 +74,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavTapped(int index) {
+    if (index == 1) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => HealthScreen(inferenceService: widget.inferenceService),
+        ),
+      );
+      return;
+    }
     setState(() => _currentIndex = index);
   }
 
@@ -323,7 +332,17 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const ApiaryManagementScreen())))),
       const SizedBox(width: 10),
-      Expanded(child: _QuickAction(icon: Icons.bar_chart_rounded, label: 'Inspect', onTap: () {})),
+      Expanded(
+        child: _QuickAction(
+          icon: Icons.bar_chart_rounded,
+          label: 'Inspect',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => HealthScreen(inferenceService: widget.inferenceService),
+            ),
+          ),
+        ),
+      ),
       const SizedBox(width: 10),
       Expanded(child: _QuickAction(icon: Icons.notifications_active_outlined,
           label: 'Alerts', onTap: () {})),
