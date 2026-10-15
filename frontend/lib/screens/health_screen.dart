@@ -12,6 +12,7 @@ import '../widgets/bee_illustration.dart';
 import 'add_hive_screen.dart';
 import 'apiary_management_screen.dart';
 import 'scanner_screen.dart';
+import 'hive_health_dashboard_screen.dart';
 
 /// Colony Health Monitoring Screen
 /// Displays the active apiary selector, "+ Add Hive" action,
@@ -342,13 +343,17 @@ class _HealthScreenState extends State<HealthScreen> {
   }
 
   void _onHiveTapped(_HiveHealthItem item) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => _HiveDetailSheet(
-        item: item,
-        inferenceService: widget.inferenceService,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => HiveHealthDashboardScreen(
+          hiveId: item.id,
+          hiveName: item.name,
+          apiaryName: _selectedApiary?.locationName ?? 'Yakkala Apiary',
+          status: item.status,
+          boxNumber: item.boxNumber,
+          numFrames: item.numFrames,
+          inferenceService: widget.inferenceService,
+        ),
       ),
     );
   }
