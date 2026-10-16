@@ -108,9 +108,9 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.sensors_rounded, color: AppColors.darkGreen),
+                leading: const Icon(Icons.sensors_rounded, color: AppColors.accent3),
                 title: Text('ESP32 Telemetry Rate',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 subtitle: Text('Current: Every 2 minutes',
                     style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
@@ -120,7 +120,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.notifications_active_outlined, color: AppColors.accent2),
                 title: Text('Health Alert Thresholds',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 subtitle: Text('Temp: 30–36°C • Humidity: 55–80%',
                     style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
@@ -136,17 +136,19 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.bgSecondary),
+                icon: const Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.textPrimary),
                 label: Text(
                   'Launch AI Frame Camera Scanner',
                   style: GoogleFonts.inter(
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.bgSecondary,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.darkGreen,
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: AppColors.textPrimary,
+                  elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -255,12 +257,12 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
-        color: const Color(0xFFE9F4EC), // Pale mint green tint
+        color: AppColors.lightGreenCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD4E8DA), width: 1.0),
+        border: Border.all(color: AppColors.border, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: AppColors.darkGreen.withValues(alpha: 0.04),
+            color: AppColors.textPrimary.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -282,15 +284,15 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Green Pill Badge
+              // Health Status Pill Badge
               Container(
                 padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
                 decoration: BoxDecoration(
-                  color: _isHealthy ? const Color(0xFF2C9E4B) : AppColors.warning,
+                  color: _isHealthy ? AppColors.success : AppColors.warning,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: (_isHealthy ? const Color(0xFF2C9E4B) : AppColors.warning)
+                      color: (_isHealthy ? AppColors.success : AppColors.warning)
                           .withValues(alpha: 0.25),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
@@ -305,12 +307,12 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
+                        color: AppColors.bgSecondary.withValues(alpha: 0.25),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.arrow_downward_rounded,
-                        color: Colors.white,
+                        color: AppColors.bgSecondary,
                         size: 18,
                       ),
                     ),
@@ -318,9 +320,9 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                     Text(
                       widget.status,
                       style: GoogleFonts.inter(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: AppColors.bgSecondary,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -332,7 +334,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: AppColors.bgSecondary.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -345,8 +347,8 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                 child: const Center(
                   child: Icon(
                     Icons.spa_rounded,
-                    color: Color(0xFF38B25D),
-                    size: 30,
+                    color: AppColors.success,
+                    size: 28,
                   ),
                 ),
               ),
@@ -380,7 +382,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
             Text(
               'Live Sensor Data',
               style: GoogleFonts.inter(
-                fontSize: 19,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
                 letterSpacing: -0.3,
@@ -405,7 +407,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               width: 8,
               height: 8,
               decoration: const BoxDecoration(
-                color: Color(0xFF2C9E4B),
+                color: AppColors.success,
                 shape: BoxShape.circle,
               ),
             )
@@ -417,7 +419,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3A4A3E),
+                color: AppColors.textSecondary,
               ),
             ),
           ],
@@ -437,14 +439,14 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               child: _MetricCard(
                 iconWidget: const Icon(
                   Icons.thermostat_rounded,
-                  color: Color(0xFFE54B38), // Red
+                  color: AppColors.accent2,
                   size: 26,
                 ),
                 title: 'Temperature',
                 value: '31.2 °C',
                 pillText: 'Normal',
-                pillColor: const Color(0xFF2C9E4B),
-                pillBg: const Color(0xFFEAF5EC),
+                pillColor: AppColors.success,
+                pillBg: AppColors.lightGreenCard,
               ),
             ),
             const SizedBox(width: 12),
@@ -453,14 +455,14 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               child: _MetricCard(
                 iconWidget: const Icon(
                   Icons.water_drop_rounded,
-                  color: Color(0xFF2885F6), // Blue
+                  color: AppColors.blue,
                   size: 26,
                 ),
                 title: 'Humidity',
                 value: '75 %',
                 pillText: 'Normal',
-                pillColor: const Color(0xFF2C9E4B),
-                pillBg: const Color(0xFFEAF5EC),
+                pillColor: AppColors.success,
+                pillBg: AppColors.lightGreenCard,
               ),
             ),
           ],
@@ -475,7 +477,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                 title: 'Hive Weight',
                 value: '12.4 kg',
                 trendText: '+0.3 kg today',
-                trendColor: const Color(0xFF2C9E4B),
+                trendColor: AppColors.success,
               ),
             ),
             const SizedBox(width: 12),
@@ -502,11 +504,11 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
   Widget _buildViewTrendsButton() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.darkGreen,
+        color: AppColors.accent,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.darkGreen.withValues(alpha: 0.3),
+            color: AppColors.accent.withValues(alpha: 0.35),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -523,7 +525,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               children: [
                 const Icon(
                   Icons.bar_chart_rounded,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -533,13 +535,13 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
                 const Icon(
                   Icons.chevron_right_rounded,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   size: 22,
                 ),
               ],
@@ -667,7 +669,7 @@ class _MetricCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
               decoration: BoxDecoration(
-                color: pillBg ?? const Color(0xFFEAF5EC),
+                color: pillBg ?? AppColors.lightGreenCard,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -675,7 +677,7 @@ class _MetricCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: pillColor ?? const Color(0xFF2C9E4B),
+                  color: pillColor ?? AppColors.success,
                 ),
               ),
             ),
@@ -685,7 +687,7 @@ class _MetricCard extends StatelessWidget {
                 Icon(
                   Icons.north_east_rounded,
                   size: 13,
-                  color: trendColor ?? const Color(0xFF2C9E4B),
+                  color: trendColor ?? AppColors.success,
                 ),
                 const SizedBox(width: 3),
                 Expanded(
@@ -694,7 +696,7 @@ class _MetricCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: trendColor ?? const Color(0xFF2C9E4B),
+                      color: trendColor ?? AppColors.success,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -730,11 +732,11 @@ class _HoneyJarIcon extends StatelessWidget {
       width: 26,
       height: 26,
       decoration: BoxDecoration(
-        color: const Color(0xFFFFB82E), // Honey amber
+        color: AppColors.accent,
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFB82E).withValues(alpha: 0.3),
+            color: AppColors.accent.withValues(alpha: 0.3),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -745,7 +747,7 @@ class _HoneyJarIcon extends StatelessWidget {
           width: 14,
           height: 14,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.85),
+            color: AppColors.bgSecondary.withValues(alpha: 0.85),
             shape: BoxShape.circle,
           ),
           child: const Center(
@@ -754,7 +756,7 @@ class _HoneyJarIcon extends StatelessWidget {
               style: TextStyle(
                 fontSize: 8.5,
                 fontWeight: FontWeight.w900,
-                color: Color(0xFF9E6500),
+                color: AppColors.hiveDoor,
               ),
             ),
           ),
@@ -813,7 +815,7 @@ class _TrendsBottomSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF5EC),
+                    color: AppColors.lightGreenCard,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -821,7 +823,7 @@ class _TrendsBottomSheet extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF2C9E4B),
+                      color: AppColors.success,
                     ),
                   ),
                 ),
@@ -831,7 +833,7 @@ class _TrendsBottomSheet extends StatelessWidget {
             // Trend summary rows
             _buildTrendRow(
               icon: Icons.thermostat_rounded,
-              iconColor: const Color(0xFFE54B38),
+              iconColor: AppColors.error,
               title: 'Temperature Stability',
               value: '31.2 °C (Avg: 31.8 °C)',
               status: 'Optimal Brood Range',
@@ -839,7 +841,7 @@ class _TrendsBottomSheet extends StatelessWidget {
             const SizedBox(height: 10),
             _buildTrendRow(
               icon: Icons.water_drop_rounded,
-              iconColor: const Color(0xFF2885F6),
+              iconColor: AppColors.blue,
               title: 'Internal Humidity',
               value: '75 % (Fluctuation: ±3%)',
               status: 'Healthy Ventilation',
@@ -847,7 +849,7 @@ class _TrendsBottomSheet extends StatelessWidget {
             const SizedBox(height: 10),
             _buildTrendRow(
               icon: Icons.scale_rounded,
-              iconColor: const Color(0xFFFFB82E),
+              iconColor: AppColors.accent,
               title: 'Honey & Colony Weight',
               value: '12.4 kg (+0.3 kg net gain)',
               status: 'Active Foraging Day',
@@ -870,17 +872,19 @@ class _TrendsBottomSheet extends StatelessWidget {
                   ),
                 );
               },
-              icon: const Icon(Icons.camera_alt_outlined, size: 18, color: Colors.white),
+              icon: const Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.textPrimary),
               label: Text(
                 'Perform Visual Frame AI Scan',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.darkGreen,
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
