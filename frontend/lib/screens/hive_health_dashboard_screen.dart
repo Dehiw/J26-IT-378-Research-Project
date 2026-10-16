@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import '../widgets/bee_illustration.dart';
+import 'it23136274_sensor_trends_screen.dart';
 import 'scanner_screen.dart';
 
 /// Hive Health Dashboard Screen (Live Monitoring)
@@ -158,13 +159,14 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
   }
 
   void _showDetailedTrends() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) => _TrendsBottomSheet(
-        hiveName: widget.hiveName,
-        inferenceService: widget.inferenceService,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => IT23136274SensorTrendsScreen(
+          hiveId: widget.hiveId,
+          hiveName: widget.hiveName,
+          apiaryName: widget.apiaryName,
+          inferenceService: widget.inferenceService,
+        ),
       ),
     );
   }
