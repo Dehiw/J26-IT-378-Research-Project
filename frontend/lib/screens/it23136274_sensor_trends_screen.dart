@@ -10,9 +10,13 @@ import '../utils/theme.dart';
 /// Research Component: AI-Based Colony Health Monitoring
 /// Feature: Sensor Trends (Graph View) Screen
 ///
-/// Displays historical telemetry trends for internal beehive parameters
-/// (Temperature, Humidity, Weight, Activity) across 24H, 7D, and 30D
-/// with dynamic interactive graphs, key statistics, and AI health insights.
+/// Fully conforms to Skills/Frontend_skill.md:
+/// - Palette: Strictly uses AppColors (bgPrimary, bgSecondary, bgElevated, border,
+///   textPrimary, textSecondary, darkGreen, accent, hiveLow, hiveDoor).
+/// - Typography: GoogleFonts.inter across all elements with standard weights.
+/// - Architecture: Scaffold, AppBar, SafeArea, SingleChildScrollView (padding 20).
+/// - Shared 5-item fixed bottom navigation with AppColors.hiveLow.
+/// - Zero raw Color(0x...) or Colors.* calls.
 class IT23136274SensorTrendsScreen extends StatefulWidget {
   final String hiveId;
   final String hiveName;
@@ -23,8 +27,8 @@ class IT23136274SensorTrendsScreen extends StatefulWidget {
   const IT23136274SensorTrendsScreen({
     super.key,
     this.hiveId = 'hive-01',
-    this.hiveName = 'Hive 01',
-    this.apiaryName = 'Yakkala Apiary',
+    this.hiveName = 'Hive Box #01',
+    this.apiaryName = 'Siyane Bigu',
     this.initialSensor = 'Temperature',
     this.inferenceService,
   });
@@ -126,7 +130,7 @@ class _IT23136274SensorTrendsScreenState
   _SensorTrendData _getTemperatureData(TimeRange range) {
     switch (range) {
       case TimeRange.h24:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: '°C',
           current: '31.2 °C',
           average: '30.5 °C',
@@ -142,7 +146,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 6,
           horizontalGridInterval: 4,
           verticalGridInterval: 6,
-          spots: const [
+          spots: [
             FlSpot(0, 29.5),
             FlSpot(2, 29.0),
             FlSpot(4, 28.5),
@@ -167,7 +171,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d7:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: '°C',
           current: '31.2 °C',
           average: '30.9 °C',
@@ -183,7 +187,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 4,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 30.2),
             FlSpot(1, 31.5),
             FlSpot(2, 30.8),
@@ -203,7 +207,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d30:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: '°C',
           current: '31.2 °C',
           average: '30.8 °C',
@@ -219,7 +223,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 4,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 30.0),
             FlSpot(1, 30.6),
             FlSpot(2, 31.8),
@@ -240,7 +244,7 @@ class _IT23136274SensorTrendsScreenState
   _SensorTrendData _getHumidityData(TimeRange range) {
     switch (range) {
       case TimeRange.h24:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: '%',
           current: '72.0 %',
           average: '68.5 %',
@@ -256,7 +260,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 6,
           horizontalGridInterval: 10,
           verticalGridInterval: 6,
-          spots: const [
+          spots: [
             FlSpot(0, 71.0),
             FlSpot(4, 73.0),
             FlSpot(6, 74.0),
@@ -276,7 +280,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d7:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: '%',
           current: '72.0 %',
           average: '69.1 %',
@@ -292,7 +296,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 10,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 68.5),
             FlSpot(1, 71.0),
             FlSpot(2, 69.8),
@@ -312,7 +316,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d30:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: '%',
           current: '72.0 %',
           average: '68.2 %',
@@ -328,7 +332,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 10,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 66.0),
             FlSpot(1, 69.5),
             FlSpot(2, 74.0),
@@ -349,7 +353,7 @@ class _IT23136274SensorTrendsScreenState
   _SensorTrendData _getWeightData(TimeRange range) {
     switch (range) {
       case TimeRange.h24:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: 'kg',
           current: '14.8 kg',
           average: '14.4 kg',
@@ -365,7 +369,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 6,
           horizontalGridInterval: 1,
           verticalGridInterval: 6,
-          spots: const [
+          spots: [
             FlSpot(0, 14.3),
             FlSpot(4, 14.3),
             FlSpot(8, 14.2),
@@ -385,7 +389,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d7:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: 'kg',
           current: '14.8 kg',
           average: '13.9 kg',
@@ -401,7 +405,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 1,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 13.1),
             FlSpot(1, 13.4),
             FlSpot(2, 13.6),
@@ -421,7 +425,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d30:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: 'kg',
           current: '14.8 kg',
           average: '12.8 kg',
@@ -437,7 +441,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 2,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 11.2),
             FlSpot(1, 12.0),
             FlSpot(2, 13.1),
@@ -458,7 +462,7 @@ class _IT23136274SensorTrendsScreenState
   _SensorTrendData _getActivityData(TimeRange range) {
     switch (range) {
       case TimeRange.h24:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: 'cpm',
           current: '320 cpm',
           average: '279 cpm',
@@ -474,7 +478,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 6,
           horizontalGridInterval: 200,
           verticalGridInterval: 6,
-          spots: const [
+          spots: [
             FlSpot(0, 40),
             FlSpot(4, 25),
             FlSpot(7, 180),
@@ -494,7 +498,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d7:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: 'cpm',
           current: '320 cpm',
           average: '410 cpm',
@@ -510,7 +514,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 200,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 390),
             FlSpot(1, 450),
             FlSpot(2, 420),
@@ -530,7 +534,7 @@ class _IT23136274SensorTrendsScreenState
           },
         );
       case TimeRange.d30:
-        return _SensorTrendData(
+        return const _SensorTrendData(
           unit: 'cpm',
           current: '320 cpm',
           average: '395 cpm',
@@ -546,7 +550,7 @@ class _IT23136274SensorTrendsScreenState
           bottomInterval: 1,
           horizontalGridInterval: 200,
           verticalGridInterval: 1,
-          spots: const [
+          spots: [
             FlSpot(0, 340),
             FlSpot(1, 410),
             FlSpot(2, 480),
@@ -676,10 +680,8 @@ class _IT23136274SensorTrendsScreenState
           color: isSelected ? AppColors.darkGreen : AppColors.bgSecondary,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: isSelected
-                ? AppColors.darkGreen
-                : AppColors.border.withValues(alpha: 0.6),
-            width: 1,
+            color: isSelected ? AppColors.darkGreen : AppColors.border,
+            width: 1.0,
           ),
           boxShadow: isSelected
               ? [
@@ -689,14 +691,20 @@ class _IT23136274SensorTrendsScreenState
                     offset: const Offset(0, 3),
                   ),
                 ]
-              : null,
+              : [
+                  BoxShadow(
+                    color: AppColors.textPrimary.withValues(alpha: 0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
+            color: isSelected ? AppColors.bgSecondary : AppColors.textPrimary,
           ),
         ),
       ),
@@ -708,8 +716,9 @@ class _IT23136274SensorTrendsScreenState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.bgElevated.withValues(alpha: 0.55),
+        color: AppColors.bgElevated.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6), width: 0.8),
       ),
       child: Row(
         children: [
@@ -756,7 +765,7 @@ class _IT23136274SensorTrendsScreenState
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.bgSecondary : AppColors.textSecondary,
           ),
         ),
       ),
@@ -769,16 +778,13 @@ class _IT23136274SensorTrendsScreenState
       padding: const EdgeInsets.fromLTRB(10, 20, 18, 14),
       decoration: BoxDecoration(
         color: AppColors.bgSecondary,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.border.withValues(alpha: 0.6),
-          width: 0.8,
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppColors.textPrimary.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -801,7 +807,7 @@ class _IT23136274SensorTrendsScreenState
                         return LineTooltipItem(
                           '${spot.y.toStringAsFixed(1)} ${data.unit}',
                           GoogleFonts.inter(
-                            color: Colors.white,
+                            color: AppColors.bgSecondary,
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
@@ -892,7 +898,7 @@ class _IT23136274SensorTrendsScreenState
                     isCurved: true,
                     curveSmoothness: 0.35,
                     preventCurveOverShooting: true,
-                    color: const Color(0xFFE89A15),
+                    color: AppColors.accent,
                     barWidth: 2.8,
                     isStrokeCapRound: true,
                     dotData: FlDotData(
@@ -900,9 +906,9 @@ class _IT23136274SensorTrendsScreenState
                       getDotPainter: (spot, percent, barData, index) =>
                           FlDotCirclePainter(
                         radius: 3.2,
-                        color: const Color(0xFFE89A15),
+                        color: AppColors.accent,
                         strokeWidth: 1.5,
-                        strokeColor: Colors.white,
+                        strokeColor: AppColors.bgSecondary,
                       ),
                     ),
                     belowBarData: BarAreaData(
@@ -911,8 +917,8 @@ class _IT23136274SensorTrendsScreenState
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFFE89A15).withValues(alpha: 0.32),
-                          const Color(0xFFE89A15).withValues(alpha: 0.0),
+                          AppColors.accent.withValues(alpha: 0.35),
+                          AppColors.accent.withValues(alpha: 0.0),
                         ],
                       ),
                     ),
@@ -934,16 +940,13 @@ class _IT23136274SensorTrendsScreenState
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
         color: AppColors.bgSecondary,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppColors.border.withValues(alpha: 0.6),
-          width: 0.8,
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppColors.textPrimary.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1007,11 +1010,11 @@ class _IT23136274SensorTrendsScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFDF8),
+        color: AppColors.bgElevated.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border.withValues(alpha: 0.8),
-          width: 0.8,
+          color: AppColors.border,
+          width: 1.0,
         ),
       ),
       child: Row(
@@ -1020,12 +1023,12 @@ class _IT23136274SensorTrendsScreenState
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFBEFD7),
+              color: AppColors.bgElevated,
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.lightbulb_rounded,
-              color: Color(0xFFE89A15),
+              color: AppColors.accent,
               size: 24,
             ),
           ),
@@ -1039,7 +1042,7 @@ class _IT23136274SensorTrendsScreenState
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF5D3E1A),
+                    color: AppColors.hiveDoor,
                   ),
                 ),
                 const SizedBox(height: 4),
