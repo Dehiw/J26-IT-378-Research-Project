@@ -10,6 +10,7 @@ import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
+import 'relocation_assessment_screen_IT23185302.dart';
 
 /// Home Page for Hive Sense App.
 /// - Left-side hamburger menu / drawer.
@@ -73,6 +74,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavTapped(int index) {
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const RelocationAssessmentScreenIT23185302(),
+        ),
+      );
+      return;
+    }
     setState(() => _currentIndex = index);
   }
 
