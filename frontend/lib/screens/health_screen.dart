@@ -8,7 +8,6 @@ import '../services/apiary_service.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import '../widgets/wooden_hive_box.dart';
-import '../widgets/bee_illustration.dart';
 import 'add_hive_screen.dart';
 import 'apiary_management_screen.dart';
 import 'scanner_screen.dart';
@@ -409,28 +408,19 @@ class _HealthScreenState extends State<HealthScreen> {
 
   // ── Header ────────────────────────────────────────────────────────
   Widget _buildHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Colony Health\nMonitoring',
-                style: GoogleFonts.inter(
-                  fontSize: 27,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  height: 1.15,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
+        Text(
+          'Colony Health\nMonitoring',
+          style: GoogleFonts.inter(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+            height: 1.2,
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(width: 8),
-        const BeeIllustration(size: 80),
       ],
     );
   }
@@ -529,18 +519,18 @@ class _HealthScreenState extends State<HealthScreen> {
         ),
         ElevatedButton.icon(
           onPressed: _openAddHive,
-          icon: const Icon(Icons.add_rounded, size: 18, color: AppColors.bgSecondary),
+          icon: const Icon(Icons.add_rounded, size: 18, color: AppColors.textPrimary),
           label: Text(
             'Add Hive',
             style: GoogleFonts.inter(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: AppColors.bgSecondary,
+              color: AppColors.textPrimary,
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.darkGreen,
-            foregroundColor: AppColors.bgSecondary,
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.textPrimary,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             shape: const StadiumBorder(),
