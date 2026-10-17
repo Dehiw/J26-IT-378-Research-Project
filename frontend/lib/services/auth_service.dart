@@ -49,17 +49,18 @@ class AuthService {
   }
 
   /// Sends register request to FastAPI backend
-  /// Sends register request to FastAPI backend
   Future<UserModel> register({
     required String name,
     required String email,
     required String password,
+    String userType = 'Bee Keeper',
   }) async {
     final endpoint = '${ApiConfig.baseUrl}/auth/register';
     final payload = {
       'name': name.trim(),
       'email': email.trim().toLowerCase(),
       'password': password,
+      'user_type': userType,
     };
 
     final responseMap = await _postJson(endpoint, payload);

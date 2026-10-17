@@ -53,8 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navAfterAuth() {
     if (!mounted) return;
-    if (widget.isFirstLoginAfterRegister) {
-      // ONLY for 1st login after register -> Selection Part / First-Time Setup
+    final isNormalUser = AuthService.instance.currentUser?.isNormalUser ?? false;
+    if (widget.isFirstLoginAfterRegister && !isNormalUser) {
+      // ONLY for Bee Keeper 1st login after register -> Apiary First-Time Setup
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
@@ -62,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } else {
-      // Regular login -> straight to Home Screen
+      // Normal user OR regular login -> straight to Home Screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
