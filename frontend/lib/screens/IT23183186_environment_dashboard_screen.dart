@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/theme.dart';
 import '../widgets/main_bottom_nav.dart';
-import 'forage_map_screen.dart';
-import 'hive_telemetry_screen.dart';
+import 'IT23183186_forage_map_screen.dart';
+import 'IT23183186_hive_telemetry_screen.dart';
 
 class EnvironmentDashboardScreen extends StatelessWidget {
   const EnvironmentDashboardScreen({super.key});
@@ -26,7 +26,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                 ),
                 Expanded(
                   child: Text(
-                    'Good morning 🐝',
+                    'Good morning ðŸ',
                     style: _style(20, FontWeight.w800, AppColors.textPrimary),
                   ),
                 ),
@@ -54,7 +54,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 9),
                     Text(
-                      'Colony 03 – Negombo',
+                      'Colony 03 â€“ Negombo',
                       style: _style(13, FontWeight.w600, AppColors.textPrimary),
                     ),
                     const SizedBox(width: 12),
@@ -102,7 +102,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 7),
                         Text(
-                          '↗  Up 4 pts since last week',
+                          'â†—  Up 4 pts since last week',
                           style: _style(
                             12,
                             FontWeight.w500,
@@ -152,7 +152,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                   child: _MetricCard(
                     icon: Icons.thermostat_rounded,
                     label: 'Temperature',
-                    value: '31°C',
+                    value: '31Â°C',
                     note: 'Last 12 hrs',
                     color: AppColors.accent3,
                     onTap: () => _open(context, const HiveTelemetryScreen()),
@@ -270,7 +270,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
             _AlertRow(
               icon: Icons.thermostat_rounded,
               title: 'Temperature stable',
-              subtitle: 'Sample telemetry · Hive #03',
+              subtitle: 'Sample telemetry Â· Hive #03',
               color: AppColors.accent3,
             ),
             const SizedBox(height: 24),

@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/theme.dart';
 import '../widgets/main_bottom_nav.dart';
-import 'disease_risk_screen.dart';
-import 'forage_map_screen.dart';
-import 'hive_telemetry_screen.dart';
+import 'IT23183186_disease_risk_screen.dart';
+import 'IT23183186_forage_map_screen.dart';
+import 'IT23183186_hive_telemetry_screen.dart';
 import 'home_screen.dart';
-import 'environment_dashboard_screen.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
 
 class DiseaseCheckScreen extends StatelessWidget {
   const DiseaseCheckScreen({super.key});
@@ -42,9 +42,9 @@ class DiseaseCheckScreen extends StatelessWidget {
               ])),
               const SizedBox(width: 18),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _pill('Monitor · medium risk', AppColors.accent), const SizedBox(height: 10),
+                _pill('Monitor Â· medium risk', AppColors.accent), const SizedBox(height: 10),
                 Text('Early infection signs', style: _text(18, FontWeight.w700, AppColors.bgPrimary)),
-                const SizedBox(height: 6), Text('Kandy apiary · sample assessment', style: _text(12, FontWeight.w400, AppColors.textMuted)),
+                const SizedBox(height: 6), Text('Kandy apiary Â· sample assessment', style: _text(12, FontWeight.w400, AppColors.textMuted)),
               ])),
             ]),
           ),
@@ -52,13 +52,13 @@ class DiseaseCheckScreen extends StatelessWidget {
           _heading('Signals fused', trailing: 'LIVE'),
           const SizedBox(height: 10),
           Row(children: const [
-            Expanded(child: _SignalCard(icon: Icons.speed_rounded, name: 'Sensors', value: '34.8°C · 72% RH', score: '94')),
+            Expanded(child: _SignalCard(icon: Icons.speed_rounded, name: 'Sensors', value: '34.8Â°C Â· 72% RH', score: '94')),
             SizedBox(width: 9), Expanded(child: _SignalCard(icon: Icons.camera_alt_outlined, name: 'Vision', value: '6 frames read', score: '88')),
             SizedBox(width: 9), Expanded(child: _SignalCard(icon: Icons.graphic_eq_rounded, name: 'Acoustics', value: '218 Hz mean', score: '91')),
           ]),
           const SizedBox(height: 22), _heading('Findings for Hive A-02'), const SizedBox(height: 10),
-          _finding('European Foulbrood', 'Melissococcus plutonius · early stage · Today, 09:12', '76%', AppColors.warning),
-          _finding('Varroa mite pressure', 'Varroa destructor · low load · Yesterday, 17:40', '41%', AppColors.accent3),
+          _finding('European Foulbrood', 'Melissococcus plutonius Â· early stage Â· Today, 09:12', '76%', AppColors.warning),
+          _finding('Varroa mite pressure', 'Varroa destructor Â· low load Â· Yesterday, 17:40', '41%', AppColors.accent3),
           const SizedBox(height: 8), Text('Decision support only. This is not a veterinary diagnosis.', style: _text(11, FontWeight.w400, AppColors.textSecondary)),
           const SizedBox(height: 20),
           FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const DiseaseRiskScreen())), icon: const Icon(Icons.assessment_outlined), label: const Text('Open risk overview')),

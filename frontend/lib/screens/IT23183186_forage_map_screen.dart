@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/theme.dart';
 import '../widgets/main_bottom_nav.dart';
-import 'environment_dashboard_screen.dart';
-import 'hive_telemetry_screen.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
+import 'IT23183186_hive_telemetry_screen.dart';
 
 class ForageMapScreen extends StatelessWidget {
   const ForageMapScreen({super.key});

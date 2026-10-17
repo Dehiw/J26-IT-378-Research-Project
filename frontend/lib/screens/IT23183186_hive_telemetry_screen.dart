@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/theme.dart';
 import '../widgets/main_bottom_nav.dart';
-import 'environment_dashboard_screen.dart';
-import 'forage_map_screen.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
+import 'IT23183186_forage_map_screen.dart';
 
 class HiveTelemetryScreen extends StatefulWidget {
   const HiveTelemetryScreen({super.key});
@@ -43,14 +43,14 @@ class _HiveTelemetryScreenState extends State<HiveTelemetryScreen> {
             _rangeSelector(),
             const SizedBox(height: 18),
             Text(
-              'Hive #03 · Negombo Apiary · sample data',
+              'Hive #03 Â· Negombo Apiary Â· sample data',
               style: _text(12, FontWeight.w500, AppColors.textSecondary),
             ),
             const SizedBox(height: 14),
             const _TelemetryChart(
               title: 'Internal Hive Temperature',
-              value: '31.2°C',
-              range: 'Optimal range: 32–36°C',
+              value: '31.2Â°C',
+              range: 'Optimal range: 32â€“36Â°C',
               color: AppColors.accent3,
               points: [.66, .58, .49, .41, .53, .62, .47, .35, .25, .21],
             ),
@@ -58,7 +58,7 @@ class _HiveTelemetryScreenState extends State<HiveTelemetryScreen> {
             const _TelemetryChart(
               title: 'Humidity',
               value: '64%',
-              range: 'Optimal range: 50–60%',
+              range: 'Optimal range: 50â€“60%',
               color: AppColors.blue,
               points: [.31, .38, .53, .46, .62, .71, .55, .66, .81, .75],
             ),
@@ -165,7 +165,7 @@ class _HiveTelemetryScreenState extends State<HiveTelemetryScreen> {
           const ListTile(
             leading: Icon(Icons.sensors_outlined, color: AppColors.accent3),
             title: Text('Sensors'),
-            subtitle: Text('Temperature · Humidity · Weight'),
+            subtitle: Text('Temperature Â· Humidity Â· Weight'),
           ),
         ],
       ),

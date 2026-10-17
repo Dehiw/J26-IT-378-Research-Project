@@ -1,4 +1,4 @@
-import 'dart:developer' as developer;
+﻿import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,10 +12,10 @@ import '../utils/theme.dart';
 import '../widgets/main_bottom_nav.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
-import 'environment_dashboard_screen.dart';
-import 'disease_check_screen.dart';
-import 'forage_map_screen.dart';
-import 'hive_telemetry_screen.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
+import 'IT23183186_disease_check_screen.dart';
+import 'IT23183186_forage_map_screen.dart';
+import 'IT23183186_hive_telemetry_screen.dart';
 
 /// Home Page for Hive Sense App.
 /// - Left-side hamburger menu / drawer.
@@ -592,13 +592,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _ActivityItem(
         icon: Icons.sensors_rounded,
         title: 'Sensor data synced',
-        subtitle: 'All hives reported — 2 min ago',
+        subtitle: 'All hives reported â€” 2 min ago',
         color: AppColors.info,
       ),
       _ActivityItem(
         icon: Icons.thermostat_rounded,
         title: 'Temperature normal',
-        subtitle: 'Hive Box #01 — 35°C — 15 min ago',
+        subtitle: 'Hive Box #01 â€” 35Â°C â€” 15 min ago',
         color: AppColors.success,
       ),
       _ActivityItem(
@@ -818,7 +818,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                'Hive Sense • v1.0.0',
+                'Hive Sense â€¢ v1.0.0',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -882,7 +882,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ── Supporting sub-widgets ─────────────────────────────────────────
+// â”€â”€ Supporting sub-widgets â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _StatCard extends StatelessWidget {
   final IconData icon;
