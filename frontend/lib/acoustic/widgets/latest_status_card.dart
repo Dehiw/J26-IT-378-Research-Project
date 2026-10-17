@@ -60,13 +60,20 @@ class LatestStatusCard extends StatelessWidget {
           else ...[
             Row(
               children: [
-                StatusChip(label: latest.displayLabel),
-                const Spacer(),
-                Text(
-                  AcousticFormat.dayAndTime(latest.recordedAt, now),
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                Flexible(
+                  child: StatusChip(label: latest.displayLabel),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    AcousticFormat.dayAndTime(latest.recordedAt, now),
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ],

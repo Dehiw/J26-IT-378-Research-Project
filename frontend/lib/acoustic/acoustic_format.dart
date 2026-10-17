@@ -19,4 +19,12 @@ class AcousticFormat {
   /// "Today, 09:20 AM"
   static String dayAndTime(DateTime recordedAt, DateTime now) =>
       '${dayLabel(recordedAt, now)}, ${DateFormat('hh:mm a').format(recordedAt)}';
+
+  /// "00:18", for the recording timer. Minutes and seconds only.
+  static String clock(Duration duration) {
+    final totalSeconds = duration.inSeconds.clamp(0, 359999);
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
 }

@@ -13,8 +13,8 @@ class MockAcousticService implements AcousticService {
     this.delay = const Duration(milliseconds: 1500),
     List<AcousticResult>? seed,
     DateTime? now,
-  })  : _history = seed ?? _seedHistory(now ?? DateTime.now()),
-        _waveforms = {} {
+  }) : _history = seed ?? _seedHistory(now ?? DateTime.now()),
+       _waveforms = {} {
     _waveforms.addAll(_seedWaveforms(_history));
   }
 
@@ -71,9 +71,20 @@ class MockAcousticService implements AcousticService {
           : AudioQuality.good,
       modelVersion: mockModelVersion,
     );
-    _history.insert(0, result);
-    _waveforms[result.id] = _syntheticWaveform(bytes.length);
     return result;
+  }
+
+  @override
+  Future<void> saveResult(
+    AcousticResult result, {
+    List<double> waveform = const [],
+  }) async {
+    await Future<void>.delayed(delay ~/ 3);
+    if (_history.any((r) => r.id == result.id)) return;
+    _history.insert(0, result);
+    if (waveform.isNotEmpty) {
+      _waveforms[result.id] = List.unmodifiable(waveform);
+    }
   }
 
   @override
@@ -83,12 +94,12 @@ class MockAcousticService implements AcousticService {
   }
 
   static double _confidenceFor(AcousticLabel label) => switch (label) {
-        AcousticLabel.normal => 0.89,
-        AcousticLabel.queenless => 0.87,
-        AcousticLabel.swarming => 0.79,
-        AcousticLabel.stressAbnormal => 0.72,
-        AcousticLabel.unclearRecording => 0.41,
-      };
+    AcousticLabel.normal => 0.89,
+    AcousticLabel.queenless => 0.87,
+    AcousticLabel.swarming => 0.79,
+    AcousticLabel.stressAbnormal => 0.72,
+    AcousticLabel.unclearRecording => 0.41,
+  };
 
   /// Synthetic 0-1 samples, deterministic for a given seed.
   static List<double> _syntheticWaveform(int seed, {int count = 40}) {
@@ -113,22 +124,62 @@ class MockAcousticService implements AcousticService {
   static List<AcousticResult> _seedHistory(DateTime now) {
     // (label, confidence, hiveId, how long ago, audio quality)
     final entries = <(AcousticLabel, double, String, Duration, AudioQuality)>[
-      (AcousticLabel.normal, 0.89, 'H-001', const Duration(hours: 2),
-          AudioQuality.good),
-      (AcousticLabel.swarming, 0.79, 'H-001', const Duration(hours: 28),
-          AudioQuality.good),
-      (AcousticLabel.normal, 0.84, 'H-002', const Duration(days: 1, hours: 6),
-          AudioQuality.good),
-      (AcousticLabel.queenless, 0.87, 'H-001', const Duration(days: 2, hours: 3),
-          AudioQuality.good),
-      (AcousticLabel.stressAbnormal, 0.72, 'H-002', const Duration(days: 3),
-          AudioQuality.fair),
-      (AcousticLabel.unclearRecording, 0.41, 'H-002', const Duration(days: 4),
-          AudioQuality.poor),
-      (AcousticLabel.normal, 0.91, 'H-001', const Duration(days: 5),
-          AudioQuality.good),
-      (AcousticLabel.swarming, 0.81, 'H-002', const Duration(days: 6),
-          AudioQuality.good),
+      (
+        AcousticLabel.normal,
+        0.89,
+        'H-001',
+        const Duration(hours: 2),
+        AudioQuality.good,
+      ),
+      (
+        AcousticLabel.swarming,
+        0.79,
+        'H-001',
+        const Duration(hours: 28),
+        AudioQuality.good,
+      ),
+      (
+        AcousticLabel.normal,
+        0.84,
+        'H-002',
+        const Duration(days: 1, hours: 6),
+        AudioQuality.good,
+      ),
+      (
+        AcousticLabel.queenless,
+        0.87,
+        'H-001',
+        const Duration(days: 2, hours: 3),
+        AudioQuality.good,
+      ),
+      (
+        AcousticLabel.stressAbnormal,
+        0.72,
+        'H-002',
+        const Duration(days: 3),
+        AudioQuality.fair,
+      ),
+      (
+        AcousticLabel.unclearRecording,
+        0.41,
+        'H-002',
+        const Duration(days: 4),
+        AudioQuality.poor,
+      ),
+      (
+        AcousticLabel.normal,
+        0.91,
+        'H-001',
+        const Duration(days: 5),
+        AudioQuality.good,
+      ),
+      (
+        AcousticLabel.swarming,
+        0.81,
+        'H-002',
+        const Duration(days: 6),
+        AudioQuality.good,
+      ),
     ];
 
     final results = [

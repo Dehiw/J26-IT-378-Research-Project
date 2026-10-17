@@ -8,6 +8,7 @@ import '../acoustic_strings.dart';
 import '../models/acoustic_result.dart';
 import '../models/hive_option.dart';
 import '../services/acoustic_service.dart';
+import '../services/audio_upload.dart';
 import '../services/mock_acoustic_service.dart';
 import '../widgets/hive_picker_sheet.dart';
 import '../widgets/hive_selector_card.dart';
@@ -15,21 +16,34 @@ import '../widgets/latest_status_card.dart';
 import '../widgets/recent_analysis_tile.dart';
 
 /// Hive Sound Monitor: pick a hive, see its latest sound state, and start
-/// a recording or upload. Record and upload are disabled until their
-/// callbacks are supplied (Stage 3 and 4).
+/// a recording or an upload.
+///
+/// Record is enabled when [onRecordPressed] is supplied. Upload is enabled
+/// when both [filePicker] and [onAudioPicked] are supplied. The Monitor
+/// validates the picked file itself and shows problems in a message bar.
+/// After either callback finishes, the Monitor reloads its history.
 class HiveSoundMonitorScreen extends StatefulWidget {
   const HiveSoundMonitorScreen({
     super.key,
     this.service,
     this.onRecordPressed,
-    this.onUploadPressed,
+    this.filePicker,
+    this.onAudioPicked,
     this.onHistoryPressed,
   });
 
   /// Defaults to [MockAcousticService] when not supplied.
   final AcousticService? service;
-  final VoidCallback? onRecordPressed;
-  final VoidCallback? onUploadPressed;
+
+  /// Starts a recording for the given hive.
+  final Future<void> Function(String hiveId)? onRecordPressed;
+
+  /// Opens the system file picker. Null disables Upload.
+  final AudioFilePicker? filePicker;
+
+  /// Analyses a validated upload for the given hive.
+  final Future<void> Function(String hiveId, PickedAudio audio)? onAudioPicked;
+
   final VoidCallback? onHistoryPressed;
 
   @override
@@ -39,8 +53,7 @@ class HiveSoundMonitorScreen extends StatefulWidget {
 class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
   static const int _recentLimit = 5;
 
-  late final AcousticService _service =
-      widget.service ?? MockAcousticService();
+  late final AcousticService _service = widget.service ?? MockAcousticService();
 
   List<HiveOption> _hives = const [];
   List<AcousticResult> _history = const [];
@@ -272,9 +285,62 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
     );
   }
 
+  /// Runs a flow for the selected hive, then reloads history so a saved
+  /// result appears in Recent analyses.
+  Future<void> _runFlow(Future<void> Function() flow) async {
+    await flow();
+    if (mounted) await _load();
+  }
+
+  Future<void> _uploadAudio() async {
+    final hiveId = _selectedHiveId;
+    final picker = widget.filePicker;
+    final onPicked = widget.onAudioPicked;
+    if (hiveId == null || picker == null || onPicked == null) return;
+
+    PickedAudio? audio;
+    try {
+      audio = await picker.pick();
+    } catch (error, stack) {
+      developer.log(
+        'File picker failed',
+        name: 'AcousticMonitor',
+        error: error,
+        stackTrace: stack,
+      );
+      _showMessage(AcousticStrings.uploadPickFailed);
+      return;
+    }
+    if (audio == null || !mounted) return;
+
+    final problem = AudioUploadValidator.check(audio);
+    if (problem != null) {
+      _showMessage(AudioUploadValidator.message(problem));
+      return;
+    }
+    await _runFlow(() => onPicked(hiveId, audio!));
+  }
+
+  void _showMessage(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          text,
+          style: GoogleFonts.inter(fontSize: 14, color: AppColors.bgPrimary),
+        ),
+        backgroundColor: AppColors.textPrimary,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Widget _buildRecordButton() {
+    final hiveId = _selectedHiveId;
+    final onRecord = widget.onRecordPressed;
     return ElevatedButton.icon(
-      onPressed: widget.onRecordPressed,
+      onPressed: (onRecord == null || hiveId == null)
+          ? null
+          : () => _runFlow(() => onRecord(hiveId)),
       icon: const Icon(Icons.mic_outlined),
       label: Text(
         AcousticStrings.recordHiveSound,
@@ -293,8 +359,12 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
   }
 
   Widget _buildUploadButton() {
+    final enabled =
+        _selectedHiveId != null &&
+        widget.filePicker != null &&
+        widget.onAudioPicked != null;
     return OutlinedButton.icon(
-      onPressed: widget.onUploadPressed,
+      onPressed: enabled ? _uploadAudio : null,
       icon: const Icon(Icons.file_upload_outlined),
       label: Text(
         AcousticStrings.uploadAudio,
@@ -304,11 +374,7 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
         minimumSize: const Size.fromHeight(56),
         foregroundColor: AppColors.textPrimary,
         disabledForegroundColor: AppColors.textMuted,
-        side: BorderSide(
-          color: widget.onUploadPressed == null
-              ? AppColors.border
-              : AppColors.accent,
-        ),
+        side: BorderSide(color: enabled ? AppColors.accent : AppColors.border),
         shape: const StadiumBorder(),
       ),
     );

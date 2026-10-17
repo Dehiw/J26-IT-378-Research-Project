@@ -52,6 +52,13 @@ abstract class AcousticService {
     required String filename,
   });
 
+  /// Stores an analysis the user chose to keep. Unsaved analyses do not
+  /// appear in [getHistory]. [waveform] is empty when there are no samples.
+  Future<void> saveResult(
+    AcousticResult result, {
+    List<double> waveform = const [],
+  });
+
   /// Past analyses across all hives, newest first.
   Future<List<AcousticResult>> getHistory();
 

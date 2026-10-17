@@ -72,7 +72,9 @@ class HiveSelectorCard extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: onTap == null ? AppColors.textMuted : AppColors.accent,
+                  color: onTap == null
+                      ? AppColors.textMuted
+                      : AppColors.accent2,
                 ),
               ),
             ],
