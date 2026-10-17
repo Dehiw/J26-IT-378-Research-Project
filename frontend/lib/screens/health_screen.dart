@@ -414,11 +414,11 @@ class _HealthScreenState extends State<HealthScreen> {
         Text(
           'Colony Health\nMonitoring',
           style: GoogleFonts.inter(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
-            height: 1.2,
-            letterSpacing: -0.5,
+            height: 1.25,
+            letterSpacing: -0.3,
           ),
         ),
       ],
@@ -512,8 +512,8 @@ class _HealthScreenState extends State<HealthScreen> {
         Text(
           'Hives',
           style: GoogleFonts.inter(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
         ),

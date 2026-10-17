@@ -221,7 +221,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               widget.hiveName,
               style: GoogleFonts.inter(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
