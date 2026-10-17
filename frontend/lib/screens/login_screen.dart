@@ -80,6 +80,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _continueAsGuest() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -348,6 +356,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
+
+                  TextButton(
+                    onPressed: _continueAsGuest,
+                    child: Text(
+                      'Continue as guest',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.hiveLow,
+                      ),
+                    ),
+                  ),
 
                   // Switch to Sign Up
                   Row(
