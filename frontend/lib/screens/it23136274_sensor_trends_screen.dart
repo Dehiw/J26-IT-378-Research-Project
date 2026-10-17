@@ -12,7 +12,7 @@ import '../utils/theme.dart';
 ///
 /// Fully conforms to Skills/Frontend_skill.md:
 /// - Palette: Strictly uses AppColors (bgPrimary, bgSecondary, bgElevated, border,
-///   textPrimary, textSecondary, darkGreen, accent, hiveLow, hiveDoor).
+///   textPrimary, textSecondary, accent, hiveLow, hiveDoor).
 /// - Typography: GoogleFonts.inter across all elements with standard weights.
 /// - Architecture: Scaffold, AppBar, SafeArea, SingleChildScrollView (padding 20).
 /// - Shared 5-item fixed bottom navigation with AppColors.hiveLow.
@@ -592,7 +592,7 @@ class _IT23136274SensorTrendsScreenState
               _sensorTitle,
               style: GoogleFonts.inter(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -675,18 +675,18 @@ class _IT23136274SensorTrendsScreenState
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.darkGreen : AppColors.bgSecondary,
+          color: isSelected ? AppColors.accent : AppColors.bgSecondary,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: isSelected ? AppColors.darkGreen : AppColors.border,
-            width: 1.0,
+            color: isSelected ? AppColors.accent : AppColors.border,
+            width: 1.2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.darkGreen.withValues(alpha: 0.25),
+                    color: AppColors.accent.withValues(alpha: 0.35),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -702,9 +702,9 @@ class _IT23136274SensorTrendsScreenState
         child: Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? AppColors.bgSecondary : AppColors.textPrimary,
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
           ),
         ),
       ),
@@ -716,9 +716,9 @@ class _IT23136274SensorTrendsScreenState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.bgElevated.withValues(alpha: 0.6),
+        color: AppColors.bgElevated,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6), width: 0.8),
+        border: Border.all(color: AppColors.border, width: 0.8),
       ),
       child: Row(
         children: [
@@ -748,12 +748,12 @@ class _IT23136274SensorTrendsScreenState
         padding: const EdgeInsets.symmetric(vertical: 9),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.darkGreen : Colors.transparent,
+          color: isSelected ? AppColors.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.darkGreen.withValues(alpha: 0.22),
+                    color: AppColors.accent.withValues(alpha: 0.32),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -763,9 +763,9 @@ class _IT23136274SensorTrendsScreenState
         child: Text(
           label,
           style: GoogleFonts.inter(
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? AppColors.bgSecondary : AppColors.textSecondary,
+            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
           ),
         ),
       ),
@@ -842,7 +842,7 @@ class _IT23136274SensorTrendsScreenState
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 26,
+                      reservedSize: 28,
                       interval: data.bottomInterval,
                       getTitlesWidget: (value, meta) {
                         final label = data.bottomTitles[value.toInt()] ?? '';
@@ -853,7 +853,7 @@ class _IT23136274SensorTrendsScreenState
                           child: Text(
                             label,
                             style: GoogleFonts.inter(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textSecondary,
                             ),
@@ -865,7 +865,7 @@ class _IT23136274SensorTrendsScreenState
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 32,
+                      reservedSize: 34,
                       interval: data.leftInterval,
                       getTitlesWidget: (value, meta) {
                         if (value < data.minY || value > data.maxY) {
@@ -877,7 +877,7 @@ class _IT23136274SensorTrendsScreenState
                           child: Text(
                             value.toInt().toString(),
                             style: GoogleFonts.inter(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textSecondary,
                             ),
@@ -988,7 +988,7 @@ class _IT23136274SensorTrendsScreenState
           label,
           style: GoogleFonts.inter(
             fontSize: 13,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
           ),
         ),
@@ -1010,7 +1010,7 @@ class _IT23136274SensorTrendsScreenState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgElevated.withValues(alpha: 0.45),
+        color: AppColors.bgElevated.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.border,
@@ -1021,10 +1021,11 @@ class _IT23136274SensorTrendsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.bgElevated,
+              color: AppColors.bgSecondary,
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border, width: 0.8),
             ),
             child: const Icon(
               Icons.lightbulb_rounded,
@@ -1040,17 +1041,17 @@ class _IT23136274SensorTrendsScreenState
                 Text(
                   'Insights',
                   style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.hiveDoor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   data.insight,
                   style: GoogleFonts.inter(
-                    fontSize: 13,
-                    height: 1.45,
+                    fontSize: 14,
+                    height: 1.5,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textSecondary,
                   ),
