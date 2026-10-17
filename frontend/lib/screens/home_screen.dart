@@ -8,8 +8,8 @@ import '../models/apiary_model.dart';
 import '../services/auth_service.dart';
 import '../services/apiary_service.dart';
 import '../services/inference_service.dart';
+import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
-import '../widgets/main_bottom_nav.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
 import 'relocation_assessment_screen_IT23185302.dart';
@@ -36,7 +36,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+/// Route observer used to detect when the user returns to HomeScreen.
+final RouteObserver<ModalRoute<void>> homeRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _currentIndex = 0;
 
   // Apiary data
@@ -44,6 +48,12 @@ class _HomeScreenState extends State<HomeScreen> {
   ApiaryModel? _selectedApiary;
   List<HiveModel> _hives = [];
   bool _loadingApiaries = true;
+
+  // Normal User live stats
+  int _myReportCount = 0;
+  int _activeBeekeeperCount = 0;
+  int _completedCount = 0;
+  bool _loadingStats = true;
 
   @override
   void initState() {
@@ -62,6 +72,51 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     _loadApiaries();
+    _loadNormalUserStats();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    homeRouteObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    homeRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  /// Called when this screen becomes active again (e.g. after popping from sub-screen)
+  @override
+  void didPopNext() {
+    _loadNormalUserStats();
+  }
+
+  Future<void> _loadNormalUserStats() async {
+    setState(() => _loadingStats = true);
+    try {
+      // Fetch user's own reports
+      final reports = await WildBeeService.instance.fetchMyReports();
+      // Fetch registered beekeepers from auth endpoint
+      final bkRes = await AuthService.instance.fetchRegisteredBeekeepers();
+      final completed = reports
+          .where(
+            (r) => (r['status'] ?? '').toString().toLowerCase() == 'completed',
+          )
+          .length;
+      if (mounted) {
+        setState(() {
+          _myReportCount = reports.length;
+          _activeBeekeeperCount = bkRes.length;
+          _completedCount = completed;
+          _loadingStats = false;
+        });
+      }
+    } catch (e) {
+      developer.log('Stats load error: $e', name: 'HomeScreen');
+      if (mounted) setState(() => _loadingStats = false);
+    }
   }
 
   Future<void> _loadApiaries() async {
@@ -142,9 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (index == 2) {
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const MyRequestsScreenIT23185302(),
-        ),
+        MaterialPageRoute(builder: (_) => const MyRequestsScreenIT23185302()),
       );
       return;
     }
@@ -173,9 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: AppColors.panelBlack,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -273,11 +324,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final UserModel? user = AuthService.instance.currentUser;
     final bool isNormalUser = user?.isNormalUser ?? false;
-    final String initial =
-        (user?.name.isNotEmpty == true) ? user!.name[0].toUpperCase() : 'U';
     final String initial = (user?.name.isNotEmpty == true)
         ? user!.name[0].toUpperCase()
-        : 'B';
+        : 'U';
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -320,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.hiveLow,
-          onRefresh: isNormalUser ? () async {} : _loadApiaries,
+          onRefresh: isNormalUser ? _loadNormalUserStats : _loadApiaries,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -336,88 +385,55 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 20),
                       _buildSummaryCards(),
                       const SizedBox(height: 20),
-                      Text('Quick Actions', style: GoogleFonts.inter(
-                        fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                      const SizedBox(height: 12),
-                      _buildQuickActions(),
-                      const SizedBox(height: 20),
-                      if (_hives.isNotEmpty) ...[
-                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                          Text('Hive Boxes', style: GoogleFonts.inter(
-                            fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                          Text('${_hives.length} total', style: GoogleFonts.inter(
-                            fontSize: 12, color: AppColors.textSecondary)),
-                        ]),
-                        const SizedBox(height: 12),
-                        _buildHiveOverview(),
-                        const SizedBox(height: 20),
-                      ],
-                      Text('Recent Activity', style: GoogleFonts.inter(
-                        fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                      const SizedBox(height: 12),
-                      _buildRecentActivity(),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 16),
-                _buildGreeting(user),
-                const SizedBox(height: 20),
-                _buildApiarySelector(),
-                const SizedBox(height: 20),
-                _buildSummaryCards(),
-                const SizedBox(height: 20),
-                Text(
-                  'Quick Actions',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildQuickActions(),
-                const SizedBox(height: 20),
-                if (_hives.isNotEmpty) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
                       Text(
-                        'Hive Boxes',
+                        'Quick Actions',
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      _buildQuickActions(),
+                      const SizedBox(height: 20),
+                      if (_hives.isNotEmpty) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Hive Boxes',
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${_hives.length} total',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildHiveOverview(),
+                        const SizedBox(height: 20),
+                      ],
                       Text(
-                        '${_hives.length} total',
+                        'Recent Activity',
                         style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      _buildRecentActivity(),
+                      const SizedBox(height: 32),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildHiveOverview(),
-                  const SizedBox(height: 20),
-                ],
-                Text(
-                  'Recent Activity',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildRecentActivity(),
-                const SizedBox(height: 32),
-              ],
-            ),
           ),
         ),
       ),
@@ -430,8 +446,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final greeting = hour < 12
         ? 'Good Morning'
         : hour < 17
-            ? 'Good Afternoon'
-            : 'Good Evening';
+        ? 'Good Afternoon'
+        : 'Good Evening';
     final name = user?.name.split(' ').first ?? 'User';
     final isNormalUser = user?.isNormalUser ?? false;
 
@@ -478,8 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(
                 isNormalUser ? Icons.person_rounded : Icons.hive_rounded,
                 size: 13,
-                color:
-                    isNormalUser ? AppColors.badgeLeafFg : AppColors.hiveLow,
+                color: isNormalUser ? AppColors.badgeLeafFg : AppColors.hiveLow,
               ),
               const SizedBox(width: 5),
               Text(
@@ -487,24 +502,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color:
-                      isNormalUser ? AppColors.badgeLeafFg : AppColors.hiveLow,
+                  color: isNormalUser
+                      ? AppColors.badgeLeafFg
+                      : AppColors.hiveLow,
                 ),
               ),
             ],
           ),
         ),
       ],
-        ? 'Good Afternoon'
-        : 'Good Evening';
-    final name = user?.name.split(' ').first ?? 'Beekeeper';
-    return Text(
-      '$greeting, $name',
-      style: GoogleFonts.inter(
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-      ),
     );
   }
 
@@ -855,10 +861,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSidebar(UserModel? user, String initial) {
-    final String displayName =
-        (user != null && user.name.isNotEmpty) ? user.name : 'Guest User';
-    final String displayEmail =
-        (user != null && user.email.isNotEmpty) ? user.email : 'Not signed in';
+    final String displayName = (user != null && user.name.isNotEmpty)
+        ? user.name
+        : 'Guest User';
+    final String displayEmail = (user != null && user.email.isNotEmpty)
+        ? user.email
+        : 'Not signed in';
     return Drawer(
       backgroundColor: AppColors.bgSecondary,
       child: SafeArea(
@@ -1107,14 +1115,24 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: _onNavTapped,
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.monitor_heart_outlined), label: 'Health'),
-        BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), label: 'Relocate'),
-        BottomNavigationBarItem(icon: Icon(Icons.graphic_eq_rounded), label: 'Acoustic'),
-        BottomNavigationBarItem(icon: Icon(Icons.eco_outlined), label: 'Environment'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.monitor_heart_outlined),
+          label: 'Health',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.location_on_outlined),
+          label: 'Relocate',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.graphic_eq_rounded),
+          label: 'Acoustic',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.eco_outlined),
+          label: 'Environment',
+        ),
       ],
     );
-  Widget _buildBottomNav() {
-    return MainBottomNav(currentIndex: _currentIndex, onTap: _onNavTapped);
   }
 
   Widget _buildNormalUserBody(UserModel? user) {
@@ -1229,33 +1247,33 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 24),
 
         // Quick Stats / Overview
-        const Row(
+        Row(
           children: [
             Expanded(
               child: _StatCard(
                 icon: Icons.assignment_outlined,
                 label: 'My Reports',
-                value: '0',
+                value: _loadingStats ? '...' : '$_myReportCount',
                 color: AppColors.hiveLow,
                 bg: AppColors.badgeBeeBg,
               ),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Expanded(
               child: _StatCard(
                 icon: Icons.verified_user_outlined,
                 label: 'Beekeepers',
-                value: '12 Active',
+                value: _loadingStats ? '...' : '$_activeBeekeeperCount',
                 color: AppColors.success,
                 bg: AppColors.badgeLeafBg,
               ),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Expanded(
               child: _StatCard(
                 icon: Icons.eco_outlined,
-                label: 'Colonies Saved',
-                value: '100%',
+                label: 'Completed',
+                value: _loadingStats ? '...' : '$_completedCount',
                 color: AppColors.accent3,
                 bg: AppColors.badgeLeafBg,
               ),
@@ -1282,8 +1300,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const WildBeeHiveReportScreenIT23185302(),
+                      builder: (_) => const WildBeeHiveReportScreenIT23185302(),
                     ),
                   );
                 },
@@ -1352,24 +1369,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.pan_tool_outlined,
                 color: AppColors.warning,
                 title: 'Do not disturb or throw objects',
-                subtitle:
-                    'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance.',
+                subtitle: 'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.do_not_touch_outlined,
                 color: AppColors.error,
                 title: 'Avoid chemical insect sprays',
-                subtitle:
-                    'Pesticides contaminate the ecosystem and make relocation impossible.',
+                subtitle: 'Pesticides contaminate the ecosystem and make relocation impossible.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.pets_outlined,
                 color: AppColors.info,
                 title: 'Secure pets and children indoors',
-                subtitle:
-                    'Ensure animals stay clear of flight paths until the colony is assessed.',
+                subtitle: 'Ensure animals stay clear of flight paths until the colony is assessed.',
               ),
             ],
           ),
@@ -1451,7 +1465,7 @@ class _StatCard extends StatelessWidget {
       border: Border.all(color: AppColors.border),
     ),
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: 32,
@@ -1470,6 +1484,7 @@ class _StatCard extends StatelessWidget {
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 2),
         Text(
@@ -1478,6 +1493,7 @@ class _StatCard extends StatelessWidget {
             fontSize: 11,
             color: AppColors.textSecondary,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     ),
