@@ -59,9 +59,10 @@ def submit_wild_bee_report(
         "has_photo": request.has_photo,
         "photo_url": request.photo_url,
         "notes": request.notes,
-        "status": "Submitted",
-        "assigned_beekeeper": None,
-        "assigned_phone": None,
+        "status": "Accepted" if request.assigned_beekeeper else "Submitted",
+        "assigned_beekeeper": request.assigned_beekeeper,
+        "assigned_phone": request.assigned_phone,
+        "assigned_beekeeper_id": request.assigned_beekeeper_id,
         "created_at": now_iso,
     }
 
@@ -72,7 +73,7 @@ def submit_wild_bee_report(
         success=True,
         report_id=report_id,
         message="Wild bee hive report submitted successfully",
-        status="Submitted",
+        status="Accepted" if request.assigned_beekeeper else "Submitted",
         created_at=now_iso,
         address=request.address.strip(),
         gps_coordinates=request.gps_coordinates,
@@ -80,8 +81,8 @@ def submit_wild_bee_report(
         height=request.height,
         inside_structure=request.inside_structure,
         safe_access=request.safe_access,
-        assigned_beekeeper=None,
-        assigned_phone=None,
+        assigned_beekeeper=request.assigned_beekeeper,
+        assigned_phone=request.assigned_phone,
     )
 
 
@@ -193,4 +194,37 @@ def update_report_status(
         "message": f"Report {report_id} updated to {status_str}.",
         "report": data,
     }
+
+
+@router.patch("/{report_id}/assign-beekeeper")
+def assign_beekeeper_to_report(
+    report_id: str,
+    beekeeper_name: str,
+    beekeeper_phone: Optional[str] = None,
+    beekeeper_id: Optional[str] = None,
+):
+    """Assigns a selected beekeeper to an existing report."""
+    doc_ref = db.collection("wild_bee_reports").document(report_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Report {report_id} not found."
+        )
+    updates = {
+        "status": "Accepted",
+        "assigned_beekeeper": beekeeper_name,
+        "assigned_phone": beekeeper_phone or "",
+        "assigned_beekeeper_id": beekeeper_id or "",
+        "assigned_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    doc_ref.update(updates)
+    data = doc_ref.get().to_dict()
+    return {
+        "success": True,
+        "message": f"Beekeeper {beekeeper_name} successfully assigned to report {report_id}.",
+        "report": data,
+    }
+
 

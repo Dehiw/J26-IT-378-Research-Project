@@ -80,15 +80,16 @@ class AuthService {
   Future<List<Map<String, dynamic>>> fetchRegisteredBeekeepers() async {
     final endpoint = '${ApiConfig.baseUrl}/auth/beekeepers';
     try {
-      final res = await _getJson(endpoint);
-      final list = (res['beekeepers'] as List<dynamic>? ?? [])
-          .map((e) => e as Map<String, dynamic>)
+      final res = await _getJson(endpoint, token: _token);
+      final rawList = res['beekeepers'] as List<dynamic>? ?? [];
+      final list = rawList
+          .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
       return list;
     } catch (e) {
       developer.log('Error fetching registered beekeepers: $e',
           name: 'AuthService');
-      return [];
+      rethrow;
     }
   }
 

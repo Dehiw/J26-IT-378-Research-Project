@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
@@ -230,6 +231,336 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
         onReportCancelled: () {
           _loadReports();
         },
+        onSelectBeekeeperTapped: () {
+          _openSelectBeekeeperSheet(report);
+        },
+      ),
+    );
+  }
+
+  // ── Select Beekeeper According to Location Sheet ────────────
+  void _openSelectBeekeeperSheet(Map<String, dynamic> report) {
+    final reportId = report['id']?.toString() ?? '';
+    final reportAddress =
+        (report['address'] ?? 'Sri Lanka').toString().toLowerCase();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: AppColors.bgSecondary,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Select Beekeeper',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'According to location: ${report['display_id'] ?? reportId}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded,
+                        color: AppColors.textSecondary),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+              const Divider(height: 18, color: AppColors.border),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.hiveLow.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on_rounded,
+                        size: 16, color: AppColors.accent2),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Hive Location: ${report['address'] ?? 'Sri Lanka'}',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: AuthService.instance.fetchRegisteredBeekeepers(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(AppColors.hiveLow),
+                        ),
+                      );
+                    }
+                    final list = snapshot.data ?? [];
+                    if (list.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.groups_outlined,
+                                size: 36, color: AppColors.textSecondary),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No registered beekeepers in database yet.',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Sort matching location first
+                    final sorted = List<Map<String, dynamic>>.from(list);
+                    sorted.sort((a, b) {
+                      final aArea =
+                          (a['area_address'] ?? '').toString().toLowerCase();
+                      final bArea =
+                          (b['area_address'] ?? '').toString().toLowerCase();
+                      final aMatch = reportAddress.isNotEmpty &&
+                          reportAddress.contains(aArea);
+                      final bMatch = reportAddress.isNotEmpty &&
+                          reportAddress.contains(bArea);
+                      if (aMatch && !bMatch) return -1;
+                      if (!aMatch && bMatch) return 1;
+                      return 0;
+                    });
+
+                    return ListView.separated(
+                      itemCount: sorted.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) {
+                        final bk = sorted[i];
+                        final name = (bk['name'] ?? 'Beekeeper').toString();
+                        final apiary =
+                            (bk['apiary_name'] ?? 'Registered Apiary')
+                                .toString();
+                        final area =
+                            (bk['area_address'] ?? 'Sri Lanka').toString();
+                        final phone = (bk['phone'] ?? '').toString();
+                        final aArea = area.toLowerCase();
+                        final isMatch = reportAddress.isNotEmpty &&
+                            (reportAddress.contains(aArea) ||
+                                aArea.contains(reportAddress) ||
+                                (aArea.contains('gampaha') &&
+                                    reportAddress.contains('gampaha')) ||
+                                (aArea.contains('colombo') &&
+                                    reportAddress.contains('colombo')) ||
+                                (aArea.contains('kandy') &&
+                                    reportAddress.contains('kandy')));
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgSecondary,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isMatch
+                                  ? AppColors.hiveLow
+                                  : AppColors.border,
+                              width: isMatch ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor:
+                                    AppColors.hiveLow.withValues(alpha: 0.15),
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : 'B',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.hiveLow,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            name,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (isMatch) ...[
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 5, vertical: 1.5),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.success
+                                                  .withValues(alpha: 0.12),
+                                              borderRadius:
+                                                  BorderRadius.circular(5),
+                                            ),
+                                            child: Text(
+                                              'Nearby Area',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w700,
+                                                color: AppColors.success,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '$apiary • $area',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (phone.isNotEmpty)
+                                      Text(
+                                        phone,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.hiveLow,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.hiveLow,
+                                  foregroundColor: AppColors.bgSecondary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(ctx);
+                                  final messenger = ScaffoldMessenger.of(context);
+                                  try {
+                                    await WildBeeService.instance
+                                        .assignBeekeeper(
+                                      reportId: reportId,
+                                      beekeeperName: name,
+                                      beekeeperPhone: phone,
+                                      beekeeperId:
+                                          (bk['id'] ?? '').toString(),
+                                    );
+                                    _loadReports();
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Assigned $name according to location!',
+                                            style: GoogleFonts.inter(
+                                              color: AppColors.bgSecondary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          backgroundColor: AppColors.success,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content:
+                                              Text('Failed to assign: $e'),
+                                          backgroundColor: AppColors.error,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Text(
+                                  'Assign',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -300,7 +631,7 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                               vertical: 12,
                             ),
                             itemCount: _filteredReports.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 14),
                             itemBuilder: (context, i) {
                               return _buildRequestCard(_filteredReports[i]);
@@ -563,34 +894,84 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
           ),
           const Divider(height: 1, color: AppColors.border),
 
-          // 3. View Details Button
-          InkWell(
-            onTap: () => _openDetailsModal(report),
-            borderRadius: const BorderRadius.vertical(
-              bottom: Radius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'View Details',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.hiveLow,
+          // 3. Action Buttons: Select Beekeeper + View Details
+          Row(
+            children: [
+              if ((beekeeper == null || beekeeper.isEmpty) &&
+                  status != 'Cancelled' &&
+                  status != 'Completed')
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _openSelectBeekeeperSheet(report),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(15),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      decoration: BoxDecoration(
+                        color: AppColors.hiveLow.withValues(alpha: 0.1),
+                        border: const Border(
+                          right: BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.person_pin_circle_rounded,
+                            size: 14,
+                            color: AppColors.hiveLow,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Select Beekeeper',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.hiveLow,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 12,
-                    color: AppColors.hiveLow,
+                ),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _openDetailsModal(report),
+                  borderRadius: BorderRadius.only(
+                    bottomRight: const Radius.circular(15),
+                    bottomLeft: (beekeeper != null && beekeeper.isNotEmpty) ||
+                            status == 'Cancelled' ||
+                            status == 'Completed'
+                        ? const Radius.circular(15)
+                        : Radius.zero,
                   ),
-                ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'View Details',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.hiveLow,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 12,
+                          color: AppColors.hiveLow,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -622,7 +1003,7 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
             child: Image.network(
               photoUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _buildFallbackThumbnail(),
+              errorBuilder: (_, _, _) => _buildFallbackThumbnail(),
             ),
           ),
         );
@@ -740,10 +1121,12 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
 class _RequestDetailsSheet extends StatefulWidget {
   final Map<String, dynamic> report;
   final VoidCallback onReportCancelled;
+  final VoidCallback? onSelectBeekeeperTapped;
 
   const _RequestDetailsSheet({
     required this.report,
     required this.onReportCancelled,
+    this.onSelectBeekeeperTapped,
   });
 
   @override
@@ -1453,6 +1836,91 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                                 beekeeperName,
                                 beekeeperPhone,
                               ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  if ((beekeeperName == null || beekeeperName.isEmpty) &&
+                      _status != 'Cancelled' &&
+                      _status != 'Completed') ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgElevated,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor:
+                                    AppColors.hiveLow.withValues(alpha: 0.15),
+                                child: const Icon(
+                                  Icons.person_pin_circle_rounded,
+                                  color: AppColors.hiveLow,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'No Beekeeper Assigned Yet',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Select a registered apiarist according to this hive\'s location.',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.hiveLow,
+                                foregroundColor: AppColors.bgSecondary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 11),
+                              ),
+                              icon: const Icon(Icons.person_pin_circle_rounded,
+                                  size: 16),
+                              label: Text(
+                                'Select Beekeeper by Location',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                widget.onSelectBeekeeperTapped?.call();
+                              },
                             ),
                           ),
                         ],

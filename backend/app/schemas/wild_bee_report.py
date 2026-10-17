@@ -12,6 +12,9 @@ class WildBeeReportCreate(BaseModel):
     has_photo: bool = False
     photo_url: Optional[str] = None
     notes: Optional[str] = None
+    assigned_beekeeper: Optional[str] = None
+    assigned_phone: Optional[str] = None
+    assigned_beekeeper_id: Optional[str] = None
 
 
 class WildBeeReportResponse(BaseModel):

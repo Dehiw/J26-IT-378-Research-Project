@@ -22,6 +22,9 @@ class WildBeeService {
     bool hasPhoto = false,
     String? photoUrl,
     String? notes,
+    String? assignedBeekeeper,
+    String? assignedPhone,
+    String? assignedBeekeeperId,
   }) async {
     final endpoint = '${ApiConfig.baseUrl}/wild-bee-reports';
     final payload = {
@@ -34,6 +37,9 @@ class WildBeeService {
       'has_photo': hasPhoto,
       'photo_url': photoUrl,
       'notes': notes,
+      'assigned_beekeeper': assignedBeekeeper,
+      'assigned_phone': assignedPhone,
+      'assigned_beekeeper_id': assignedBeekeeperId,
     };
 
     developer.log('Submitting wild bee report to backend: $endpoint',
@@ -62,6 +68,21 @@ class WildBeeService {
       return list;
     } catch (e) {
       developer.log('Error fetching user reports: $e', name: 'WildBeeService');
+      return [];
+    }
+  }
+
+  /// Fetches ALL wild bee hive reports (for beekeepers to review & manage).
+  Future<List<Map<String, dynamic>>> fetchAllReports() async {
+    final endpoint = '${ApiConfig.baseUrl}/wild-bee-reports/all';
+    try {
+      final res = await _getJson(endpoint);
+      final list = (res['reports'] as List<dynamic>? ?? [])
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+      return list;
+    } catch (e) {
+      developer.log('Error fetching all reports: $e', name: 'WildBeeService');
       return [];
     }
   }
@@ -153,6 +174,30 @@ class WildBeeService {
       return true;
     } catch (e) {
       developer.log('Error cancelling report: $e', name: 'WildBeeService');
+      rethrow;
+    }
+  }
+
+  /// Assigns a selected beekeeper to a report.
+  Future<Map<String, dynamic>> assignBeekeeper({
+    required String reportId,
+    required String beekeeperName,
+    String? beekeeperPhone,
+    String? beekeeperId,
+  }) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/wild-bee-reports/$reportId/assign-beekeeper').replace(
+      queryParameters: {
+        'beekeeper_name': beekeeperName,
+        if (beekeeperPhone != null && beekeeperPhone.isNotEmpty)
+          'beekeeper_phone': beekeeperPhone,
+        if (beekeeperId != null && beekeeperId.isNotEmpty)
+          'beekeeper_id': beekeeperId,
+      },
+    );
+    try {
+      return await _patchJson(uri.toString(), {});
+    } catch (e) {
+      developer.log('Error assigning beekeeper: $e', name: 'WildBeeService');
       rethrow;
     }
   }

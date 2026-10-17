@@ -55,6 +55,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _completedCount = 0;
   bool _loadingStats = true;
 
+  // Beekeeper dashboard stats & recent activity
+  int _bkPending = 0;
+  int _bkActive = 0;
+  int _bkCompleted = 0;
+  bool _loadingBkStats = true;
+  List<Map<String, dynamic>> _recentRelocationActivity = [];
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
     _loadApiaries();
     _loadNormalUserStats();
+    _loadBeekeeperStats();
   }
 
   @override
@@ -91,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   void didPopNext() {
     _loadNormalUserStats();
+    _loadBeekeeperStats();
   }
 
   Future<void> _loadNormalUserStats() async {

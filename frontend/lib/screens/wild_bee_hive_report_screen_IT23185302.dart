@@ -15,7 +15,12 @@ import 'beekeepers_directory_screen_IT23185302.dart';
 /// Research Component IT23185302:
 /// Wild Bee Hive Reporting & Decision Support System (Normal Users / Homeowners).
 class WildBeeHiveReportScreenIT23185302 extends StatefulWidget {
-  const WildBeeHiveReportScreenIT23185302({super.key});
+  final Map<String, dynamic>? preselectedBeekeeper;
+
+  const WildBeeHiveReportScreenIT23185302({
+    super.key,
+    this.preselectedBeekeeper,
+  });
 
   @override
   State<WildBeeHiveReportScreenIT23185302> createState() =>
@@ -36,7 +41,12 @@ class _WildBeeHiveReportScreenIT23185302State
   String? _detectedArea;
   bool _isFetchingGps = false;
 
-  // 3. Colony questions state
+  // 3. Beekeeper selection state (according to location)
+  Map<String, dynamic>? _selectedBeekeeper;
+  List<Map<String, dynamic>> _dbBeekeepers = [];
+  bool _isLoadingBeekeepers = false;
+
+  // 4. Colony questions state
   String? _selectedLocation; // 'Roof', 'Wall', 'Tree', 'Other'
   final _otherLocationController = TextEditingController();
 
@@ -49,7 +59,24 @@ class _WildBeeHiveReportScreenIT23185302State
   @override
   void initState() {
     super.initState();
+    _selectedBeekeeper = widget.preselectedBeekeeper;
     _detectInitialLocation();
+    _fetchBeekeepers();
+  }
+
+  Future<void> _fetchBeekeepers() async {
+    setState(() => _isLoadingBeekeepers = true);
+    try {
+      final list = await AuthService.instance.fetchRegisteredBeekeepers();
+      if (mounted) {
+        setState(() {
+          _dbBeekeepers = list;
+          _isLoadingBeekeepers = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingBeekeepers = false);
+    }
   }
 
   Future<void> _detectInitialLocation() async {
@@ -77,6 +104,7 @@ class _WildBeeHiveReportScreenIT23185302State
 
   // ── Image Picking ───────────────────────────────────────────
   Future<void> _pickImage(ImageSource source) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final xFile = await _picker.pickImage(
         source: source,
@@ -89,7 +117,7 @@ class _WildBeeHiveReportScreenIT23185302State
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Could not open image: $e'),
           backgroundColor: AppColors.error,
@@ -404,6 +432,9 @@ class _WildBeeHiveReportScreenIT23185302State
         safeAccess: _selectedSafeAccess!,
         hasPhoto: _pickedImage != null,
         photoUrl: photoUrl,
+        assignedBeekeeper: _selectedBeekeeper?['name'],
+        assignedPhone: _selectedBeekeeper?['phone'],
+        assignedBeekeeperId: _selectedBeekeeper?['id'],
       );
 
       if (!mounted) return;
@@ -423,6 +454,8 @@ class _WildBeeHiveReportScreenIT23185302State
             insideStructure: _selectedInsideStructure!,
             safeAccess: _selectedSafeAccess!,
             imageFile: _pickedImage,
+            assignedBeekeeper: _selectedBeekeeper?['name'],
+            assignedPhone: _selectedBeekeeper?['phone'],
           ),
         ),
       );
@@ -510,253 +543,7 @@ class _WildBeeHiveReportScreenIT23185302State
     );
   }
 
-  void _showMyRequestsSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.78,
-        decoration: const BoxDecoration(
-          color: AppColors.bgSecondary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'My Relocation Requests',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Stored in Firestore database',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppColors.textSecondary),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, color: AppColors.border),
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: WildBeeService.instance.fetchMyReports(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.hiveLow),
-                      ),
-                    );
-                  }
 
-                  final reports = snapshot.data ?? [];
-                  if (reports.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.bgElevated,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.assignment_outlined,
-                                size: 36,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              'No Reports Found',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'When you submit a wild bee hive report, it will be saved to the database and displayed here.',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: reports.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, i) {
-                      final r = reports[i];
-                      final id = r['id'] ?? 'Report #${i + 1}';
-                      final address = r['address'] ?? 'Sri Lanka';
-                      final spot = r['colony_location'] ?? 'Colony';
-                      final height = r['height'] ?? '';
-                      final status = r['status'] ?? 'Pending Beekeeper';
-                      final createdAt = (r['created_at'] ?? '').toString();
-                      final dateDisplay = createdAt.length >= 10
-                          ? createdAt.substring(0, 10)
-                          : 'Recent';
-
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgElevated,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.receipt_long_rounded,
-                                      size: 16,
-                                      color: AppColors.hiveLow,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      id,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.hiveLow
-                                        .withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    status,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.hiveLow,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.location_on_outlined,
-                                  size: 14,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    address,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      color: AppColors.textPrimary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 4,
-                              children: [
-                                _buildMiniBadge('Spot: $spot'),
-                                if (height.isNotEmpty)
-                                  _buildMiniBadge('Height: $height'),
-                                _buildMiniBadge('Date: $dateDisplay'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMiniBadge(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: AppColors.bgPrimary,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -828,7 +615,17 @@ class _WildBeeHiveReportScreenIT23185302State
                 _buildLocationCard(),
                 const SizedBox(height: 24),
 
-                // ── SECTION 3: WHERE IS THE BEE COLONY? ─────────────
+                // ── SECTION 3: SELECT BEEKEEPER (BY LOCATION) ──────
+                _buildSectionHeader(
+                  title: 'Select Beekeeper',
+                  subtitle: 'Choose a verified beekeeper registered near your hive location',
+                  icon: Icons.person_pin_circle_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildSelectBeekeeperSection(),
+                const SizedBox(height: 24),
+
+                // ── SECTION 4: WHERE IS THE BEE COLONY? ─────────────
                 _buildSectionHeader(
                   title: 'Where is the bee colony?',
                   subtitle: 'Select where the bees have built their nest',
@@ -1452,6 +1249,268 @@ class _WildBeeHiveReportScreenIT23185302State
     );
   }
 
+  Widget _buildSelectBeekeeperSection() {
+    final currentAddress = _addressController.text.trim().toLowerCase();
+    final currentArea = (_detectedArea ?? '').toLowerCase();
+
+    // Sort beekeepers so those matching the location are first
+    final sortedBeekeepers = List<Map<String, dynamic>>.from(_dbBeekeepers);
+    sortedBeekeepers.sort((a, b) {
+      final aArea = (a['area_address'] ?? '').toString().toLowerCase();
+      final bArea = (b['area_address'] ?? '').toString().toLowerCase();
+
+      final aMatch = (currentAddress.isNotEmpty && (currentAddress.contains(aArea) || aArea.contains(currentAddress))) ||
+          (currentArea.isNotEmpty && (currentArea.contains(aArea) || aArea.contains(currentArea)));
+      final bMatch = (currentAddress.isNotEmpty && (currentAddress.contains(bArea) || bArea.contains(currentAddress))) ||
+          (currentArea.isNotEmpty && (currentArea.contains(bArea) || bArea.contains(currentArea)));
+
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    });
+
+    final isAutoAssign = _selectedBeekeeper == null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Option 1: Auto-assign Nearest Beekeeper
+        GestureDetector(
+          onTap: () {
+            setState(() => _selectedBeekeeper = null);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isAutoAssign ? AppColors.bgElevated : AppColors.bgSecondary,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isAutoAssign ? AppColors.hiveLow : AppColors.border,
+                width: isAutoAssign ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isAutoAssign
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_off_rounded,
+                  color: isAutoAssign ? AppColors.hiveLow : AppColors.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              'Auto-assign Nearest Beekeeper',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: isAutoAssign ? FontWeight.w700 : FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Recommended',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Automatically matches the closest registered apiarist based on your location coordinates.',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+
+        if (_isLoadingBeekeepers)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColors.hiveLow),
+                ),
+              ),
+            ),
+          )
+        else if (sortedBeekeepers.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bgSecondary,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'No individual beekeepers registered in database yet. Auto-assignment will be used.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          )
+        else
+          ...sortedBeekeepers.map((b) {
+            final isSelected = _selectedBeekeeper?['id'] == b['id'] ||
+                (_selectedBeekeeper?['name'] == b['name'] && _selectedBeekeeper != null);
+            final name = (b['name'] ?? 'Beekeeper').toString();
+            final apiary = (b['apiary_name'] ?? 'Registered Apiary').toString();
+            final area = (b['area_address'] ?? 'Sri Lanka').toString();
+            final phone = (b['phone'] ?? '').toString();
+
+            final aArea = area.toLowerCase();
+            final isMatch = (currentAddress.isNotEmpty && (currentAddress.contains(aArea) || aArea.contains(currentAddress))) ||
+                (currentArea.isNotEmpty && (currentArea.contains(aArea) || aArea.contains(currentArea))) ||
+                (aArea.contains('gampaha') && currentAddress.contains('gampaha')) ||
+                (aArea.contains('colombo') && currentAddress.contains('colombo')) ||
+                (aArea.contains('kandy') && currentAddress.contains('kandy'));
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() => _selectedBeekeeper = b);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected ? AppColors.hiveLow : AppColors.border,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        color: isSelected ? AppColors.hiveLow : AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: AppColors.hiveLow.withValues(alpha: 0.15),
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : 'B',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.hiveLow,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified_rounded, size: 14, color: AppColors.success),
+                                if (isMatch) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.success.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                    child: Text(
+                                      'Nearby Area',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.success,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$apiary • $area',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (phone.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                phone,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.hiveLow,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
   Widget _buildColonySpotGrid() {
     final spots = [
       {'id': 'Roof', 'icon': Icons.roofing_rounded, 'label': 'Roof'},
@@ -1682,6 +1741,8 @@ class WildBeeHiveResultScreen extends StatelessWidget {
   final String insideStructure;
   final String safeAccess;
   final File? imageFile;
+  final String? assignedBeekeeper;
+  final String? assignedPhone;
 
   const WildBeeHiveResultScreen({
     super.key,
@@ -1693,6 +1754,8 @@ class WildBeeHiveResultScreen extends StatelessWidget {
     required this.insideStructure,
     required this.safeAccess,
     this.imageFile,
+    this.assignedBeekeeper,
+    this.assignedPhone,
   });
 
   @override
@@ -1775,7 +1838,9 @@ class WildBeeHiveResultScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Status: Pending Beekeeper Assignment',
+                        assignedBeekeeper != null && assignedBeekeeper!.isNotEmpty
+                            ? 'Status: Accepted & Assigned to $assignedBeekeeper'
+                            : 'Status: Pending Beekeeper Assignment',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1814,6 +1879,11 @@ class WildBeeHiveResultScreen extends StatelessWidget {
                     _buildSummaryRow('Safe Access', safeAccess),
                     _buildSummaryRow('Address', address),
                     _buildSummaryRow('GPS Pin', gps),
+                    if (assignedBeekeeper != null && assignedBeekeeper!.isNotEmpty) ...[
+                      _buildSummaryRow('Assigned Beekeeper', assignedBeekeeper!),
+                      if (assignedPhone != null && assignedPhone!.isNotEmpty)
+                        _buildSummaryRow('Beekeeper Phone', assignedPhone!),
+                    ],
                     if (imageFile != null) ...[
                       const SizedBox(height: 10),
                       Row(

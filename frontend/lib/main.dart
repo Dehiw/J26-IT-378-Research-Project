@@ -7,7 +7,6 @@ import 'services/auth_service.dart';
 import 'services/inference_service.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/relocation_assessment_screen_IT23185302.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +36,7 @@ class HiveSenseApp extends StatelessWidget {
       title: 'Hive Sense',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      navigatorObservers: [homeRouteObserver],
       home: const _AppLoader(),
     );
   }
