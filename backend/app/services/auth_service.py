@@ -31,6 +31,7 @@ class AuthService:
             "id": user_id,
             "name": data.name.strip(),
             "email": normalized_email,
+            "user_type": data.user_type.strip() if data.user_type else "Bee Keeper",
             "apiary_name": data.apiary_name.strip() if data.apiary_name else None,
             "password_hash": pwd_hash,
             "created_at": now_iso,
@@ -61,6 +62,7 @@ class AuthService:
             id=user_id,
             name=data.name.strip(),
             email=normalized_email,
+            user_type=user_dict["user_type"],
             apiary_name=user_dict["apiary_name"],
             created_at=now_iso
         )
@@ -102,6 +104,7 @@ class AuthService:
             id=user_id,
             name=user_data.get("name", ""),
             email=normalized_email,
+            user_type=user_data.get("user_type", "Bee Keeper"),
             apiary_name=user_data.get("apiary_name"),
             created_at=user_data.get("created_at")
         )
@@ -125,6 +128,7 @@ class AuthService:
             id=user_id,
             name=data.get("name", ""),
             email=data.get("email", ""),
+            user_type=data.get("user_type", "Bee Keeper"),
             apiary_name=data.get("apiary_name"),
             created_at=data.get("created_at")
         )
