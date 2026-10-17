@@ -145,6 +145,55 @@ class WildBeeService {
     }
   }
 
+  /// Cancels a submitted report if relocation has not started.
+  Future<bool> cancelReport(String reportId) async {
+    final endpoint = '${ApiConfig.baseUrl}/wild-bee-reports/$reportId/cancel';
+    try {
+      await _patchJson(endpoint, {});
+      return true;
+    } catch (e) {
+      developer.log('Error cancelling report: $e', name: 'WildBeeService');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> _patchJson(
+      String url, Map<String, dynamic> body) async {
+    final token = AuthService.instance.token;
+    HttpClient? client;
+    try {
+      client = HttpClient()..connectionTimeout = const Duration(seconds: 14);
+      final request = await client.patchUrl(Uri.parse(url));
+      request.headers.set('content-type', 'application/json; charset=utf-8');
+      request.headers.set('accept', 'application/json');
+      if (token != null) {
+        request.headers.set('authorization', 'Bearer $token');
+      }
+      final bytes = utf8.encode(jsonEncode(body));
+      request.contentLength = bytes.length;
+      request.add(bytes);
+
+      final response = await request.close();
+      final respBody = await response.transform(utf8.decoder).join();
+      final json = jsonDecode(respBody) as Map<String, dynamic>;
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json;
+      }
+      final detail = json['detail'];
+      if (detail is String) throw AuthException(detail);
+      throw AuthException(json['message']?.toString() ?? 'Request failed');
+    } on SocketException {
+      throw const AuthException(
+          'Cannot connect to backend server. Make sure the FastAPI backend is running.');
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException(e.toString());
+    } finally {
+      client?.close();
+    }
+  }
+
   Future<Map<String, dynamic>> _getJson(String url) async {
     final token = AuthService.instance.token;
     HttpClient? client;

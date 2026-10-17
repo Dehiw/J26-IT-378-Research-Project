@@ -59,7 +59,9 @@ def submit_wild_bee_report(
         "has_photo": request.has_photo,
         "photo_url": request.photo_url,
         "notes": request.notes,
-        "status": "Pending Beekeeper Assignment",
+        "status": "Submitted",
+        "assigned_beekeeper": None,
+        "assigned_phone": None,
         "created_at": now_iso,
     }
 
@@ -70,7 +72,7 @@ def submit_wild_bee_report(
         success=True,
         report_id=report_id,
         message="Wild bee hive report submitted successfully",
-        status="Pending Beekeeper Assignment",
+        status="Submitted",
         created_at=now_iso,
         address=request.address.strip(),
         gps_coordinates=request.gps_coordinates,
@@ -78,6 +80,8 @@ def submit_wild_bee_report(
         height=request.height,
         inside_structure=request.inside_structure,
         safe_access=request.safe_access,
+        assigned_beekeeper=None,
+        assigned_phone=None,
     )
 
 
@@ -112,3 +116,81 @@ def get_all_reports():
         return {"reports": reports}
     except Exception:
         return {"reports": []}
+
+
+@router.get("/{report_id}")
+def get_report_by_id(report_id: str):
+    """Retrieves a single wild bee hive report by its ID."""
+    doc = db.collection("wild_bee_reports").document(report_id).get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Report {report_id} not found."
+        )
+    return doc.to_dict()
+
+
+@router.patch("/{report_id}/cancel")
+def cancel_wild_bee_report(report_id: str):
+    """Cancels a wild bee hive report if relocation has not started."""
+    doc_ref = db.collection("wild_bee_reports").document(report_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Report {report_id} not found."
+        )
+    data = doc.to_dict()
+    current_status = data.get("status", "")
+    if current_status in ["In Progress", "Completed"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot cancel a request that is already {current_status}."
+        )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    doc_ref.update({
+        "status": "Cancelled",
+        "cancelled_at": now_iso,
+    })
+    data["status"] = "Cancelled"
+    data["cancelled_at"] = now_iso
+    return {
+        "success": True,
+        "message": f"Report {report_id} cancelled successfully.",
+        "report": data,
+    }
+
+
+@router.patch("/{report_id}/status")
+def update_report_status(
+    report_id: str,
+    status_str: str,
+    beekeeper_name: Optional[str] = None,
+    beekeeper_phone: Optional[str] = None,
+):
+    """Updates the status and optional beekeeper assignment of a report."""
+    doc_ref = db.collection("wild_bee_reports").document(report_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Report {report_id} not found."
+        )
+    updates = {
+        "status": status_str,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if beekeeper_name:
+        updates["assigned_beekeeper"] = beekeeper_name
+    if beekeeper_phone:
+        updates["assigned_phone"] = beekeeper_phone
+
+    doc_ref.update(updates)
+    data = doc_ref.get().to_dict()
+    return {
+        "success": True,
+        "message": f"Report {report_id} updated to {status_str}.",
+        "report": data,
+    }
+

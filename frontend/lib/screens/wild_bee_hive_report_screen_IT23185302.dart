@@ -9,6 +9,7 @@ import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
 import 'home_screen.dart';
+import 'my_requests_screen_IT23185302.dart';
 
 /// Research Component IT23185302:
 /// Wild Bee Hive Reporting & Decision Support System (Normal Users / Homeowners).
@@ -467,7 +468,11 @@ class _WildBeeHiveReportScreenIT23185302State
     }
 
     if (isNormalUser && index == 2) {
-      _showMyRequestsSheet();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const MyRequestsScreenIT23185302(),
+        ),
+      );
       return;
     }
 
@@ -1878,7 +1883,7 @@ class WildBeeHiveResultScreen extends StatelessWidget {
               // Action buttons
               SizedBox(
                 height: 50,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.hiveLow,
                     elevation: 0,
@@ -1886,18 +1891,46 @@ class WildBeeHiveResultScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
-                    );
-                  },
-                  child: Text(
-                    'Back to Home',
+                  icon: const Icon(Icons.assignment_outlined,
+                      color: AppColors.bgSecondary, size: 18),
+                  label: Text(
+                    'Track in My Requests',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppColors.bgSecondary,
                     ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => const MyRequestsScreenIT23185302(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                },
+                child: Text(
+                  'Back to Home',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),

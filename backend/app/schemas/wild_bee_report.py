@@ -18,7 +18,7 @@ class WildBeeReportResponse(BaseModel):
     success: bool = True
     report_id: str
     message: str = "Wild bee hive report submitted successfully"
-    status: str = "Pending Beekeeper Assignment"
+    status: str = "Submitted"
     created_at: str
     address: str
     gps_coordinates: Optional[str] = None
@@ -26,3 +26,13 @@ class WildBeeReportResponse(BaseModel):
     height: str
     inside_structure: str
     safe_access: str
+    assigned_beekeeper: Optional[str] = None
+    assigned_phone: Optional[str] = None
+
+
+class WildBeeStatusUpdate(BaseModel):
+    status: str = Field(..., description="Submitted, Under Review, Waiting for Beekeeper, Accepted, Relocation Scheduled, In Progress, Completed, Cancelled")
+    assigned_beekeeper: Optional[str] = None
+    assigned_phone: Optional[str] = None
+    notes: Optional[str] = None
+
