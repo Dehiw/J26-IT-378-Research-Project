@@ -25,17 +25,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  String _selectedUserType = 'Bee Keeper'; // 'Normal user' | 'Bee Keeper'
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -60,6 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
 
     developer.log('Registering user with backend: $email',
@@ -70,6 +74,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         name: name,
         email: email,
         password: password,
+        phone: phone.isNotEmpty ? phone : null,
+        userType: _selectedUserType,
       );
 
       if (!mounted) return;
@@ -83,7 +89,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
           content: Text(
-            'Account created! Please sign in to set up your apiary.',
+            _selectedUserType == 'Bee Keeper'
+                ? 'Account created! Please sign in to set up your apiary.'
+                : 'Account created! Welcome to Hive Sense.',
             style: GoogleFonts.inter(
               color: AppColors.bgSecondary,
               fontWeight: FontWeight.w600,
@@ -187,14 +195,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Set up your beekeeper profile to monitor acoustics, forage, and colony vitality.',
+                  'Create an account to monitor hives or report wild bee colonies in your area.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                     height: 1.45,
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 24),
+
+                // User Type Selection
+                Text(
+                  'Account Type',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildRoleCard(
+                        role: 'Normal user',
+                        title: 'Normal user',
+                        subtitle: 'Report colonies & request relocations',
+                        icon: Icons.person_outline_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildRoleCard(
+                        role: 'Bee Keeper',
+                        title: 'Bee Keeper',
+                        subtitle: 'Manage hives & monitor apiary health',
+                        icon: Icons.hive_outlined,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 22),
 
                 // Full Name
                 Text(
@@ -269,6 +310,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
 
+                // Phone Number
+                Row(
+                  children: [
+                    Text(
+                      'Phone Number',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _selectedUserType == 'Bee Keeper'
+                          ? '(Required for beekeeper contact)'
+                          : '(Optional)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: _selectedUserType == 'Bee Keeper'
+                            ? AppColors.hiveLow
+                            : AppColors.textSecondary,
+                        fontWeight: _selectedUserType == 'Bee Keeper'
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '+94 77 123 4567',
+                    prefixIcon: const Icon(
+                      Icons.phone_outlined,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (_selectedUserType == 'Bee Keeper' &&
+                        (value == null || value.trim().isEmpty)) {
+                      return 'Please enter your phone number for beekeeper contact';
+                    }
+                    if (value != null &&
+                        value.trim().isNotEmpty &&
+                        value.trim().length < 8) {
+                      return 'Please enter a valid phone number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 18),
 
                 // Password
                 Text(
@@ -436,6 +535,98 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleCard({
+    required String role,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedUserType == role;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedUserType = role;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? AppColors.hiveLow : AppColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.hiveLow.withValues(alpha: 0.12)
+                  : AppColors.textPrimary.withValues(alpha: 0.03),
+              blurRadius: isSelected ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.hiveLow.withValues(alpha: 0.15)
+                        : AppColors.bgPrimary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color:
+                        isSelected ? AppColors.hiveLow : AppColors.textSecondary,
+                  ),
+                ),
+                if (isSelected)
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 18,
+                    color: AppColors.hiveLow,
+                  )
+                else
+                  const Icon(
+                    Icons.radio_button_unchecked_rounded,
+                    size: 18,
+                    color: AppColors.textMuted,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                height: 1.3,
+              ),
+            ),
+          ],
         ),
       ),
     );

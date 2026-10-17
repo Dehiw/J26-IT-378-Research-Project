@@ -49,17 +49,20 @@ class AuthService {
   }
 
   /// Sends register request to FastAPI backend
-  /// Sends register request to FastAPI backend
   Future<UserModel> register({
     required String name,
     required String email,
     required String password,
+    String? phone,
+    String userType = 'Bee Keeper',
   }) async {
     final endpoint = '${ApiConfig.baseUrl}/auth/register';
     final payload = {
       'name': name.trim(),
       'email': email.trim().toLowerCase(),
       'password': password,
+      if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+      'user_type': userType,
     };
 
     final responseMap = await _postJson(endpoint, payload);
@@ -71,6 +74,22 @@ class AuthService {
 
     await _persistSession(_token!, _currentUser!);
     return _currentUser!;
+  }
+
+  /// Fetches registered beekeepers from backend/Firestore
+  Future<List<Map<String, dynamic>>> fetchRegisteredBeekeepers() async {
+    final endpoint = '${ApiConfig.baseUrl}/auth/beekeepers';
+    try {
+      final res = await _getJson(endpoint);
+      final list = (res['beekeepers'] as List<dynamic>? ?? [])
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+      return list;
+    } catch (e) {
+      developer.log('Error fetching registered beekeepers: $e',
+          name: 'AuthService');
+      return [];
+    }
   }
 
   /// Sends login request to FastAPI backend
