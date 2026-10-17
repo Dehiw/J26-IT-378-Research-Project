@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -37,6 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -61,6 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text;
 
     developer.log('Registering user with backend: $email',
@@ -71,6 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         name: name,
         email: email,
         password: password,
+        phone: phone.isNotEmpty ? phone : null,
         userType: _selectedUserType,
       );
 
@@ -306,6 +310,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 18),
 
+                // Phone Number
+                Row(
+                  children: [
+                    Text(
+                      'Phone Number',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _selectedUserType == 'Bee Keeper'
+                          ? '(Required for beekeeper contact)'
+                          : '(Optional)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: _selectedUserType == 'Bee Keeper'
+                            ? AppColors.hiveLow
+                            : AppColors.textSecondary,
+                        fontWeight: _selectedUserType == 'Bee Keeper'
+                            ? FontWeight.w600
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '+94 77 123 4567',
+                    prefixIcon: const Icon(
+                      Icons.phone_outlined,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (_selectedUserType == 'Bee Keeper' &&
+                        (value == null || value.trim().isEmpty)) {
+                      return 'Please enter your phone number for beekeeper contact';
+                    }
+                    if (value != null &&
+                        value.trim().isNotEmpty &&
+                        value.trim().length < 8) {
+                      return 'Please enter a valid phone number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 18),
 
                 // Password
                 Text(

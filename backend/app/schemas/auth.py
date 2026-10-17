@@ -8,6 +8,7 @@ class UserRegisterRequest(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
     email: str = Field(..., pattern=EMAIL_PATTERN, description="Valid email address")
     password: str = Field(..., min_length=6, max_length=128)
+    phone: Optional[str] = Field(None, description="Contact phone number")
     user_type: Optional[str] = Field("Bee Keeper", description="'Normal user' or 'Bee Keeper'")
     apiary_name: Optional[str] = None
 
@@ -21,6 +22,7 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: str
+    phone: Optional[str] = None
     user_type: Optional[str] = "Bee Keeper"
     apiary_name: Optional[str] = None
     created_at: Optional[str] = None

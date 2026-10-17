@@ -27,10 +27,13 @@ class AuthService:
         now_iso = datetime.now(timezone.utc).isoformat()
         pwd_hash = hash_password(data.password)
 
+        phone = data.phone.strip() if data.phone else None
+
         user_dict = {
             "id": user_id,
             "name": data.name.strip(),
             "email": normalized_email,
+            "phone": phone,
             "user_type": data.user_type.strip() if data.user_type else "Bee Keeper",
             "apiary_name": data.apiary_name.strip() if data.apiary_name else None,
             "password_hash": pwd_hash,
@@ -45,6 +48,7 @@ class AuthService:
             fb_auth.create_user(
                 uid=user_id,
                 email=normalized_email,
+                phone_number=phone if phone and phone.startswith("+") else None,
                 display_name=data.name.strip()
             )
         except Exception:
@@ -62,6 +66,7 @@ class AuthService:
             id=user_id,
             name=data.name.strip(),
             email=normalized_email,
+            phone=phone,
             user_type=user_dict["user_type"],
             apiary_name=user_dict["apiary_name"],
             created_at=now_iso
@@ -104,6 +109,7 @@ class AuthService:
             id=user_id,
             name=user_data.get("name", ""),
             email=normalized_email,
+            phone=user_data.get("phone"),
             user_type=user_data.get("user_type", "Bee Keeper"),
             apiary_name=user_data.get("apiary_name"),
             created_at=user_data.get("created_at")
@@ -128,10 +134,34 @@ class AuthService:
             id=user_id,
             name=data.get("name", ""),
             email=data.get("email", ""),
+            phone=data.get("phone"),
             user_type=data.get("user_type", "Bee Keeper"),
             apiary_name=data.get("apiary_name"),
             created_at=data.get("created_at")
         )
 
+    def get_registered_beekeepers(self):
+        """Retrieves all registered users who are Bee Keepers."""
+        try:
+            docs = self.collection.where("user_type", "==", "Bee Keeper").get()
+            beekeepers = []
+            for doc in docs:
+                d = doc.to_dict()
+                beekeepers.append({
+                    "id": d.get("id", doc.id),
+                    "name": d.get("name", "Beekeeper"),
+                    "email": d.get("email", ""),
+                    "phone": d.get("phone", ""),
+                    "apiary_name": d.get("apiary_name", "Registered Apiary"),
+                    "user_type": d.get("user_type", "Bee Keeper"),
+                    "created_at": d.get("created_at", ""),
+                })
+            # Sort newest registered first
+            beekeepers.sort(key=lambda b: b.get("created_at", ""), reverse=True)
+            return {"beekeepers": beekeepers}
+        except Exception:
+            return {"beekeepers": []}
+
 
 auth_service = AuthService()
+
