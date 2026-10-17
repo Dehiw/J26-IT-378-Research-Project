@@ -7,6 +7,7 @@ import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
 import 'wild_bee_hive_report_screen_IT23185302.dart';
+import 'beekeepers_directory_screen_IT23185302.dart';
 
 /// Research Component IT23185302:
 /// My Requests Page & Relocation Tracking Workflow for Normal Users.
@@ -209,24 +210,12 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
     }
 
     if (index == 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Beekeepers Directory will be available in the upcoming update.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.bgSecondary,
-            ),
-          ),
-          backgroundColor: AppColors.panelBlack,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          duration: const Duration(seconds: 2),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
         ),
       );
+      return;
     }
   }
 

@@ -10,6 +10,7 @@ import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
 import 'home_screen.dart';
 import 'my_requests_screen_IT23185302.dart';
+import 'beekeepers_directory_screen_IT23185302.dart';
 
 /// Research Component IT23185302:
 /// Wild Bee Hive Reporting & Decision Support System (Normal Users / Homeowners).
@@ -471,6 +472,15 @@ class _WildBeeHiveReportScreenIT23185302State
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => const MyRequestsScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+
+    if (isNormalUser && index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
         ),
       );
       return;

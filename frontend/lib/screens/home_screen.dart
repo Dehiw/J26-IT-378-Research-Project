@@ -13,6 +13,7 @@ import 'apiary_management_screen.dart';
 import 'relocation_assessment_screen_IT23185302.dart';
 import 'wild_bee_hive_report_screen_IT23185302.dart';
 import 'my_requests_screen_IT23185302.dart';
+import 'beekeepers_directory_screen_IT23185302.dart';
 
 /// Home Page for Hive Sense App.
 /// - Left-side hamburger menu / drawer.
@@ -113,6 +114,14 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => const MyRequestsScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+    if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
         ),
       );
       return;
@@ -877,7 +886,14 @@ class _HomeScreenState extends State<HomeScreen> {
               child: _QuickAction(
                 icon: Icons.groups_outlined,
                 label: 'Beekeepers',
-                onTap: () => _onMenuItemTapped('Beekeepers'),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const BeekeepersDirectoryScreenIT23185302(),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(width: 10),
