@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:frontend/main.dart';
 import 'package:frontend/screens/it23136274_ai_health_assessment_screen.dart';
+import 'package:frontend/screens/it23136274_alerts_history_screen.dart';
 import 'package:frontend/screens/it23136274_sensor_trends_screen.dart';
 
 void main() {
@@ -100,5 +101,47 @@ void main() {
 
     // Verify trends action button
     expect(find.text('View Detailed Sensor Trends'), findsOneWidget);
+  });
+
+  testWidgets('IT23136274 Alerts & History screen renders alerts cards and segmented tabs', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: IT23136274AlertsHistoryScreen(
+          hiveName: 'Hive 01',
+          apiaryName: 'Yakkala Apiary',
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Verify header
+    expect(find.text('Alerts & History'), findsOneWidget);
+    expect(find.text('Hive 01 • Yakkala Apiary'), findsOneWidget);
+
+    // Verify segmented tabs
+    expect(find.text('Alerts'), findsOneWidget);
+    expect(find.text('History'), findsOneWidget);
+
+    // Verify 4 alert cards from reference image
+    expect(find.text('Hive weight dropped significantly'), findsOneWidget);
+    expect(find.text('Today • 10:20 AM'), findsOneWidget);
+
+    expect(find.text('Humidity above normal range'), findsOneWidget);
+    expect(find.text('Today • 08:15 AM'), findsOneWidget);
+
+    expect(find.text('Bee activity lower than usual'), findsOneWidget);
+    expect(find.text('Yesterday • 4:30 PM'), findsOneWidget);
+
+    expect(find.text('Conditions returned to normal'), findsOneWidget);
+    expect(find.text('Yesterday • 6:00 PM'), findsOneWidget);
+
+    // Switch to History tab
+    await tester.tap(find.text('History'));
+    await tester.pump();
+
+    expect(find.text('Recent Event Logs'), findsOneWidget);
+    expect(find.text('Microclimate Stabilization'), findsOneWidget);
   });
 }

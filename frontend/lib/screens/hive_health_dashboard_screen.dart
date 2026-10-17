@@ -6,6 +6,7 @@ import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import '../widgets/bee_illustration.dart';
 import 'it23136274_ai_health_assessment_screen.dart';
+import 'it23136274_alerts_history_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
 import 'scanner_screen.dart';
 
@@ -189,6 +190,19 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
     );
   }
 
+  void _openAlertsHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => IT23136274AlertsHistoryScreen(
+          hiveId: widget.hiveId,
+          hiveName: widget.hiveName,
+          apiaryName: widget.apiaryName,
+          inferenceService: widget.inferenceService,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -222,6 +236,15 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: Badge(
+              smallSize: 8,
+              backgroundColor: AppColors.error,
+              child: const Icon(Icons.notifications_outlined, color: AppColors.textPrimary, size: 22),
+            ),
+            tooltip: 'Alerts & History',
+            onPressed: _openAlertsHistory,
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary, size: 22),
             onPressed: _openSettings,

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
+import 'it23136274_alerts_history_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
 
 /// Student Registration: IT23136274
@@ -190,6 +191,25 @@ class _IT23136274AiHealthAssessmentScreenState
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded, color: AppColors.textPrimary, size: 22),
+            tooltip: 'Alerts & History',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => IT23136274AlertsHistoryScreen(
+                    hiveId: widget.hiveId,
+                    hiveName: widget.hiveName,
+                    apiaryName: widget.apiaryName,
+                    inferenceService: widget.inferenceService,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 6),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
