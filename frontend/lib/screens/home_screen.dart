@@ -13,6 +13,7 @@ import '../widgets/main_bottom_nav.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
 import 'environment_dashboard_screen.dart';
+import 'disease_check_screen.dart';
 import 'forage_map_screen.dart';
 import 'hive_telemetry_screen.dart';
 
@@ -78,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (index == 0) return;
     if (index == 1) {
       Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const HiveTelemetryScreen()),
+        MaterialPageRoute<void>(builder: (_) => const DiseaseCheckScreen()),
       );
     } else if (index == 2) {
       Navigator.of(
