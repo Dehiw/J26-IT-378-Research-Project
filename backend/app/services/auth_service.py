@@ -141,27 +141,65 @@ class AuthService:
         )
 
     def get_registered_beekeepers(self):
-        """Retrieves all registered users who are Bee Keepers."""
+        """Retrieves all registered users who are Bee Keepers from Firestore."""
         try:
-            docs = self.collection.where("user_type", "==", "Bee Keeper").get()
+            docs = self.collection.get()
             beekeepers = []
             for doc in docs:
                 d = doc.to_dict()
-                beekeepers.append({
-                    "id": d.get("id", doc.id),
-                    "name": d.get("name", "Beekeeper"),
-                    "email": d.get("email", ""),
-                    "phone": d.get("phone", ""),
-                    "apiary_name": d.get("apiary_name", "Registered Apiary"),
-                    "user_type": d.get("user_type", "Bee Keeper"),
-                    "created_at": d.get("created_at", ""),
-                })
+                u_type = str(d.get("user_type") or "").strip().lower()
+                
+                # Exclude Normal users
+                if "normal" in u_type:
+                    continue
+
+                # Must be a Beekeeper (or legacy account without user_type which was always beekeeper)
+                is_beekeeper = (
+                    "keeper" in u_type
+                    or u_type == ""
+                    or u_type == "bee keeper"
+                )
+
+                if is_beekeeper:
+                    u_id = d.get("id", doc.id)
+                    apiary_name = d.get("apiary_name")
+                    area_address = d.get("area_address") or d.get("address") or d.get("district")
+
+                    # Check if beekeeper has set up an apiary location in "apiaries" collection
+                    try:
+                        apiary_docs = db.collection("apiaries").where("user_id", "==", u_id).limit(1).get()
+                        if apiary_docs:
+                            a_data = apiary_docs[0].to_dict()
+                            apiary_name = a_data.get("location_name") or apiary_name
+                            area_address = a_data.get("area_address") or area_address
+                    except Exception:
+                        pass
+
+                    phone_val = (
+                        d.get("phone")
+                        or d.get("phone_number")
+                        or d.get("mobile")
+                        or ""
+                    )
+
+                    beekeepers.append({
+                        "id": u_id,
+                        "name": d.get("name", "Beekeeper"),
+                        "email": d.get("email", ""),
+                        "phone": phone_val,
+                        "apiary_name": apiary_name or "Registered Apiary",
+                        "area_address": area_address or "Sri Lanka",
+                        "user_type": "Bee Keeper",
+                        "created_at": d.get("created_at", ""),
+                    })
+
             # Sort newest registered first
             beekeepers.sort(key=lambda b: b.get("created_at", ""), reverse=True)
             return {"beekeepers": beekeepers}
-        except Exception:
+        except Exception as e:
             return {"beekeepers": []}
 
 
 auth_service = AuthService()
+
 

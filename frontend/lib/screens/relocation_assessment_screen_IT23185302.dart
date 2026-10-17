@@ -1,16 +1,15 @@
-import 'dart:developer' as developer;
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../services/auth_service.dart';
 import '../utils/theme.dart';
+import '../widgets/image_source_sheet.dart';
 import 'home_screen.dart';
 
 /// Research Component IT23185302:
-/// Wild Bee Colony Relocation Decision Support System.
-///
-/// Clean, modern, homeowner-friendly assessment intake screen designed
-/// to evaluate wild bee colonies discovered near residential properties.
+/// Wild Bee Colony Relocation Decision Support & Reporting System.
 class RelocationAssessmentScreenIT23185302 extends StatefulWidget {
   const RelocationAssessmentScreenIT23185302({super.key});
 
@@ -21,23 +20,255 @@ class RelocationAssessmentScreenIT23185302 extends StatefulWidget {
 
 class _RelocationAssessmentScreenIT23185302State
     extends State<RelocationAssessmentScreenIT23185302> {
-  // Input selections
-  String? _selectedLocation;
-  String? _selectedInsideStructure;
-  String? _selectedHeight;
-  String? _selectedAccessibility;
-  String? _selectedBehavior;
-  String? _selectedHumanProximity;
+  final _picker = ImagePicker();
+  final _formKey = GlobalKey<FormState>();
+
+  // 1. Photo state
+  File? _pickedImage;
+
+  // 2. Location state
+  final _addressController =
+      TextEditingController(text: '42 Flower Road, Colombo 07');
+  String _gpsCoordinates = '6.9061° N, 79.8636° E';
+  bool _isFetchingGps = false;
+
+  // 3. Colony questions state
+  String? _selectedLocation; // 'Roof', 'Wall', 'Tree', 'Other'
+  final _otherLocationController = TextEditingController();
+
+  String? _selectedHeight; // 'Below 2 m', '2–5 m', 'Above 5 m'
+  String? _selectedInsideStructure; // 'Yes', 'No', 'Not sure'
+  String? _selectedSafeAccess; // 'Yes', 'No', 'Not sure'
 
   bool _isSubmitting = false;
 
-  final int _currentNavIndex = 2; // Relocate is tab index 2
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _otherLocationController.dispose();
+    super.dispose();
+  }
 
-  void _onNavTapped(int index) {
-    if (index == _currentNavIndex) return;
+  // ── Image Picking ───────────────────────────────────────────
+  Future<void> _pickImage(ImageSource source) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final xFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 88,
+        maxWidth: 1600,
+      );
+      if (xFile != null) {
+        setState(() {
+          _pickedImage = File(xFile.path);
+        });
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Could not open image: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  void _showImageSourceSheet() {
+    ImageSourceSheet.show(
+      context,
+      onCamera: () => _pickImage(ImageSource.camera),
+      onGallery: () => _pickImage(ImageSource.gallery),
+    );
+  }
+
+  // ── GPS Auto-detection ──────────────────────────────────────
+  Future<void> _refreshGps() async {
+    setState(() => _isFetchingGps = true);
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+    setState(() {
+      _gpsCoordinates = '6.9124° N, 79.8587° E';
+      _isFetchingGps = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        content: Text(
+          'Location updated via GPS pin.',
+          style: GoogleFonts.inter(
+            color: AppColors.bgSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _openPinAdjustDialog() {
+    final latLngCtrl = TextEditingController(text: _gpsCoordinates);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.bgSecondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          'Adjust Location Pin',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter exact coordinates or landmark description:',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: latLngCtrl,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.bgPrimary,
+                hintText: 'e.g. 6.9061° N, 79.8636° E',
+                prefixIcon: const Icon(
+                  Icons.edit_location_alt_rounded,
+                  color: AppColors.hiveLow,
+                  size: 20,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.hiveLow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              if (latLngCtrl.text.trim().isNotEmpty) {
+                setState(() => _gpsCoordinates = latLngCtrl.text.trim());
+              }
+              Navigator.pop(ctx);
+            },
+            child: Text(
+              'Save Pin',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                color: AppColors.bgSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Form Validation & Submission ────────────────────────────
+  void _handleSubmit() async {
+    final missing = <String>[];
+    if (_selectedLocation == null) missing.add('Where is the colony?');
+    if (_selectedLocation == 'Other' &&
+        _otherLocationController.text.trim().isEmpty) {
+      missing.add('Specify "Other" colony location');
+    }
+    if (_selectedHeight == null) missing.add('Approximate height');
+    if (_selectedInsideStructure == null) {
+      missing.add('Is it inside a structure?');
+    }
+    if (_selectedSafeAccess == null) {
+      missing.add('Can the area be safely accessed?');
+    }
+
+    if (missing.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          content: Text(
+            'Please complete: ${missing.first}',
+            style: GoogleFonts.inter(
+              color: AppColors.bgSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    // Simulate backend submission & request creation
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    final finalLocation = _selectedLocation == 'Other'
+        ? 'Other (${_otherLocationController.text.trim()})'
+        : _selectedLocation!;
+
+    final requestId =
+        '#REL-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => RelocationResultScreen(
+          requestId: requestId,
+          address: _addressController.text.trim().isNotEmpty
+              ? _addressController.text.trim()
+              : 'Current GPS Location',
+          gps: _gpsCoordinates,
+          colonySpot: finalLocation,
+          height: _selectedHeight!,
+          insideStructure: _selectedInsideStructure!,
+          safeAccess: _selectedSafeAccess!,
+          imageFile: _pickedImage,
+        ),
+      ),
+    );
+  }
+
+  // ── Bottom Nav Navigation ───────────────────────────────────
+  void _onNavTapped(int index, bool isNormalUser) {
+    final activeIndex = isNormalUser ? 1 : 2;
+    if (index == activeIndex) return;
 
     if (index == 0) {
-      // Return to Home Screen
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       } else {
@@ -48,10 +279,14 @@ class _RelocationAssessmentScreenIT23185302State
       return;
     }
 
+    final labels = isNormalUser
+        ? const ['Home', 'Report', 'Requests', 'Beekeepers']
+        : const ['Home', 'Health', 'Relocate', 'Acoustic', 'Environment'];
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Module tab $index will be available in the upcoming update.',
+          '${labels[index]} module will be available in the upcoming update.',
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -68,266 +303,582 @@ class _RelocationAssessmentScreenIT23185302State
     );
   }
 
-  void _submitAssessment() async {
-    // Validate that questions are answered
-    final missing = <String>[];
-    if (_selectedLocation == null) missing.add('Location');
-    if (_selectedInsideStructure == null) missing.add('Structure');
-    if (_selectedHeight == null) missing.add('Height');
-    if (_selectedAccessibility == null) missing.add('Accessibility');
-    if (_selectedBehavior == null) missing.add('Bee Behavior');
-    if (_selectedHumanProximity == null) missing.add('People Proximity');
+  @override
+  Widget build(BuildContext context) {
+    final isNormalUser =
+        AuthService.instance.currentUser?.isNormalUser ?? false;
 
-    if (missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                color: AppColors.bgSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Please answer all questions before submitting (${missing.length} remaining).',
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        backgroundColor: AppColors.bgPrimary,
+        elevation: 0,
+        automaticallyImplyLeading: false, // No back button as requested
+        centerTitle: true,
+        title: Text(
+          'Report Wild Colony',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header intro
+                Text(
+                  'Colony Relocation Request',
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Provide colony details to connect with local registered beekeepers for ethical removal.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.bgSecondary,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
                   ),
+                ),
+                const SizedBox(height: 20),
+
+                // ── SECTION 1: UPLOAD PHOTO ─────────────────────────
+                _buildSectionHeader(
+                  title: 'Upload Photo',
+                  subtitle: 'Take a clear photo of the hive or nest entrance',
+                  icon: Icons.camera_alt_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildPhotoSection(),
+                const SizedBox(height: 24),
+
+                // ── SECTION 2: LOCATION ─────────────────────────────
+                _buildSectionHeader(
+                  title: 'Location',
+                  subtitle: 'Colony address and GPS coordinates',
+                  icon: Icons.location_on_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildLocationCard(),
+                const SizedBox(height: 24),
+
+                // ── SECTION 3: WHERE IS THE BEE COLONY? ─────────────
+                _buildSectionHeader(
+                  title: 'Where is the bee colony?',
+                  subtitle: 'Select where the bees have built their nest',
+                  icon: Icons.home_work_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildColonySpotGrid(),
+                if (_selectedLocation == 'Other') ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _otherLocationController,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Describe location (e.g. Garden shed, Chimney)',
+                      filled: true,
+                      fillColor: AppColors.bgSecondary,
+                      prefixIcon: const Icon(
+                        Icons.edit_note_rounded,
+                        color: AppColors.hiveLow,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.border),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+
+                // ── SECTION 4: APPROXIMATE HEIGHT ───────────────────
+                _buildSectionHeader(
+                  title: 'Approximate height',
+                  subtitle: 'Estimated vertical height from ground level',
+                  icon: Icons.height_rounded,
+                ),
+                const SizedBox(height: 12),
+                _buildHeightSelector(),
+                const SizedBox(height: 24),
+
+                // ── SECTION 5: INSIDE STRUCTURE? ────────────────────
+                _buildSectionHeader(
+                  title: 'Is it inside a structure?',
+                  subtitle: 'Enclosed inside cavity, roof beam, or ceiling',
+                  icon: Icons.domain_verification_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildTripleChoice(
+                  selectedValue: _selectedInsideStructure,
+                  onChanged: (val) =>
+                      setState(() => _selectedInsideStructure = val),
+                ),
+                const SizedBox(height: 24),
+
+                // ── SECTION 6: CAN BE SAFELY ACCESSED? ───────────────
+                _buildSectionHeader(
+                  title: 'Can the area be safely accessed?',
+                  subtitle: 'Free of power lines, sharp terrain, or hazards',
+                  icon: Icons.health_and_safety_outlined,
+                ),
+                const SizedBox(height: 12),
+                _buildTripleChoice(
+                  selectedValue: _selectedSafeAccess,
+                  onChanged: (val) => setState(() => _selectedSafeAccess = val),
+                ),
+                const SizedBox(height: 32),
+
+                // ── SUBMIT BUTTON ───────────────────────────────────
+                SizedBox(
+                  height: 54,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.hiveLow,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: _isSubmitting ? null : _handleSubmit,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.bgSecondary,
+                              ),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.send_rounded,
+                                color: AppColors.bgSecondary,
+                                size: 19,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Submit Report',
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.bgSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.bgPrimary,
+        selectedItemColor: AppColors.hiveLow,
+        unselectedItemColor: AppColors.textSecondary,
+        showUnselectedLabels: true,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        currentIndex: isNormalUser ? 1 : 2,
+        onTap: (i) => _onNavTapped(i, isNormalUser),
+        items: isNormalUser
+            ? const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home_filled),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.add_location_alt_outlined),
+                  activeIcon: Icon(Icons.add_location_alt_rounded),
+                  label: 'Report',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.assignment_outlined),
+                  activeIcon: Icon(Icons.assignment_rounded),
+                  label: 'Requests',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.groups_outlined),
+                  activeIcon: Icon(Icons.groups_rounded),
+                  label: 'Beekeepers',
+                ),
+              ]
+            : const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home_filled),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.monitor_heart_outlined),
+                  label: 'Health',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.location_on_outlined),
+                  activeIcon: Icon(Icons.location_on),
+                  label: 'Relocate',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.graphic_eq_rounded),
+                  label: 'Acoustic',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.eco_outlined),
+                  label: 'Environment',
+                ),
+              ],
+      ),
+    );
+  }
+
+  // ── SUB-WIDGETS & SECTIONS ──────────────────────────────────
+
+  Widget _buildSectionHeader({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: AppColors.hiveLow.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 18, color: AppColors.hiveLow),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
-          backgroundColor: AppColors.accent2,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 3),
         ),
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-    developer.log(
-      'Submitting wild colony assessment: Location=$_selectedLocation, Inside=$_selectedInsideStructure, Height=$_selectedHeight, Access=$_selectedAccessibility, Behavior=$_selectedBehavior, Proximity=$_selectedHumanProximity',
-      name: 'RelocationAssessmentScreenIT23185302',
+      ],
     );
-
-    // Simulate AI decision support engine synthesis
-    await Future.delayed(const Duration(milliseconds: 900));
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    _showAssessmentResultSheet();
   }
 
-  void _showAssessmentResultSheet() {
-    final bool isHighUrgency = _selectedBehavior == 'Aggressive' ||
-        (_selectedHumanProximity == 'High' && _selectedHeight == 'Below 2 m');
-
-    final bool isInsideStructure = _selectedInsideStructure == 'Yes';
-
-    String recommendationTitle;
-    String recommendationDesc;
-    Color statusColor;
-    Color statusBg;
-    IconData statusIcon;
-
-    if (isHighUrgency) {
-      recommendationTitle = 'Priority Live Relocation Required';
-      recommendationDesc =
-          'Due to elevated bee defensiveness or high public proximity, professional live bee-rescue dispatch is strongly advised. Maintain a 6-meter clearance perimeter until assistance arrives.';
-      statusColor = AppColors.error;
-      statusBg = AppColors.badgeTempBg;
-      statusIcon = Icons.emergency_rounded;
-    } else if (isInsideStructure || _selectedAccessibility == 'Difficult') {
-      recommendationTitle = 'Specialized Live Extraction Recommended';
-      recommendationDesc =
-          'The colony is located within structural cavity or challenging reach. A humane cut-out specialist equipped with gentle bee-vacuum hardware should be deployed to prevent property damage.';
-      statusColor = AppColors.warning;
-      statusBg = AppColors.badgeBeeBg;
-      statusIcon = Icons.handyman_outlined;
-    } else {
-      recommendationTitle = 'Safe Standard Live Relocation Suitable';
-      recommendationDesc =
-          'Colony is in a manageable position with calm bee activity. A registered community beekeeper can safely collect and rehome this colony to a protected apiary.';
-      statusColor = AppColors.success;
-      statusBg = AppColors.badgeLeafBg;
-      statusIcon = Icons.check_circle_outline_rounded;
-    }
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.bgSecondary,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 44,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
+  Widget _buildPhotoSection() {
+    if (_pickedImage != null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgSecondary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(15)),
+              child: SizedBox(
+                height: 180,
+                width: double.infinity,
+                child: Image.file(
+                  _pickedImage!,
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: statusBg,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(statusIcon, color: statusColor, size: 26),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Decision Support Result',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.hiveLow,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            recommendationTitle,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgElevated,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Text(
-                    recommendationDesc,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.45,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Telemetry Confirmation Row
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.bgSecondary,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
                       const Icon(
-                        Icons.my_location_rounded,
-                        size: 16,
-                        color: AppColors.accent3,
+                        Icons.check_circle_rounded,
+                        color: AppColors.success,
+                        size: 18,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Telemetry Captured: 6.9271° N, 79.8612° E • 28°C Clear',
+                      const SizedBox(width: 6),
+                      Text(
+                        'Photo Attached',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        icon: const Icon(Icons.refresh_rounded, size: 16),
+                        label: Text(
+                          'Retake',
                           style: GoogleFonts.inter(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            color: AppColors.hiveLow,
+                          ),
+                        ),
+                        onPressed: _showImageSourceSheet,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                          color: AppColors.error,
+                        ),
+                        onPressed: () => setState(() => _pickedImage = null),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.bgElevated,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.add_a_photo_outlined,
+              size: 24,
+              color: AppColors.hiveLow,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Attach Colony Photo (Optional)',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Helps beekeepers identify the species and prepare proper equipment',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: const Icon(Icons.camera_alt_rounded, size: 17),
+                  label: Text(
+                    'Take Photo',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: () => _pickImage(ImageSource.camera),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  icon: const Icon(Icons.photo_library_rounded, size: 17),
+                  label: Text(
+                    'Choose Gallery',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: () => _pickImage(ImageSource.gallery),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Stylized interactive map preview card
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppColors.bgElevated,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(15)),
+            ),
+            child: Stack(
+              children: [
+                // Stylized map grid pattern
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _MapCanvasPainter(),
+                  ),
+                ),
+                // Center pin
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.hiveLow,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.hiveLow.withValues(alpha: 0.35),
+                              blurRadius: 10,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.location_on_rounded,
+                          color: AppColors.bgSecondary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.panelBlack.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _gpsCoordinates,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.bgSecondary,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                // Adjust pin button overlay
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: _openPinAdjustDialog,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgSecondary,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border),
                       ),
-                    ),
-                    onPressed: () {
-                      Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Assessment saved and forwarded to nearest verified beekeepers.',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.tune_rounded,
+                            size: 13,
+                            color: AppColors.hiveLow,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Adjust Pin',
                             style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.bgSecondary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
                             ),
                           ),
-                          backgroundColor: AppColors.panelBlack,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Confirm & Dispatch Notification',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Center(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: Text(
-                      'Review Inputs',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        ],
                       ),
                     ),
                   ),
@@ -335,10 +886,329 @@ class _RelocationAssessmentScreenIT23185302State
               ],
             ),
           ),
-        );
-      },
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Address / Landmark',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _isFetchingGps ? null : _refreshGps,
+                      child: Row(
+                        children: [
+                          if (_isFetchingGps)
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.hiveLow),
+                              ),
+                            )
+                          else
+                            const Icon(
+                              Icons.my_location_rounded,
+                              size: 13,
+                              color: AppColors.hiveLow,
+                            ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isFetchingGps
+                                ? 'Detecting GPS...'
+                                : 'Auto-detect GPS',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.hiveLow,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _addressController,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    hintText: 'Enter street name, house number, area',
+                    filled: true,
+                    fillColor: AppColors.bgPrimary,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
+
+  Widget _buildColonySpotGrid() {
+    final spots = [
+      {'id': 'Roof', 'icon': Icons.roofing_rounded, 'label': 'Roof'},
+      {'id': 'Wall', 'icon': Icons.apartment_rounded, 'label': 'Wall'},
+      {'id': 'Tree', 'icon': Icons.park_rounded, 'label': 'Tree'},
+      {'id': 'Other', 'icon': Icons.more_horiz_rounded, 'label': 'Other'},
+    ];
+
+    return Row(
+      children: spots.map((spot) {
+        final id = spot['id'] as String;
+        final icon = spot['icon'] as IconData;
+        final label = spot['label'] as String;
+        final isSelected = _selectedLocation == id;
+
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedLocation = id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? AppColors.hiveLow : AppColors.border,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      icon,
+                      size: 22,
+                      color: isSelected
+                          ? AppColors.hiveLow
+                          : AppColors.textSecondary,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildHeightSelector() {
+    final options = [
+      {'id': 'Below 2 m', 'label': 'Below 2 m', 'sub': 'Ground / Low'},
+      {'id': '2–5 m', 'label': '2–5 m', 'sub': 'Standard ladder'},
+      {'id': 'Above 5 m', 'label': 'Above 5 m', 'sub': 'High elevation'},
+    ];
+
+    return Row(
+      children: options.map((opt) {
+        final id = opt['id']!;
+        final label = opt['label']!;
+        final sub = opt['sub']!;
+        final isSelected = _selectedHeight == id;
+
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedHeight = id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? AppColors.hiveLow : AppColors.border,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      label,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w600,
+                        color: isSelected
+                            ? AppColors.textPrimary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      sub,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildTripleChoice({
+    required String? selectedValue,
+    required ValueChanged<String> onChanged,
+  }) {
+    final choices = ['Yes', 'No', 'Not sure'];
+
+    return Row(
+      children: choices.map((choice) {
+        final isSelected = selectedValue == choice;
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: GestureDetector(
+              onTap: () => onChanged(choice),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? AppColors.hiveLow : AppColors.border,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    choice,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── CUSTOM CANVAS PAINTER FOR MAP PREVIEW ─────────────────────────
+class _MapCanvasPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final roadPaint = Paint()
+      ..color = AppColors.border.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+
+    final roadPaintSecondary = Paint()
+      ..color = AppColors.border.withValues(alpha: 0.4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    // Draw stylized road grid
+    final path1 = Path()
+      ..moveTo(0, size.height * 0.3)
+      ..lineTo(size.width, size.height * 0.7);
+
+    final path2 = Path()
+      ..moveTo(size.width * 0.2, 0)
+      ..lineTo(size.width * 0.8, size.height);
+
+    final path3 = Path()
+      ..moveTo(0, size.height * 0.65)
+      ..quadraticBezierTo(size.width * 0.5, size.height * 0.2, size.width,
+          size.height * 0.45);
+
+    canvas.drawPath(path1, roadPaint);
+    canvas.drawPath(path2, roadPaintSecondary);
+    canvas.drawPath(path3, roadPaintSecondary);
+
+    // Subtle radial ring around center pin
+    final ringPaint = Paint()
+      ..color = AppColors.hiveLow.withValues(alpha: 0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), 24, ringPaint);
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), 44, ringPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ── RELOCATION RESULT / STATUS SCREEN ─────────────────────────────
+class RelocationResultScreen extends StatelessWidget {
+  final String requestId;
+  final String address;
+  final String gps;
+  final String colonySpot;
+  final String height;
+  final String insideStructure;
+  final String safeAccess;
+  final File? imageFile;
+
+  const RelocationResultScreen({
+    super.key,
+    required this.requestId,
+    required this.address,
+    required this.gps,
+    required this.colonySpot,
+    required this.height,
+    required this.insideStructure,
+    required this.safeAccess,
+    this.imageFile,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -347,1034 +1217,284 @@ class _RelocationAssessmentScreenIT23185302State
       appBar: AppBar(
         backgroundColor: AppColors.bgPrimary,
         elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-            size: 24,
-          ),
-          tooltip: 'Back',
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-          },
-        ),
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         title: Text(
-          'Relocation Assessment',
+          'Request Submitted',
           style: GoogleFonts.inter(
             fontSize: 18,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 12),
-
-              // Hero intro banner with helper text
-              _buildIntroBanner().animate().fadeIn(duration: 350.ms).slideY(
-                    begin: 0.05,
-                    end: 0,
-                  ),
-
-              const SizedBox(height: 24),
-
-              // Section 1: Where is the bee colony located?
-              _buildSectionHeader(
-                questionNumber: '1',
-                title: 'Where is the bee colony located?',
-                subtitle: 'Select the primary surface where the cluster is anchored',
+              // Success badge card
+              Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  gradient: AppColors.accentGradient,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.hiveLow.withValues(alpha: 0.22),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 58,
+                      height: 58,
+                      decoration: const BoxDecoration(
+                        color: AppColors.panelBlack,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: AppColors.bgSecondary,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Report Received!',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.panelBlack,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tracking ID: $requestId',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.panelBlack.withValues(alpha: 0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.panelBlack.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Status: Pending Beekeeper Assignment',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.panelBlack,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              _buildLocationSection(),
-
-              const SizedBox(height: 26),
-
-              // Section 2: Is the colony inside a structure?
-              _buildSectionHeader(
-                questionNumber: '2',
-                title: 'Is the colony inside a structure?',
-                subtitle: 'Indicate whether bees have penetrated walls, ceilings, or cavities',
-              ),
-              const SizedBox(height: 12),
-              _buildInsideStructureSection(),
-
-              const SizedBox(height: 26),
-
-              // Section 3: Approximately how high is the colony?
-              _buildSectionHeader(
-                questionNumber: '3',
-                title: 'Approximately how high is the colony?',
-                subtitle: 'Helps determine whether ladders or lifting platforms are required',
-              ),
-              const SizedBox(height: 12),
-              _buildHeightSection(),
-
-              const SizedBox(height: 26),
-
-              // Section 4: How easy is it to access the colony location?
-              _buildSectionHeader(
-                questionNumber: '4',
-                title: 'How easy is it to access the colony location?',
-                subtitle: 'Physical clearance and footing safety for relocation specialists',
-              ),
-              const SizedBox(height: 12),
-              _buildAccessibilitySection(),
-
-              const SizedBox(height: 26),
-
-              // Section 5: How are the bees behaving?
-              _buildSectionHeader(
-                questionNumber: '5',
-                title: 'How are the bees behaving?',
-                subtitle: 'Assess colony defensiveness from a safe observation distance',
-              ),
-              const SizedBox(height: 12),
-              _buildBehaviorSection(),
-
-              const SizedBox(height: 26),
-
-              // Section 6: Are many people normally close to this area?
-              _buildSectionHeader(
-                questionNumber: '6',
-                title: 'Are many people normally close to this area?',
-                subtitle: 'Identifies public stinging risk near walkways or home entrances',
-              ),
-              const SizedBox(height: 12),
-              _buildProximitySection(),
-
-              const SizedBox(height: 28),
-
-              // Information Card
-              _buildTelemetryInfoCard().animate().fadeIn(duration: 400.ms),
-
               const SizedBox(height: 20),
 
-              // Large Primary Action Button
-              _buildSubmitButton(),
+              // Summary card
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.bgSecondary,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Submitted Details',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const Divider(height: 20, color: AppColors.border),
+                    _buildSummaryRow('Location Spot', colonySpot),
+                    _buildSummaryRow('Approx. Height', height),
+                    _buildSummaryRow('Inside Structure', insideStructure),
+                    _buildSummaryRow('Safe Access', safeAccess),
+                    _buildSummaryRow('Address', address),
+                    _buildSummaryRow('GPS Pin', gps),
+                    if (imageFile != null) ...[
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Photo Preview',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              imageFile!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 32),
+              // Safety Reminders
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.badgeLeafBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: AppColors.badgeLeafFg.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.shield_outlined,
+                      color: AppColors.badgeLeafFg,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Next Steps & Safety',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.badgeLeafFg,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'A local registered beekeeper will review your report within 24 hours. Please do not attempt to disturb or spray the bees.',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppColors.textPrimary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              // Action buttons
+              SizedBox(
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.hiveLow,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Back to Home',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.bgSecondary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const RelocationAssessmentScreenIT23185302(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'Submit Another Report',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // ── Helper & Section Header Widgets ──────────────────────────────
-
-  Widget _buildIntroBanner() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.border.withValues(alpha: 0.35),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+  Widget _buildSummaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: AppColors.accentGradient,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.shield_outlined,
-              color: AppColors.textPrimary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.badgeBeeBg,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'IT23185302 • DECISION SUPPORT',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.hiveLow,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Tell us a few details about the bee colony. This will help us determine the safest next step.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    height: 1.45,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader({
-    required String questionNumber,
-    required String title,
-    required String subtitle,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: AppColors.hiveLow,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  questionNumber,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.bgSecondary,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.only(left: 32),
-          child: Text(
-            subtitle,
+          Text(
+            label,
             style: GoogleFonts.inter(
               fontSize: 12,
               color: AppColors.textSecondary,
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  // ── Input Section 1: Location ────────────────────────────────────
-
-  Widget _buildLocationSection() {
-    final options = [
-      {'title': 'Roof', 'icon': Icons.roofing_rounded, 'desc': 'Eaves & rafters'},
-      {'title': 'Wall', 'icon': Icons.grid_view_rounded, 'desc': 'Cavities & vents'},
-      {'title': 'Tree', 'icon': Icons.park_rounded, 'desc': 'Trunks & branches'},
-      {'title': 'Other', 'icon': Icons.more_horiz_rounded, 'desc': 'Sheds & furniture'},
-    ];
-
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.45,
-      ),
-      itemCount: options.length,
-      itemBuilder: (context, index) {
-        final item = options[index];
-        final title = item['title'] as String;
-        final icon = item['icon'] as IconData;
-        final desc = item['desc'] as String;
-        final isSelected = _selectedLocation == title;
-
-        return GestureDetector(
-          onTap: () => setState(() => _selectedLocation = title),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isSelected ? AppColors.hiveLow : AppColors.border,
-                width: isSelected ? 2.0 : 1.0,
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.22),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.badgeBeeBg
-                            : AppColors.bgElevated,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 20,
-                        color: isSelected
-                            ? AppColors.hiveLow
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    if (isSelected)
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        size: 18,
-                        color: AppColors.hiveLow,
-                      ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      desc,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: isSelected
-                            ? AppColors.hiveDoor
-                            : AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Input Section 2: Inside Structure ────────────────────────────
-
-  Widget _buildInsideStructureSection() {
-    final options = [
-      {'title': 'Yes', 'icon': Icons.check_circle_outline_rounded},
-      {'title': 'No', 'icon': Icons.highlight_off_rounded},
-      {'title': 'Not sure', 'icon': Icons.help_outline_rounded},
-    ];
-
-    return Row(
-      children: options.map((item) {
-        final title = item['title'] as String;
-        final icon = item['icon'] as IconData;
-        final isSelected = _selectedInsideStructure == title;
-
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedInsideStructure = title),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? AppColors.hiveLow : AppColors.border,
-                    width: isSelected ? 2.0 : 1.0,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      icon,
-                      size: 22,
-                      color: isSelected
-                          ? AppColors.hiveLow
-                          : AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ── Input Section 3: Height ──────────────────────────────────────
-
-  Widget _buildHeightSection() {
-    final options = [
-      {
-        'title': 'Below 2 m',
-        'sub': 'Reachable standing from ground',
-        'icon': Icons.vertical_align_bottom_rounded,
-        'badge': 'Ground',
-      },
-      {
-        'title': '2–5 m',
-        'sub': 'Standard ladder reach level',
-        'icon': Icons.height_rounded,
-        'badge': 'Mid-level',
-      },
-      {
-        'title': 'Above 5 m',
-        'sub': 'Requires tall ladders or lift gear',
-        'icon': Icons.vertical_align_top_rounded,
-        'badge': 'Elevated',
-      },
-    ];
-
-    return Column(
-      children: options.map((item) {
-        final title = item['title'] as String;
-        final sub = item['sub'] as String;
-        final icon = item['icon'] as IconData;
-        final badge = item['badge'] as String;
-        final isSelected = _selectedHeight == title;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: GestureDetector(
-            onTap: () => setState(() => _selectedHeight = title),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color:
-                    isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isSelected ? AppColors.hiveLow : AppColors.border,
-                  width: isSelected ? 2.0 : 1.0,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.badgeBeeBg
-                          : AppColors.bgElevated,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 20,
-                      color: isSelected
-                          ? AppColors.hiveLow
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w800
-                                : FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          sub,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.hiveLow.withValues(alpha: 0.15)
-                          : AppColors.bgElevated,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      badge,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: isSelected
-                            ? AppColors.hiveLow
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ── Input Section 4: Accessibility ───────────────────────────────
-
-  Widget _buildAccessibilitySection() {
-    final options = [
-      {'title': 'Easy', 'icon': Icons.sentiment_satisfied_rounded, 'color': AppColors.success},
-      {'title': 'Moderate', 'icon': Icons.sentiment_neutral_rounded, 'color': AppColors.warning},
-      {'title': 'Difficult', 'icon': Icons.sentiment_dissatisfied_rounded, 'color': AppColors.error},
-    ];
-
-    return Row(
-      children: options.map((item) {
-        final title = item['title'] as String;
-        final icon = item['icon'] as IconData;
-        final color = item['color'] as Color;
-        final isSelected = _selectedAccessibility == title;
-
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedAccessibility = title),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? AppColors.hiveLow : AppColors.border,
-                    width: isSelected ? 2.0 : 1.0,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      icon,
-                      size: 22,
-                      color: isSelected ? color : AppColors.textSecondary,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ── Input Section 5: Bee Behavior ────────────────────────────────
-
-  Widget _buildBehaviorSection() {
-    final options = [
-      {
-        'title': 'Calm',
-        'sub': 'Clustered, quiet, gentle flight',
-        'color': AppColors.success,
-        'icon': Icons.spa_outlined,
-      },
-      {
-        'title': 'Active',
-        'sub': 'Busy forage flight around nest',
-        'color': AppColors.warning,
-        'icon': Icons.air_rounded,
-      },
-      {
-        'title': 'Aggressive',
-        'sub': 'Defensive buzzing, chasing, stinging',
-        'color': AppColors.error,
-        'icon': Icons.bolt_rounded,
-      },
-      {
-        'title': 'Not sure',
-        'sub': 'Observed safely from far away',
-        'color': AppColors.textSecondary,
-        'icon': Icons.help_outline_rounded,
-      },
-    ];
-
-    return GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.4,
-      ),
-      itemCount: options.length,
-      itemBuilder: (context, index) {
-        final item = options[index];
-        final title = item['title'] as String;
-        final sub = item['sub'] as String;
-        final color = item['color'] as Color;
-        final icon = item['icon'] as IconData;
-        final isSelected = _selectedBehavior == title;
-
-        return GestureDetector(
-          onTap: () => setState(() => _selectedBehavior = title),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: isSelected ? AppColors.hiveLow : AppColors.border,
-                width: isSelected ? 2.0 : 1.0,
-              ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: AppColors.accent.withValues(alpha: 0.18),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? color.withValues(alpha: 0.15)
-                            : AppColors.bgElevated,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 18,
-                        color: isSelected ? color : AppColors.textSecondary,
-                      ),
-                    ),
-                    if (isSelected)
-                      const Icon(
-                        Icons.check_circle_rounded,
-                        size: 18,
-                        color: AppColors.hiveLow,
-                      ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      sub,
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Input Section 6: Human Proximity ─────────────────────────────
-
-  Widget _buildProximitySection() {
-    final options = [
-      {
-        'title': 'Low',
-        'sub': 'Rarely visited garden or boundary',
-        'icon': Icons.person_outline_rounded,
-      },
-      {
-        'title': 'Medium',
-        'sub': 'Moderate family or driveway footpaths',
-        'icon': Icons.people_outline_rounded,
-      },
-      {
-        'title': 'High',
-        'sub': 'Busy doorway, porch, or public path',
-        'icon': Icons.groups_rounded,
-      },
-    ];
-
-    return Column(
-      children: options.map((item) {
-        final title = item['title'] as String;
-        final sub = item['sub'] as String;
-        final icon = item['icon'] as IconData;
-        final isSelected = _selectedHumanProximity == title;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: GestureDetector(
-            onTap: () => setState(() => _selectedHumanProximity = title),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color:
-                    isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isSelected ? AppColors.hiveLow : AppColors.border,
-                  width: isSelected ? 2.0 : 1.0,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.badgeBeeBg
-                          : AppColors.bgElevated,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 20,
-                      color: isSelected
-                          ? AppColors.hiveLow
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w800
-                                : FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          sub,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (isSelected)
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      size: 20,
-                      color: AppColors.hiveLow,
-                    ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ── Information Card ─────────────────────────────────────────────
-
-  Widget _buildTelemetryInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.bgElevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.badgeWaveBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.my_location_rounded,
-              size: 20,
-              color: AppColors.badgeWaveFg,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Automated Sensor Telemetry',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: AppColors.success,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Ready',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.success,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'GPS location and current weather will be collected automatically when the assessment is submitted.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    height: 1.45,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
       ),
     );
   }
-
-  // ── Primary Action Button ────────────────────────────────────────
-
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      height: 56,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-        ),
-        onPressed: _isSubmitting ? null : _submitAssessment,
-        child: _isSubmitting
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Evaluating Colony Relocation...',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Assess Relocation',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: AppColors.textPrimary,
-                    size: 20,
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-  // ── Bottom Navigation Bar ────────────────────────────────────────
-
-  Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: AppColors.bgPrimary,
-      selectedItemColor: AppColors.hiveLow,
-      unselectedItemColor: AppColors.textSecondary,
-      showUnselectedLabels: true,
-      selectedFontSize: 11,
-      unselectedFontSize: 11,
-      currentIndex: _currentNavIndex,
-      onTap: _onNavTapped,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.monitor_heart_outlined),
-          label: 'Health',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.location_on_outlined),
-          label: 'Relocate',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.graphic_eq_rounded),
-          label: 'Acoustic',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.eco_outlined),
-          label: 'Environment',
-        ),
-      ],
-    );
-  }
 }
 
-/// Convenience typedef matching component naming
+/// Typedef for general reference
 typedef RelocationAssessmentScreen = RelocationAssessmentScreenIT23185302;
