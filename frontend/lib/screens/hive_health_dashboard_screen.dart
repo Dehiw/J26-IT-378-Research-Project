@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import '../widgets/bee_illustration.dart';
+import 'it23136274_ai_health_assessment_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
 import 'scanner_screen.dart';
 
@@ -173,6 +174,21 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
     );
   }
 
+  void _showAiHealthAssessment() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => IT23136274AiHealthAssessmentScreen(
+          hiveId: widget.hiveId,
+          hiveName: widget.hiveName,
+          apiaryName: widget.apiaryName,
+          initialStatus: widget.status == 'Healthy' ? 'Healthy Colony' : 'Early Stress',
+          confidence: widget.status == 'Healthy' ? 0.94 : 0.87,
+          inferenceService: widget.inferenceService,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -238,7 +254,13 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                   .fadeIn(delay: 150.ms, duration: 400.ms)
                   .slideY(begin: 0.06, end: 0),
               const SizedBox(height: 18),
-              // 4. View Detailed Trends Action Button
+              // 4. AI Health Assessment Action Button
+              _buildAiAssessmentButton()
+                  .animate()
+                  .fadeIn(delay: 200.ms, duration: 400.ms)
+                  .slideY(begin: 0.08, end: 0),
+              const SizedBox(height: 12),
+              // 5. View Detailed Trends Action Button
               _buildViewTrendsButton()
                   .animate()
                   .fadeIn(delay: 250.ms, duration: 400.ms)
@@ -254,118 +276,149 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
 
   // ── Overall Colony Health Card ────────────────────────────────────
   Widget _buildOverallHealthCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: BoxDecoration(
-        color: AppColors.lightGreenCard,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _showAiHealthAssessment,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border, width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Overall Colony Health',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Health Status Pill Badge
-              Container(
-                padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
-                decoration: BoxDecoration(
-                  color: _isHealthy ? AppColors.success : AppColors.warning,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (_isHealthy ? AppColors.success : AppColors.warning)
-                          .withValues(alpha: 0.25),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Circular check / arrow icon inside pill
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: AppColors.bgSecondary.withValues(alpha: 0.25),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.arrow_downward_rounded,
-                        color: AppColors.bgSecondary,
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      widget.status,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.bgSecondary,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ],
-                ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          decoration: BoxDecoration(
+            color: AppColors.lightGreenCard,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border, width: 1.0),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.textPrimary.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
-              // Leaf Badge inside circular disc
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.bgSecondary.withValues(alpha: 0.9),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.textPrimary.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Overall Colony Health',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.spa_rounded,
-                    color: AppColors.success,
-                    size: 28,
                   ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'AI Assessment',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accent2,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: AppColors.accent2,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Health Status Pill Badge
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
+                    decoration: BoxDecoration(
+                      color: _isHealthy ? AppColors.success : AppColors.warning,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (_isHealthy ? AppColors.success : AppColors.warning)
+                              .withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Circular check / arrow icon inside pill
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.bgSecondary.withValues(alpha: 0.25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_downward_rounded,
+                            color: AppColors.bgSecondary,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.status,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.bgSecondary,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Leaf Badge inside circular disc
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgSecondary.withValues(alpha: 0.9),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.textPrimary.withValues(alpha: 0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.spa_rounded,
+                        color: AppColors.success,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                _isHealthy
+                    ? 'Conditions are within normal range. Tap to view AI assessment.'
+                    : 'Attention needed: tap to view detected indicators & advice.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Text(
-            _isHealthy
-                ? 'Conditions are within normal range.'
-                : 'Attention needed: monitor humidity and temperature.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -497,6 +550,73 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  // ── AI Health Assessment Button ────────────────────────────────────
+  Widget _buildAiAssessmentButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.bgElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showAiHealthAssessment,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.health_and_safety_outlined,
+                  color: AppColors.accent2,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI Health Assessment',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Colony status, indicators & recommendations',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textSecondary,
+                  size: 22,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
