@@ -7,6 +7,7 @@ import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
+import 'IT23185302.beekeeper_requests_screen.dart';
 
 /// Research Component IT23185302:
 /// Beekeeper Relocation Hub — Dashboard with overview, services, and activity.
@@ -122,7 +123,7 @@ class _RelocationAssessmentScreenIT23185302State
           },
         ),
         title: Text(
-          'Bee Keeper Relocation',
+          'Bee Keeper Relocate | IT23185302',
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -237,6 +238,15 @@ class _RelocationAssessmentScreenIT23185302State
           iconBg: AppColors.badgeTempBg,
           iconColor: AppColors.accent2,
           valueColor: AppColors.accent2,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const BeekeeperRequestsScreenIT23185302(
+                  initialFilter: 'Pending',
+                ),
+              ),
+            ).then((_) => _loadStats());
+          },
         ),
         const SizedBox(width: 10),
         _OverviewCard(
@@ -246,6 +256,15 @@ class _RelocationAssessmentScreenIT23185302State
           iconBg: AppColors.badgeBeeBg,
           iconColor: AppColors.hiveLow,
           valueColor: AppColors.hiveLow,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const BeekeeperRequestsScreenIT23185302(
+                  initialFilter: 'Accepted',
+                ),
+              ),
+            ).then((_) => _loadStats());
+          },
         ),
         const SizedBox(width: 10),
         _OverviewCard(
@@ -255,6 +274,15 @@ class _RelocationAssessmentScreenIT23185302State
           iconBg: AppColors.badgeLeafBg,
           iconColor: AppColors.success,
           valueColor: AppColors.success,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const BeekeeperRequestsScreenIT23185302(
+                  initialFilter: 'Completed',
+                ),
+              ),
+            ).then((_) => _loadStats());
+          },
         ),
       ],
     ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.06, end: 0);
@@ -276,9 +304,9 @@ class _RelocationAssessmentScreenIT23185302State
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const _WildBeeAssessmentFormScreen(),
+                builder: (_) => const BeekeeperRequestsScreenIT23185302(),
               ),
-            );
+            ).then((_) => _loadStats());
           },
         ),
         const SizedBox(height: 12),
@@ -413,7 +441,18 @@ class _RelocationAssessmentScreenIT23185302State
       children: _recentActivity.asMap().entries.map((entry) {
         final i = entry.key;
         final r = entry.value;
-        return _ActivityRow(report: r, index: i);
+        return _ActivityRow(
+          report: r,
+          index: i,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    BeekeeperRequestDetailsScreenIT23185302(request: r),
+              ),
+            ).then((_) => _loadStats());
+          },
+        );
       }).toList(),
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06, end: 0);
   }
@@ -466,6 +505,7 @@ class _OverviewCard extends StatelessWidget {
   final Color iconBg;
   final Color iconColor;
   final Color valueColor;
+  final VoidCallback? onTap;
 
   const _OverviewCard({
     required this.label,
@@ -474,30 +514,33 @@ class _OverviewCard extends StatelessWidget {
     required this.iconBg,
     required this.iconColor,
     required this.valueColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: AppColors.bgSecondary,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.border.withValues(alpha: 0.4),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 34,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+          decoration: BoxDecoration(
+            color: AppColors.bgSecondary,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.border.withValues(alpha: 0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 34,
               height: 34,
               decoration: BoxDecoration(
                 color: iconBg,
@@ -528,8 +571,9 @@ class _OverviewCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ── Service card sub-widget ───────────────────────────────────────────
@@ -639,8 +683,13 @@ class _ServiceCard extends StatelessWidget {
 class _ActivityRow extends StatelessWidget {
   final Map<String, dynamic> report;
   final int index;
+  final VoidCallback? onTap;
 
-  const _ActivityRow({required this.report, required this.index});
+  const _ActivityRow({
+    required this.report,
+    required this.index,
+    this.onTap,
+  });
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -709,35 +758,37 @@ class _ActivityRow extends StatelessWidget {
     final statusColor = _statusColor(status);
     final statusBg = _statusBg(status);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.bgSecondary,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: statusBg,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: statusColor,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.bgSecondary,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: statusBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Text(
+                  '${index + 1}',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: statusColor,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -789,10 +840,17 @@ class _ActivityRow extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: 6),
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 18,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

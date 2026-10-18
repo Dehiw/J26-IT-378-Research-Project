@@ -13,7 +13,7 @@ import 'apiary_management_screen.dart';
 import 'home_screen.dart';
 import 'scanner_screen.dart';
 import 'hive_health_dashboard_screen.dart';
-import 'relocation_assessment_screen_IT23185302.dart';
+import 'IT23185302.relocation_assessment_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 
 /// Colony Health Monitoring Screen

@@ -9,9 +9,9 @@ import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'home_screen.dart' show homeRouteObserver;
-import 'wild_bee_hive_report_screen_IT23185302.dart';
-import 'my_requests_screen_IT23185302.dart';
-import 'beekeepers_directory_screen_IT23185302.dart';
+import 'IT23185302.wild_bee_hive_report_screen.dart';
+import 'IT23185302.my_requests_screen.dart';
+import 'IT23185302.beekeepers_directory_screen.dart';
 
 /// Dedicated Home Page for Wild Bee Hive / Normal Users.
 /// Focused on wild colony discovery reporting, relocation tracking,
