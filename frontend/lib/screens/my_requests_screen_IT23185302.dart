@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
-import 'home_screen.dart';
+import 'normal_user_home_screen.dart';
 import 'wild_bee_hive_report_screen_IT23185302.dart';
 import 'beekeepers_directory_screen_IT23185302.dart';
 
@@ -195,9 +195,13 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
     if (index == 2) return; // Already on Requests
 
     if (index == 0) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const NormalUserHomeScreen()),
+        );
+      }
       return;
     }
 

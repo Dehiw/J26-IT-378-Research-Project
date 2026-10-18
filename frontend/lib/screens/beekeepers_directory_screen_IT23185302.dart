@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
-import 'home_screen.dart';
+import 'normal_user_home_screen.dart';
 import 'my_requests_screen_IT23185302.dart';
 import 'wild_bee_hive_report_screen_IT23185302.dart';
 
@@ -170,9 +170,13 @@ class _BeekeepersDirectoryScreenIT23185302State
     if (index == 3) return; // Already on Beekeepers
 
     if (index == 0) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const NormalUserHomeScreen()),
+        );
+      }
       return;
     }
 
@@ -327,9 +331,7 @@ class _BeekeepersDirectoryScreenIT23185302State
                 Navigator.pop(ctx);
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) => WildBeeHiveReportScreenIT23185302(
-                      preselectedBeekeeper: beekeeper,
-                    ),
+                    builder: (_) => const WildBeeHiveReportScreenIT23185302(),
                   ),
                 );
               },
@@ -369,7 +371,7 @@ class _BeekeepersDirectoryScreenIT23185302State
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Pre-select $name as your assigned beekeeper for the new report.',
+                            'Submit colony details for ethical relocation by qualified beekeepers.',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: AppColors.textSecondary,
