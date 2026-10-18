@@ -1,32 +1,216 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../services/disease_risk_service.dart';
+import '../services/inference_service.dart';
 import '../utils/theme.dart';
-import '../widgets/main_bottom_nav.dart';
 import 'IT23183186_disease_assessment_screen.dart';
-import 'IT23183186_disease_check_screen.dart';
-import 'IT23183186_forage_map_screen.dart';
-import 'IT23183186_hive_telemetry_screen.dart';
-import 'home_screen.dart';
-import 'IT23183186_environment_dashboard_screen.dart';
 
 class DiseaseRiskScreen extends StatelessWidget {
-  const DiseaseRiskScreen({super.key});
-  @override Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.bgPrimary,
-    appBar: AppBar(leading: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back_rounded)), title: const Text('Disease Risk Overview'), actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.menu_book_outlined))]),
-    body: SafeArea(child: ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 22), children: [
-      Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9), decoration: _card(), child: Text('â—  Hive #03 â€“ Negombo Apiary', style: _style(12, FontWeight.w600, AppColors.textPrimary)))),
-      const SizedBox(height: 16),
-      Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.hiveTop, AppColors.accent, AppColors.accent2, AppColors.accent], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(22)), child: Column(children: [Text('Colony Disease Risk Score', style: _style(13, FontWeight.w500, AppColors.textPrimary)), const SizedBox(height: 12), Container(width: 116, height: 116, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.textPrimary, width: 5)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [RichText(text: TextSpan(style: _style(34, FontWeight.w800, AppColors.textPrimary), children: const [TextSpan(text: '42'), TextSpan(text: '/100', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500))])), Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: AppColors.textPrimary, borderRadius: BorderRadius.circular(18)), child: Text('Monitor closely', style: _style(10, FontWeight.w600, AppColors.bgPrimary)))])), const SizedBox(height: 12), Text('Based on sensor + image + acoustic fusion', textAlign: TextAlign.center, style: _style(11, FontWeight.w500, AppColors.textPrimary)), const SizedBox(height: 8), const Icon(Icons.speed_rounded, size: 20, color: AppColors.textPrimary)])),
-      const SizedBox(height: 20), Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('Suspected Conditions', style: _style(16, FontWeight.w700, AppColors.textPrimary)), Text('â†— Trend', style: _style(11, FontWeight.w500, AppColors.textSecondary))]),
-      const SizedBox(height: 10), _condition('Varroa Destructor', '68% confidence', 'High', AppColors.accent2, Icons.shield_outlined), _condition('Nosema', '34% confidence', 'Medium', AppColors.warning, Icons.shield_outlined), _condition('American Foulbrood', '8% confidence', 'Low', AppColors.accent3, Icons.verified_user_outlined),
-      const SizedBox(height: 16), FilledButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const DiseaseAssessmentScreen())), icon: const Icon(Icons.document_scanner_outlined), label: const Text('Run new diagnosis')),
-      const SizedBox(height: 6), Text('Sample risk estimates for demonstration.', textAlign: TextAlign.center, style: _style(10, FontWeight.w400, AppColors.textSecondary)),
-    ])), bottomNavigationBar: MainBottomNav(currentIndex: 1, onTap: (i) => _navigate(context, i)));
+  final PredictionResult? predictionResult;
+  final InferenceService? inferenceService;
+
+  const DiseaseRiskScreen({
+    super.key,
+    this.predictionResult,
+    this.inferenceService,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final assessment = predictionResult == null
+        ? null
+        : const DiseaseRiskService().assess(predictionResult!);
+    final scoreColor = assessment == null || assessment.score < 30
+        ? AppColors.accent3
+        : assessment.score < 60
+        ? AppColors.warning
+        : AppColors.error;
+
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: const Text('Disease Risk Overview'),
+        actions: [
+          IconButton(
+            tooltip: 'Assessment guidance',
+            onPressed: () => showAboutDialog(
+              context: context,
+              applicationName: 'Hive Sense',
+              children: const [
+                Text('This baseline summarizes classifier outputs. It is not a veterinary diagnosis or calibrated disease probability.'),
+              ],
+            ),
+            icon: const Icon(Icons.info_outline_rounded),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+          children: [
+            _scoreCard(assessment, scoreColor),
+            const SizedBox(height: 18),
+            Text(
+              'Model evidence',
+              style: _style(16, FontWeight.w700, AppColors.textPrimary),
+            ),
+            const SizedBox(height: 9),
+            if (assessment == null) ...[
+              _emptyEvidence(),
+            ] else ...[
+              for (final entry in assessment.classScores.entries)
+                _scoreRow(entry.key, entry.value),
+              const SizedBox(height: 4),
+              Text(
+                'Baseline score = Disease Signs + Stressed Colony model scores. The model has four broad classes and cannot identify a specific disease.',
+                style: _style(11, FontWeight.w400, AppColors.textSecondary),
+              ),
+            ],
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => DiseaseAssessmentScreen(
+                    inferenceService: inferenceService,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.add_a_photo_outlined),
+              label: const Text('Upload hive image'),
+            ),
+            const SizedBox(height: 9),
+            Text(
+              'A photo assessment requires the ONNX model files to be bundled in the app.',
+              textAlign: TextAlign.center,
+              style: _style(11, FontWeight.w400, AppColors.textSecondary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _scoreCard(DiseaseRiskAssessment? assessment, Color scoreColor) =>
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: AppColors.accentGradient,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Column(
+          children: [
+            Text(
+              'Initial image-risk indicator',
+              style: _style(14, FontWeight.w600, AppColors.textPrimary),
+            ),
+            const SizedBox(height: 13),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: scoreColor, width: 5),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    assessment == null || predictionResult!.isOod
+                        ? '—'
+                        : '${assessment.score}',
+                    style: _style(34, FontWeight.w800, AppColors.textPrimary),
+                  ),
+                  Text('/ 100', style: _style(12, FontWeight.w500, AppColors.textPrimary)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.textPrimary,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                assessment?.level ?? 'Awaiting image evidence',
+                style: _style(11, FontWeight.w700, AppColors.bgPrimary),
+              ),
+            ),
+            const SizedBox(height: 9),
+            Text(
+              assessment?.explanation ??
+                  'No image inference is available yet. Upload a hive image when a compatible model is bundled.',
+              textAlign: TextAlign.center,
+              style: _style(11, FontWeight.w500, AppColors.textPrimary),
+            ),
+          ],
+        ),
+      );
+
+  Widget _emptyEvidence() => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: _card(),
+    child: Row(
+      children: [
+        const Icon(Icons.photo_camera_back_outlined, color: AppColors.warning),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Text(
+            'No model result to assess. The repository currently has no ONNX weights, so no disease score or condition findings are shown.',
+            style: _style(12, FontWeight.w500, AppColors.textSecondary),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _scoreRow(String name, double score) {
+    final color = switch (name) {
+      'Disease Signs' => AppColors.error,
+      'Stressed Colony' => AppColors.warning,
+      'Healthy Colony' => AppColors.accent3,
+      _ => AppColors.blue,
+    };
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(13),
+      decoration: _card(),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(name, style: _style(13, FontWeight.w700, AppColors.textPrimary))),
+              Text('${(score * 100).toStringAsFixed(1)}%', style: _style(12, FontWeight.w700, color)),
+            ],
+          ),
+          const SizedBox(height: 9),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: score.clamp(0, 1),
+              minHeight: 6,
+              color: color,
+              backgroundColor: AppColors.border,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-Widget _condition(String name, String confidence, String level, Color color, IconData icon) => Container(margin: const EdgeInsets.only(bottom: 9), padding: const EdgeInsets.all(13), decoration: _card(), child: Row(children: [Container(width: 42, height: 42, decoration: BoxDecoration(color: color.withValues(alpha: .13), borderRadius: BorderRadius.circular(13)), child: Icon(icon, color: color)), const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(name, style: _style(14, FontWeight.w700, AppColors.textPrimary)), Text(confidence, style: _style(11, FontWeight.w400, AppColors.textSecondary))])), Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6), decoration: BoxDecoration(color: color.withValues(alpha: .12), borderRadius: BorderRadius.circular(16)), child: Text(level, style: _style(11, FontWeight.w600, color)),), const SizedBox(width: 6), const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary)]));
-BoxDecoration _card() => BoxDecoration(color: AppColors.bgSecondary, borderRadius: BorderRadius.circular(17), border: Border.all(color: AppColors.border), boxShadow: [BoxShadow(color: AppColors.textPrimary.withValues(alpha: .04), blurRadius: 9, offset: const Offset(0, 3))]);
-TextStyle _style(double size, FontWeight weight, Color color) => GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color);
-void _navigate(BuildContext c, int i) { final page = switch (i) { 0 => const HomeScreen(), 2 => const ForageMapScreen(), 3 => const HiveTelemetryScreen(), 4 => const EnvironmentDashboardScreen(), _ => const DiseaseCheckScreen() }; Navigator.push(c, MaterialPageRoute<void>(builder: (_) => page)); }
+BoxDecoration _card() => BoxDecoration(
+  color: AppColors.bgSecondary,
+  borderRadius: BorderRadius.circular(17),
+  border: Border.all(color: AppColors.border),
+);
+
+TextStyle _style(double size, FontWeight weight, Color color) =>
+    GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color);
+

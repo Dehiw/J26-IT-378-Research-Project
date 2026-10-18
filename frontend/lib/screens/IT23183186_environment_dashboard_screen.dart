@@ -1,13 +1,108 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../models/apiary_model.dart';
+import '../services/apiary_service.dart';
+import '../services/inference_service.dart';
+import '../services/weather_service.dart';
 import '../utils/theme.dart';
-import '../widgets/main_bottom_nav.dart';
+import 'IT23183186_disease_assessment_screen.dart';
+import 'IT23183186_disease_check_screen.dart';
+import 'IT23183186_disease_risk_screen.dart';
 import 'IT23183186_forage_map_screen.dart';
 import 'IT23183186_hive_telemetry_screen.dart';
 
-class EnvironmentDashboardScreen extends StatelessWidget {
-  const EnvironmentDashboardScreen({super.key});
+class EnvironmentDashboardScreen extends StatefulWidget {
+  final InferenceService? inferenceService;
+
+  const EnvironmentDashboardScreen({super.key, this.inferenceService});
+
+  @override
+  State<EnvironmentDashboardScreen> createState() =>
+      _EnvironmentDashboardScreenState();
+}
+
+class _EnvironmentDashboardScreenState
+    extends State<EnvironmentDashboardScreen> {
+  final WeatherService _weatherService = const WeatherService();
+  CurrentWeather? _weather;
+  String? _weatherError;
+  String _locationQuery = 'Colombo, Sri Lanka';
+  String? _manualLocation;
+  bool _loadingWeather = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather({String? location}) async {
+    final ApiaryModel? apiary = ApiaryService.instance.selectedApiary;
+    final gps = apiary?.gpsLocation?.trim();
+    _locationQuery =
+        location ??
+        _manualLocation ??
+        (gps != null && gps.isNotEmpty
+            ? gps
+            : apiary == null
+            ? 'Colombo, Sri Lanka'
+            : '${apiary.locationName}, Sri Lanka');
+    setState(() {
+      _loadingWeather = true;
+      _weatherError = null;
+    });
+    try {
+      final weather = await _weatherService.fetchCurrent(_locationQuery);
+      if (!mounted) return;
+      setState(() {
+        _weather = weather;
+        _loadingWeather = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _weatherError = error.toString();
+        _loadingWeather = false;
+      });
+    }
+  }
+
+  Future<void> _editLocation() async {
+    final controller = TextEditingController(text: _locationQuery);
+    final location = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.bgPrimary,
+        title: Text(
+          'Weather location',
+          style: _style(18, FontWeight.w700, AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'City or latitude,longitude',
+            hintText: 'Kandy or 7.2906,80.6337',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (location == null || location.isEmpty) return;
+    _manualLocation = location;
+    await _loadWeather(location: location);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -30,36 +125,45 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                     style: _style(20, FontWeight.w800, AppColors.textPrimary),
                   ),
                 ),
-                const Icon(
-                  Icons.notifications_none_rounded,
-                  color: AppColors.textPrimary,
+                IconButton(
+                  tooltip: 'Refresh weather',
+                  onPressed: _loadWeather,
+                  icon: const Icon(Icons.refresh_rounded),
                 ),
               ],
             ),
             Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 18),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 11,
-                ),
-                decoration: _cardDecoration(),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.circle,
-                      size: 10,
-                      color: AppColors.accent3,
-                    ),
-                    const SizedBox(width: 9),
-                    Text(
-                      'Colony 03 â€“ Negombo',
-                      style: _style(13, FontWeight.w600, AppColors.textPrimary),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(Icons.keyboard_arrow_down_rounded),
-                  ],
+              child: InkWell(
+                onTap: _editLocation,
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 8, bottom: 18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 11,
+                  ),
+                  decoration: _cardDecoration(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: AppColors.accent3,
+                      ),
+                      const SizedBox(width: 9),
+                      Text(
+                        _weather?.locationName ?? _locationQuery,
+                        style: _style(
+                          13,
+                          FontWeight.w600,
+                          AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Icon(Icons.edit_location_alt_outlined, size: 18),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -84,7 +188,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Environmental Health Score',
+                          'Current outdoor conditions',
                           style: _style(
                             14,
                             FontWeight.w500,
@@ -93,7 +197,10 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Favorable Conditions',
+                          _weather?.condition ??
+                              (_loadingWeather
+                                  ? 'Loading weather…'
+                                  : 'Weather unavailable'),
                           style: _style(
                             17,
                             FontWeight.w700,
@@ -102,7 +209,10 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 7),
                         Text(
-                          'â†—  Up 4 pts since last week',
+                          _weather == null
+                              ? (_weatherError ??
+                                    'WeatherAPI data for this location')
+                              : 'Updated ${_weather!.updatedAt}',
                           style: _style(
                             12,
                             FontWeight.w500,
@@ -129,9 +239,13 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                             AppColors.bgPrimary,
                           ),
                           children: [
-                            const TextSpan(text: '82\n'),
                             TextSpan(
-                              text: '/ 100',
+                              text: _weather == null
+                                  ? '--\n'
+                                  : '${_weather!.humidityPercent}\n',
+                            ),
+                            TextSpan(
+                              text: '% RH',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -145,6 +259,62 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            _sectionTitle(
+              'Hive Health',
+              'Disease check',
+              () => _open(
+                context,
+                DiseaseCheckScreen(inferenceService: widget.inferenceService),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _MetricCard(
+                    icon: Icons.health_and_safety_outlined,
+                    label: 'Disease check',
+                    value: 'Open',
+                    note: 'View available evidence',
+                    color: AppColors.warning,
+                    onTap: () => _open(
+                      context,
+                      DiseaseCheckScreen(
+                        inferenceService: widget.inferenceService,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _MetricCard(
+                    icon: Icons.assessment_outlined,
+                    label: 'Risk overview',
+                    value: 'Open',
+                    note: 'See baseline assessment',
+                    color: AppColors.accent3,
+                    onTap: () => _open(
+                      context,
+                      DiseaseRiskScreen(
+                        inferenceService: widget.inferenceService,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => _open(
+                context,
+                DiseaseAssessmentScreen(
+                  inferenceService: widget.inferenceService,
+                ),
+              ),
+              icon: const Icon(Icons.add_a_photo_outlined),
+              label: const Text('Upload hive images'),
+            ),
             const SizedBox(height: 14),
             Row(
               children: [
@@ -152,8 +322,12 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                   child: _MetricCard(
                     icon: Icons.thermostat_rounded,
                     label: 'Temperature',
-                    value: '31Â°C',
-                    note: 'Last 12 hrs',
+                    value: _weather == null
+                        ? (_loadingWeather ? 'Loading…' : 'Unavailable')
+                        : '${_weather!.temperatureC.toStringAsFixed(1)}°C',
+                    note: _weather == null
+                        ? 'WeatherAPI'
+                        : 'Feels like ${_weather!.feelsLikeC.toStringAsFixed(1)}°C',
                     color: AppColors.accent3,
                     onTap: () => _open(context, const HiveTelemetryScreen()),
                   ),
@@ -163,8 +337,12 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                   child: _MetricCard(
                     icon: Icons.water_drop_outlined,
                     label: 'Humidity',
-                    value: '64%',
-                    note: 'Last 12 hrs',
+                    value: _weather == null
+                        ? (_loadingWeather ? 'Loading…' : 'Unavailable')
+                        : '${_weather!.humidityPercent}%',
+                    note: _weather == null
+                        ? 'WeatherAPI'
+                        : 'Current outdoor humidity',
                     color: AppColors.blue,
                     onTap: () => _open(context, const HiveTelemetryScreen()),
                   ),
@@ -174,12 +352,16 @@ class EnvironmentDashboardScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: _MetricCard(
                     icon: Icons.cloud_outlined,
-                    label: 'Rainfall Risk',
-                    value: 'Low',
-                    note: '8% next 24 hrs',
+                    label: 'Rainfall',
+                    value: _weather == null
+                        ? (_loadingWeather ? 'Loading…' : 'Unavailable')
+                        : '${_weather!.precipitationMm.toStringAsFixed(1)} mm',
+                    note: _weather == null
+                        ? 'WeatherAPI'
+                        : 'Current precipitation',
                     color: AppColors.accent3,
                   ),
                 ),
@@ -230,7 +412,7 @@ class EnvironmentDashboardScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            'Sample alert: pesticide exposure risk detected 2 km NE of hive.',
+                            'Weather conditions are from WeatherAPI. Other risk insights require local sensor data.',
                             style: _style(
                               13,
                               FontWeight.w500,
@@ -269,22 +451,24 @@ class EnvironmentDashboardScreen extends StatelessWidget {
             const SizedBox(height: 10),
             _AlertRow(
               icon: Icons.thermostat_rounded,
-              title: 'Temperature stable',
-              subtitle: 'Sample telemetry Â· Hive #03',
+              title: _weather == null
+                  ? 'Weather data status'
+                  : 'Wind ${_weather!.windKph.toStringAsFixed(0)} km/h · UV ${_weather!.uvIndex.toStringAsFixed(1)}',
+              subtitle: _weather == null
+                  ? (_weatherError ?? 'Loading current conditions')
+                  : '${_weather!.windDirection} · ${_weather!.locationName} · ${_weather!.updatedAt}',
               color: AppColors.accent3,
             ),
             const SizedBox(height: 24),
             Text(
-              'Sample dashboard values',
+              _weatherError == null
+                  ? 'Temperature, humidity and weather data via WeatherAPI. Forage and telemetry cards are illustrative.'
+                  : _weatherError!,
               style: _style(11, FontWeight.w500, AppColors.textSecondary),
             ),
           ],
         ),
       ),
-    ),
-    bottomNavigationBar: MainBottomNav(
-      currentIndex: 4,
-      onTap: (i) => _navigateTab(context, i),
     ),
   );
 }
@@ -305,11 +489,6 @@ BoxDecoration _cardDecoration() => BoxDecoration(
 );
 void _open(BuildContext context, Widget page) =>
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
-void _navigateTab(BuildContext context, int i) {
-  if (i == 1) _open(context, const HiveTelemetryScreen());
-  if (i == 2) _open(context, const ForageMapScreen());
-  if (i == 0) Navigator.maybePop(context);
-}
 
 Widget _sectionTitle(String title, String action, VoidCallback onTap) => Row(
   mainAxisAlignment: MainAxisAlignment.spaceBetween,

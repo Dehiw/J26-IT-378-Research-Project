@@ -13,9 +13,6 @@ import '../widgets/main_bottom_nav.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
-import 'IT23183186_disease_check_screen.dart';
-import 'IT23183186_forage_map_screen.dart';
-import 'IT23183186_hive_telemetry_screen.dart';
 
 /// Home Page for Hive Sense App.
 /// - Left-side hamburger menu / drawer.
@@ -48,6 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadApiaries() async {
+    if (!AuthService.instance.isLoggedIn) {
+      if (mounted) setState(() => _loadingApiaries = false);
+      return;
+    }
     setState(() => _loadingApiaries = true);
     try {
       final list = await ApiaryService.instance.fetchApiaries();
@@ -76,26 +77,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavTapped(int index) {
-    if (index == 0) return;
-    if (index == 1) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const DiseaseCheckScreen()),
-      );
-    } else if (index == 2) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => const ForageMapScreen()));
-    } else if (index == 4) {
+    if (index == 0) {
+      setState(() => _currentIndex = 0);
+      return;
+    }
+    if (index == 4) {
+      setState(() => _currentIndex = 4);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => const EnvironmentDashboardScreen(),
+          builder: (_) => EnvironmentDashboardScreen(
+            inferenceService: widget.inferenceService,
+          ),
         ),
       );
-    } else {
+      return;
+    }
+    {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Acoustic monitoring is coming soon.',
+            'Open Environment to access the IT23183186 project screens.',
             style: GoogleFonts.inter(color: AppColors.bgSecondary),
           ),
           backgroundColor: AppColors.panelBlack,
