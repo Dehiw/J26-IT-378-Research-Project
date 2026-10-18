@@ -11,9 +11,25 @@ class FakeAcousticService implements AcousticService {
     this.failures = 1,
     this.historyFailures = 0,
     List<AcousticResult> history = const [],
-  }) : _seeded = List.of(history);
+    List<HiveOption>? hives,
+    this.isDemo = false,
+  }) : _seeded = List.of(history),
+       hives = hives ?? [defaultHive];
+
+  /// The hive used when none is given.
+  static const HiveOption defaultHive = HiveOption(
+    id: 'H-001',
+    name: 'Hive H-001',
+    apiary: 'Test apiary',
+  );
 
   final int failures;
+
+  /// Hives returned by [getHives].
+  final List<HiveOption> hives;
+
+  @override
+  final bool isDemo;
 
   /// How many [getHistory] calls fail before one succeeds.
   int historyFailures;
@@ -72,9 +88,7 @@ class FakeAcousticService implements AcousticService {
   }
 
   @override
-  Future<List<HiveOption>> getHives() async => const [
-    HiveOption(id: 'H-001', apiary: 'Test apiary'),
-  ];
+  Future<List<HiveOption>> getHives() async => hives;
 
   @override
   Future<List<double>?> getWaveform(String resultId) async => null;

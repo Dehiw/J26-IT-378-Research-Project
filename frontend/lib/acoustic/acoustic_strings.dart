@@ -40,8 +40,6 @@ class AcousticStrings {
   static const String qualityFair = 'Fair';
   static const String qualityPoor = 'Poor';
 
-  static String recordingHive(String hiveId) => 'Hive $hiveId';
-
   static String recordingLengthHint(int seconds) =>
       'Recording stops automatically after $seconds seconds.';
 
@@ -160,6 +158,9 @@ class AcousticStrings {
       'No saved analyses match this filter.';
 
   static const String noAbnormalThisWeek = 'No abnormal results this week';
+
+  // Demo notice, shown while the mock service is in use
+  static const String demoNotice = 'Demo analysis, not a real AI result';
 
   static String showingFilter(String label) => 'Showing: $label';
 

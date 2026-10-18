@@ -44,6 +44,10 @@ class AcousticException implements Exception {
 ///
 /// Waveform samples are kept beside the result, not inside AcousticResult.
 abstract class AcousticService {
+  /// True when results are made up (the mock). The UI shows a "Demo
+  /// analysis" notice while this is true. The real service returns false.
+  bool get isDemo;
+
   /// Analyses one recording for [hiveId]. [bytes] and [filename] are used
   /// instead of a File so the same call works on web and mobile.
   Future<AcousticResult> analyzeAudio({

@@ -8,6 +8,7 @@ import '../acoustic_format.dart';
 import '../acoustic_strings.dart';
 import '../models/abnormal_trend.dart';
 import '../models/acoustic_result.dart';
+import '../models/hive_names.dart';
 import '../services/acoustic_service.dart';
 import '../widgets/abnormality_trend_card.dart';
 import '../widgets/acoustic_status_style.dart';
@@ -55,6 +56,7 @@ class _SoundHistoryScreenState extends State<SoundHistoryScreen> {
       _failed = false;
     });
     try {
+      await _rememberHiveNames();
       final saved = await widget.service.getHistory(hiveId: widget.hiveId);
       if (!mounted) return;
       final items = [
@@ -77,6 +79,21 @@ class _SoundHistoryScreenState extends State<SoundHistoryScreen> {
         _loading = false;
         _failed = true;
       });
+    }
+  }
+
+  /// Keeps hive names current for the header. Best effort: names are only
+  /// for display, so a failure here does not block the list.
+  Future<void> _rememberHiveNames() async {
+    try {
+      HiveNames.remember(await widget.service.getHives());
+    } catch (error, stack) {
+      developer.log(
+        'Failed to load hive names',
+        name: 'AcousticHistory',
+        error: error,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -266,7 +283,7 @@ class _SoundHistoryScreenState extends State<SoundHistoryScreen> {
           ),
           const SizedBox(height: 2),
           Text(
-            AcousticStrings.hiveName(widget.hiveId),
+            HiveNames.of(widget.hiveId),
             style: GoogleFonts.inter(
               fontSize: 14,
               color: AppColors.textSecondary,

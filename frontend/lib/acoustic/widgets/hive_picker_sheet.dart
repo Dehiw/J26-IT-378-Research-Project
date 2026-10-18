@@ -79,7 +79,7 @@ class _HiveRow extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '${AcousticStrings.hiveName(hive.id)}, ${hive.apiary}',
+      label: '${hive.name}, ${hive.apiary}',
       excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
@@ -100,7 +100,7 @@ class _HiveRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AcousticStrings.hiveName(hive.id),
+                      hive.name,
                       style: GoogleFonts.inter(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

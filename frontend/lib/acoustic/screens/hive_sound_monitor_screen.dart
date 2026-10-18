@@ -6,10 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../utils/theme.dart';
 import '../acoustic_strings.dart';
 import '../models/acoustic_result.dart';
+import '../models/hive_names.dart';
 import '../models/hive_option.dart';
 import '../services/acoustic_service.dart';
 import '../services/audio_upload.dart';
 import '../services/mock_acoustic_service.dart';
+import '../widgets/demo_notice.dart';
 import '../widgets/hive_picker_sheet.dart';
 import '../widgets/hive_selector_card.dart';
 import '../widgets/latest_status_card.dart';
@@ -32,7 +34,12 @@ class HiveSoundMonitorScreen extends StatefulWidget {
     this.onAudioPicked,
     this.onHistoryPressed,
     this.extraAppBarActions = const [],
+    this.initialHiveId,
   });
+
+  /// Hive to select when the Monitor opens. Ignored if it is not in the
+  /// hive list; the first hive is used then.
+  final String? initialHiveId;
 
   /// Defaults to [MockAcousticService] when not supplied.
   final AcousticService? service;
@@ -70,6 +77,7 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedHiveId = widget.initialHiveId;
     _load();
   }
 
@@ -80,6 +88,7 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
     });
     try {
       final hives = await _service.getHives();
+      HiveNames.remember(hives);
       final history = await _service.getHistory();
       if (!mounted) return;
       setState(() {
@@ -250,6 +259,10 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
             onTap: _hives.isEmpty ? null : _pickHive,
           ),
           const SizedBox(height: 16),
+          if (_service.isDemo) ...[
+            const DemoNotice(compact: true),
+            const SizedBox(height: 16),
+          ],
           LatestStatusCard(
             result: _latestForSelectedHive,
             waveform: _waveform,

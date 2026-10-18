@@ -49,7 +49,7 @@ class HiveSelectorCard extends StatelessWidget {
                     Text(
                       selected == null
                           ? AcousticStrings.noHivesFound
-                          : AcousticStrings.hiveName(selected.id),
+                          : selected.name,
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

@@ -7,9 +7,11 @@ import '../../utils/theme.dart';
 import '../acoustic_format.dart';
 import '../acoustic_strings.dart';
 import '../models/acoustic_result.dart';
+import '../models/hive_names.dart';
 import '../services/acoustic_service.dart';
 import '../widgets/acoustic_status_style.dart';
 import '../widgets/confidence_indicator.dart';
+import '../widgets/demo_notice.dart';
 import '../widgets/waveform_view.dart';
 
 /// Result of one analysis. The user either saves it, which returns to the
@@ -102,6 +104,10 @@ class _ResultScreenState extends State<ResultScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 32),
+              if (widget.service.isDemo) ...[
+                const DemoNotice(),
+                const SizedBox(height: 16),
+              ],
               Center(
                 child: Container(
                   width: 88,
@@ -126,7 +132,7 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                '${AcousticStrings.hiveName(result.hiveId)} · '
+                '${HiveNames.of(result.hiveId)} · '
                 '${AcousticFormat.dayAndTime(result.recordedAt, DateTime.now())}',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(

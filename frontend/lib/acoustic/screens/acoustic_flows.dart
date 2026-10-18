@@ -17,6 +17,11 @@ import 'recording_screen.dart';
 class AcousticFlows {
   AcousticFlows._();
 
+  /// Route name of the Monitor. "Record Again" pops back to it, so it works
+  /// both in the demo (where the Monitor is the first route) and in the app
+  /// (where it is pushed on top of Home).
+  static const String monitorRouteName = '/acoustic/monitor';
+
   /// Opens the Recording screen for [hiveId].
   static Future<void> startRecording({
     required NavigatorState navigator,
@@ -70,7 +75,9 @@ class AcousticFlows {
     required AcousticService service,
     required String hiveId,
   }) {
-    navigator.popUntil((route) => route.isFirst);
+    navigator.popUntil(
+      (route) => route.settings.name == monitorRouteName || route.isFirst,
+    );
     startRecording(navigator: navigator, service: service, hiveId: hiveId);
   }
 }

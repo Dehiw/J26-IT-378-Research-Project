@@ -7,6 +7,7 @@ import '../../utils/theme.dart';
 import '../acoustic_config.dart';
 import '../acoustic_format.dart';
 import '../acoustic_strings.dart';
+import '../models/hive_names.dart';
 import '../models/recording_capture.dart';
 import '../services/acoustic_service.dart';
 import '../services/microphone_permission.dart';
@@ -260,7 +261,7 @@ class _HiveTag extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        AcousticStrings.recordingHive(hiveId),
+        HiveNames.of(hiveId),
         style: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w700,

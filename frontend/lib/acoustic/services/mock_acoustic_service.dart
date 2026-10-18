@@ -13,24 +13,36 @@ class MockAcousticService implements AcousticService {
     this.delay = const Duration(milliseconds: 1500),
     List<AcousticResult>? seed,
     DateTime? now,
+    Future<List<HiveOption>> Function()? hivesProvider,
   }) : _history = seed ?? _seedHistory(now ?? DateTime.now()),
-       _waveforms = {} {
+       _waveforms = {},
+       _hivesProvider = hivesProvider ?? _demoHives {
     _waveforms.addAll(_seedWaveforms(_history));
   }
 
   /// Simulated network and processing time for each call.
   final Duration delay;
 
+  final Future<List<HiveOption>> Function() _hivesProvider;
+
   static const String mockModelVersion = 'mock-0.1';
 
   static const List<AcousticLabel> _cycle = AcousticLabel.values;
 
-  static const List<HiveOption> _hives = [
-    HiveOption(id: 'H-001', apiary: 'Yakkala Apiary'),
-    HiveOption(id: 'H-002', apiary: 'Kandy Apiary'),
+  /// The hives used when no provider is given. The seeded history uses
+  /// these ids.
+  static const List<HiveOption> demoHives = [
+    HiveOption(id: 'H-001', name: 'Hive H-001', apiary: 'Yakkala Apiary'),
+    HiveOption(id: 'H-002', name: 'Hive H-002', apiary: 'Kandy Apiary'),
     // No seeded history: use it to check the Sound History empty state.
-    HiveOption(id: 'H-003', apiary: 'Nuwara Eliya Apiary'),
+    HiveOption(id: 'H-003', name: 'Hive H-003', apiary: 'Nuwara Eliya Apiary'),
   ];
+
+  static Future<List<HiveOption>> _demoHives() async => demoHives;
+
+  /// Always true: this service makes up its results.
+  @override
+  bool get isDemo => true;
 
   final List<AcousticResult> _history;
   final Map<String, List<double>> _waveforms;
@@ -39,7 +51,7 @@ class MockAcousticService implements AcousticService {
   @override
   Future<List<HiveOption>> getHives() async {
     await Future<void>.delayed(delay ~/ 3);
-    return _hives;
+    return _hivesProvider();
   }
 
   @override
