@@ -67,27 +67,17 @@ class _AcousticDemoAppState extends State<_AcousticDemoApp> {
       title: 'Hive Sense: Acoustic demo',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      builder: (context, child) => Stack(
-        children: [
-          child ?? const SizedBox.shrink(),
-          if (kDebugMode)
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: SafeArea(
-                child: FloatingActionButton.extended(
-                  heroTag: 'debug-save-wav',
-                  onPressed: _saveLastCapture,
-                  icon: const Icon(Icons.save_alt),
-                  label: const Text('Save last WAV'),
-                ),
-              ),
-            ),
-        ],
-      ),
       home: HiveSoundMonitorScreen(
         service: _service,
         filePicker: const FilePickerAudioPicker(),
+        extraAppBarActions: [
+          if (kDebugMode)
+            IconButton(
+              icon: const Icon(Icons.save_alt),
+              tooltip: 'Save last WAV (debug)',
+              onPressed: _saveLastCapture,
+            ),
+        ],
         onRecordPressed: (hiveId) => AcousticFlows.startRecording(
           navigator: _navigatorKey.currentState!,
           service: _service,

@@ -30,6 +30,7 @@ class HiveSoundMonitorScreen extends StatefulWidget {
     this.filePicker,
     this.onAudioPicked,
     this.onHistoryPressed,
+    this.extraAppBarActions = const [],
   });
 
   /// Defaults to [MockAcousticService] when not supplied.
@@ -45,6 +46,9 @@ class HiveSoundMonitorScreen extends StatefulWidget {
   final Future<void> Function(String hiveId, PickedAudio audio)? onAudioPicked;
 
   final VoidCallback? onHistoryPressed;
+
+  /// Extra icons shown after the history icon. Used by the dev entry only.
+  final List<Widget> extraAppBarActions;
 
   @override
   State<HiveSoundMonitorScreen> createState() => _HiveSoundMonitorScreenState();
@@ -173,6 +177,7 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
             tooltip: AcousticStrings.soundHistoryTooltip,
             onPressed: widget.onHistoryPressed,
           ),
+          ...widget.extraAppBarActions,
         ],
       ),
       body: SafeArea(child: _buildBody()),
