@@ -2,9 +2,6 @@
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/theme.dart';
-import '../widgets/main_bottom_nav.dart';
-import 'IT23183186_environment_dashboard_screen.dart';
-import 'IT23183186_forage_map_screen.dart';
 
 class HiveTelemetryScreen extends StatefulWidget {
   const HiveTelemetryScreen({super.key});
@@ -103,10 +100,6 @@ class _HiveTelemetryScreenState extends State<HiveTelemetryScreen> {
       foregroundColor: AppColors.textPrimary,
       child: const Icon(Icons.add_rounded),
     ),
-    bottomNavigationBar: MainBottomNav(
-      currentIndex: 1,
-      onTap: (i) => _navigate(context, i),
-    ),
   );
 
   Widget _rangeSelector() => Container(
@@ -173,21 +166,6 @@ class _HiveTelemetryScreenState extends State<HiveTelemetryScreen> {
   );
 }
 
-void _navigate(BuildContext c, int i) {
-  if (i == 0) Navigator.maybePop(c);
-  if (i == 2)
-    Navigator.push(
-      c,
-      MaterialPageRoute<void>(builder: (_) => const ForageMapScreen()),
-    );
-  if (i == 4)
-    Navigator.push(
-      c,
-      MaterialPageRoute<void>(
-        builder: (_) => const EnvironmentDashboardScreen(),
-      ),
-    );
-}
 
 TextStyle _text(double s, FontWeight w, Color c) =>
     GoogleFonts.inter(fontSize: s, fontWeight: w, color: c);

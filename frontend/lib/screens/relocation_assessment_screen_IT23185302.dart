@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
 import 'home_screen.dart';
 
 /// Research Component IT23185302:
@@ -27,8 +29,9 @@ class _RelocationAssessmentScreenIT23185302State
   File? _pickedImage;
 
   // 2. Location state
-  final _addressController =
-      TextEditingController(text: '42 Flower Road, Colombo 07');
+  final _addressController = TextEditingController(
+    text: '42 Flower Road, Colombo 07',
+  );
   String _gpsCoordinates = '6.9061° N, 79.8636° E';
   bool _isFetchingGps = false;
 
@@ -268,6 +271,16 @@ class _RelocationAssessmentScreenIT23185302State
     final activeIndex = isNormalUser ? 1 : 2;
     if (index == activeIndex) return;
 
+    // The Environment tab opens the IT23183186 module from the beekeeper nav.
+    if (!isNormalUser && index == 4) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const EnvironmentDashboardScreen(),
+        ),
+      );
+      return;
+    }
+
     if (index == 0) {
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
@@ -278,6 +291,9 @@ class _RelocationAssessmentScreenIT23185302State
       }
       return;
     }
+
+    // Health and Acoustic do not have destinations on this screen.
+    if (!isNormalUser) return;
 
     final labels = isNormalUser
         ? const ['Home', 'Report', 'Requests', 'Beekeepers']
@@ -295,9 +311,7 @@ class _RelocationAssessmentScreenIT23185302State
         ),
         backgroundColor: AppColors.panelBlack,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -612,15 +626,13 @@ class _RelocationAssessmentScreenIT23185302State
         child: Column(
           children: [
             ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(15)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(15),
+              ),
               child: SizedBox(
                 height: 180,
                 width: double.infinity,
-                child: Image.file(
-                  _pickedImage!,
-                  fit: BoxFit.cover,
-                ),
+                child: Image.file(_pickedImage!, fit: BoxFit.cover),
               ),
             ),
             Padding(
@@ -686,10 +698,7 @@ class _RelocationAssessmentScreenIT23185302State
       decoration: BoxDecoration(
         color: AppColors.bgSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border,
-          style: BorderStyle.solid,
-        ),
+        border: Border.all(color: AppColors.border, style: BorderStyle.solid),
       ),
       child: Column(
         children: [
@@ -792,16 +801,15 @@ class _RelocationAssessmentScreenIT23185302State
             height: 120,
             decoration: BoxDecoration(
               color: AppColors.bgElevated,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(15)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(15),
+              ),
             ),
             child: Stack(
               children: [
                 // Stylized map grid pattern
                 Positioned.fill(
-                  child: CustomPaint(
-                    painter: _MapCanvasPainter(),
-                  ),
+                  child: CustomPaint(painter: _MapCanvasPainter()),
                 ),
                 // Center pin
                 Center(
@@ -830,7 +838,9 @@ class _RelocationAssessmentScreenIT23185302State
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.panelBlack.withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(6),
@@ -855,7 +865,9 @@ class _RelocationAssessmentScreenIT23185302State
                     onTap: _openPinAdjustDialog,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.bgSecondary,
                         borderRadius: BorderRadius.circular(8),
@@ -913,7 +925,8 @@ class _RelocationAssessmentScreenIT23185302State
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.hiveLow),
+                                  AppColors.hiveLow,
+                                ),
                               ),
                             )
                           else
@@ -948,7 +961,9 @@ class _RelocationAssessmentScreenIT23185302State
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     hintText: 'Enter street name, house number, area',
                     filled: true,
                     fillColor: AppColors.bgPrimary,
@@ -990,8 +1005,9 @@ class _RelocationAssessmentScreenIT23185302State
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  color: isSelected
+                      ? AppColors.bgElevated
+                      : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1012,8 +1028,9 @@ class _RelocationAssessmentScreenIT23185302State
                       label,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: isSelected
                             ? AppColors.textPrimary
                             : AppColors.textSecondary,
@@ -1050,11 +1067,14 @@ class _RelocationAssessmentScreenIT23185302State
               onTap: () => setState(() => _selectedHeight = id),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  color: isSelected
+                      ? AppColors.bgElevated
+                      : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1067,8 +1087,9 @@ class _RelocationAssessmentScreenIT23185302State
                       label,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w600,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
                         color: isSelected
                             ? AppColors.textPrimary
                             : AppColors.textPrimary,
@@ -1110,8 +1131,9 @@ class _RelocationAssessmentScreenIT23185302State
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  color: isSelected
+                      ? AppColors.bgElevated
+                      : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1123,8 +1145,9 @@ class _RelocationAssessmentScreenIT23185302State
                     choice,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: isSelected
                           ? AppColors.textPrimary
                           : AppColors.textSecondary,
@@ -1165,8 +1188,12 @@ class _MapCanvasPainter extends CustomPainter {
 
     final path3 = Path()
       ..moveTo(0, size.height * 0.65)
-      ..quadraticBezierTo(size.width * 0.5, size.height * 0.2, size.width,
-          size.height * 0.45);
+      ..quadraticBezierTo(
+        size.width * 0.5,
+        size.height * 0.2,
+        size.width,
+        size.height * 0.45,
+      );
 
     canvas.drawPath(path1, roadPaint);
     canvas.drawPath(path2, roadPaintSecondary);
@@ -1177,10 +1204,8 @@ class _MapCanvasPainter extends CustomPainter {
       ..color = AppColors.hiveLow.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), 24, ringPaint);
-    canvas.drawCircle(
-        Offset(size.width / 2, size.height / 2), 44, ringPaint);
+    canvas.drawCircle(Offset(size.width / 2, size.height / 2), 24, ringPaint);
+    canvas.drawCircle(Offset(size.width / 2, size.height / 2), 44, ringPaint);
   }
 
   @override
@@ -1284,7 +1309,9 @@ class RelocationResultScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.panelBlack.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
@@ -1365,7 +1392,8 @@ class RelocationResultScreen extends StatelessWidget {
                   color: AppColors.badgeLeafBg,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: AppColors.badgeLeafFg.withValues(alpha: 0.3)),
+                    color: AppColors.badgeLeafFg.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,

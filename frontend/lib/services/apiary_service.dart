@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/apiary_model.dart';
@@ -142,56 +142,43 @@ class ApiaryService {
 
   Future<Map<String, dynamic>> _getJson(String url) async {
     final token = AuthService.instance.token;
-    HttpClient? client;
     try {
-      client = HttpClient()..connectionTimeout = const Duration(seconds: 12);
-      final request = await client.getUrl(Uri.parse(url));
-      request.headers.set('accept', 'application/json');
-      if (token != null) {
-        request.headers.set('authorization', 'Bearer $token');
-      }
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
+      final response = await http.get(Uri.parse(url), headers: {
+        'accept': 'application/json',
+        if (token != null) 'authorization': 'Bearer $token',
+      }).timeout(const Duration(seconds: 12));
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode >= 200 && response.statusCode < 300) return json;
       throw AuthException(json['detail']?.toString() ?? 'Request failed');
+    } on http.ClientException {
+      throw const AuthException('Cannot connect to backend server.');
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());
-    } finally {
-      client?.close();
     }
   }
 
   Future<Map<String, dynamic>> _postJson(
       String url, Map<String, dynamic> body) async {
     final token = AuthService.instance.token;
-    HttpClient? client;
     try {
-      client = HttpClient()..connectionTimeout = const Duration(seconds: 12);
-      final request = await client.postUrl(Uri.parse(url));
-      request.headers.set('content-type', 'application/json; charset=utf-8');
-      request.headers.set('accept', 'application/json');
-      if (token != null) {
-        request.headers.set('authorization', 'Bearer $token');
-      }
-      final bytes = utf8.encode(jsonEncode(body));
-      request.contentLength = bytes.length;
-      request.add(bytes);
-      final response = await request.close();
-      final respBody = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(respBody) as Map<String, dynamic>;
+      final response = await http.post(Uri.parse(url),
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'accept': 'application/json',
+            if (token != null) 'authorization': 'Bearer $token',
+          },
+          body: jsonEncode(body)).timeout(const Duration(seconds: 12));
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode >= 200 && response.statusCode < 300) return json;
       final detail = json['detail'];
       if (detail is String) throw AuthException(detail);
       throw AuthException(json['message']?.toString() ?? 'Request failed');
-    } on SocketException {
+    } on http.ClientException {
       throw const AuthException('Cannot connect to backend server.');
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());
-    } finally {
-      client?.close();
     }
   }
 }

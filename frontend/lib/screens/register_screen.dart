@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
+import 'home_screen.dart';
 import 'login_screen.dart';
 
 /// RegisterScreen adhering to Frontend_skill.md guidelines:
@@ -530,6 +531,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute<void>(
+                        builder: (_) => HomeScreen(
+                          inferenceService: widget.inferenceService,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Continue as guest',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.hiveLow,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
               ],

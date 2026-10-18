@@ -1,4 +1,4 @@
-﻿import 'dart:developer' as developer;
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,16 +17,8 @@ import 'wild_bee_hive_report_screen_IT23185302.dart';
 import 'my_requests_screen_IT23185302.dart';
 import 'beekeepers_directory_screen_IT23185302.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
-import 'IT23183186_disease_check_screen.dart';
-import 'IT23183186_forage_map_screen.dart';
-import 'IT23183186_hive_telemetry_screen.dart';
 
-/// Home Page for Hive Sense App.
-/// - Left-side hamburger menu / drawer.
-/// - Brand title 'Hive Sense'.
-/// - Selected Apiary section with dropdown and Manage button.
-/// - Summary stat cards, quick actions, hive overview, recent activity.
-/// - 5-item bottom navigation bar.
+
 class HomeScreen extends StatefulWidget {
   final InferenceService? inferenceService;
 
@@ -128,7 +120,48 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
+  Future<void> _loadBeekeeperStats() async {
+    if (mounted) setState(() => _loadingBkStats = true);
+    try {
+      final reports = await WildBeeService.instance.fetchAllReports();
+      final statuses = reports
+          .map((report) => (report['status'] ?? '').toString().toLowerCase())
+          .toList();
+      final pending = statuses
+          .where((status) => status == 'pending' || status == 'submitted')
+          .length;
+      final active = statuses
+          .where(
+            (status) =>
+                status == 'assigned' ||
+                status == 'accepted' ||
+                status == 'in progress' ||
+                status == 'in_progress',
+          )
+          .length;
+      final completed = statuses
+          .where((status) => status == 'completed')
+          .length;
+
+      if (!mounted) return;
+      setState(() {
+        _bkPending = pending;
+        _bkActive = active;
+        _bkCompleted = completed;
+        _recentRelocationActivity = reports.take(5).toList();
+        _loadingBkStats = false;
+      });
+    } catch (e) {
+      developer.log('Beekeeper stats load error: $e', name: 'HomeScreen');
+      if (mounted) setState(() => _loadingBkStats = false);
+    }
+  }
+
   Future<void> _loadApiaries() async {
+    if (!AuthService.instance.isLoggedIn) {
+      if (mounted) setState(() => _loadingApiaries = false);
+      return;
+    }
     setState(() => _loadingApiaries = true);
     try {
       final list = await ApiaryService.instance.fetchApiaries();
@@ -165,34 +198,23 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       );
       return;
     }
-    setState(() => _currentIndex = index);
-    if (index == 0) return;
-    if (index == 1) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const DiseaseCheckScreen()),
-      );
-    } else if (index == 2) {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute<void>(builder: (_) => const ForageMapScreen()));
-    } else if (index == 4) {
+    if (index == 0) {
+      setState(() => _currentIndex = 0);
+      return;
+    }
+    if (index == 4) {
+      setState(() => _currentIndex = 4);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => const EnvironmentDashboardScreen(),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Acoustic monitoring is coming soon.',
-            style: GoogleFonts.inter(color: AppColors.bgSecondary),
+          builder: (_) => EnvironmentDashboardScreen(
+            inferenceService: widget.inferenceService,
           ),
-          backgroundColor: AppColors.panelBlack,
-          behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
     }
+    // Health and Acoustic remain on the current screen. The IT23183186
+    // screens are reached from the Environment dashboard.
   }
 
   void _onNormalUserNavTapped(int index) {
