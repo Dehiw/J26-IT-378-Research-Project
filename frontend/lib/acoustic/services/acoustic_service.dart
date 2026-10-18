@@ -59,8 +59,9 @@ abstract class AcousticService {
     List<double> waveform = const [],
   });
 
-  /// Past analyses across all hives, newest first.
-  Future<List<AcousticResult>> getHistory();
+  /// Saved analyses, newest first. Pass [hiveId] to limit the list to one
+  /// hive; null returns every hive.
+  Future<List<AcousticResult>> getHistory({String? hiveId});
 
   /// Hives the user can record for.
   Future<List<HiveOption>> getHives();

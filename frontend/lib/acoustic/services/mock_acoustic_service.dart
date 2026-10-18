@@ -28,6 +28,8 @@ class MockAcousticService implements AcousticService {
   static const List<HiveOption> _hives = [
     HiveOption(id: 'H-001', apiary: 'Yakkala Apiary'),
     HiveOption(id: 'H-002', apiary: 'Kandy Apiary'),
+    // No seeded history: use it to check the Sound History empty state.
+    HiveOption(id: 'H-003', apiary: 'Nuwara Eliya Apiary'),
   ];
 
   final List<AcousticResult> _history;
@@ -88,9 +90,13 @@ class MockAcousticService implements AcousticService {
   }
 
   @override
-  Future<List<AcousticResult>> getHistory() async {
+  Future<List<AcousticResult>> getHistory({String? hiveId}) async {
     await Future<void>.delayed(delay ~/ 3);
-    return List.unmodifiable(_history);
+    final items = [
+      for (final r in _history)
+        if (hiveId == null || r.hiveId == hiveId) r,
+    ]..sort((a, b) => b.recordedAt.compareTo(a.recordedAt));
+    return List.unmodifiable(items);
   }
 
   static double _confidenceFor(AcousticLabel label) => switch (label) {
@@ -119,8 +125,9 @@ class MockAcousticService implements AcousticService {
     };
   }
 
-  /// Eight recordings over the last six days, across two hives, covering
-  /// all five states.
+  /// Seven saved recordings over the last six days, across H-001 and H-002.
+  /// Unclear is left out: an unclear result cannot be saved, so it never
+  /// appears in history. H-003 has none, for the empty state.
   static List<AcousticResult> _seedHistory(DateTime now) {
     // (label, confidence, hiveId, how long ago, audio quality)
     final entries = <(AcousticLabel, double, String, Duration, AudioQuality)>[
@@ -158,13 +165,6 @@ class MockAcousticService implements AcousticService {
         'H-002',
         const Duration(days: 3),
         AudioQuality.fair,
-      ),
-      (
-        AcousticLabel.unclearRecording,
-        0.41,
-        'H-002',
-        const Duration(days: 4),
-        AudioQuality.poor,
       ),
       (
         AcousticLabel.normal,

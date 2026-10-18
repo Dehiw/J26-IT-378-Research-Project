@@ -16,7 +16,8 @@ class AcousticFormat {
     return DateFormat('d MMM').format(recordedAt);
   }
 
-  /// "Today, 09:20 AM"
+  /// The one date and time format for every acoustic screen, so times read
+  /// the same everywhere: "Today, 09:20 AM", "12 Oct, 06:15 PM".
   static String dayAndTime(DateTime recordedAt, DateTime now) =>
       '${dayLabel(recordedAt, now)}, ${DateFormat('hh:mm a').format(recordedAt)}';
 

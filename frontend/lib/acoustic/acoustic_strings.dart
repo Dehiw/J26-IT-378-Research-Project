@@ -145,6 +145,27 @@ class AcousticStrings {
   static const String today = 'Today';
   static const String yesterday = 'Yesterday';
 
+  // Sound history
+  static const String soundHistoryTitle = 'Sound History';
+  static const String recentRecordings = 'Recent recordings';
+  static const String historyLoading = 'Loading sound history…';
+  static const String historyLoadFailed = "Couldn't load sound history.";
+  static const String filterTooltip = 'Filter by status';
+  static const String filterTitle = 'Filter by status';
+  static const String filterAll = 'All';
+  static const String showAll = 'Show all';
+  static const String noSavedAnalysesForHive =
+      'No saved analyses for this hive yet';
+  static const String noMatchingAnalyses =
+      'No saved analyses match this filter.';
+
+  static const String noAbnormalThisWeek = 'No abnormal results this week';
+
+  static String showingFilter(String label) => 'Showing: $label';
+
+  static String abnormalTrendTitle(int days) =>
+      'Abnormal results, last $days days';
+
   static String hiveName(String hiveId) => 'Hive $hiveId';
 
   static String percent(double confidence) =>

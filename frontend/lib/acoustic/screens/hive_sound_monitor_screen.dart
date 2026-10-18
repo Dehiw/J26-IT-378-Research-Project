@@ -14,6 +14,7 @@ import '../widgets/hive_picker_sheet.dart';
 import '../widgets/hive_selector_card.dart';
 import '../widgets/latest_status_card.dart';
 import '../widgets/recent_analysis_tile.dart';
+import 'sound_history_screen.dart';
 
 /// Hive Sound Monitor: pick a hive, see its latest sound state, and start
 /// a recording or an upload.
@@ -175,7 +176,7 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
           IconButton(
             icon: const Icon(Icons.history_outlined),
             tooltip: AcousticStrings.soundHistoryTooltip,
-            onPressed: widget.onHistoryPressed,
+            onPressed: widget.onHistoryPressed ?? () => _openHistory(),
           ),
           ...widget.extraAppBarActions,
         ],
@@ -288,6 +289,23 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
         ],
       ),
     );
+  }
+
+  /// Opens Sound History for the selected hive. Reloads on return, in case a
+  /// recording was saved from there.
+  Future<void> _openHistory() async {
+    final hiveId = _selectedHiveId;
+    if (hiveId == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SoundHistoryScreen(
+          service: _service,
+          hiveId: hiveId,
+          onRecordPressed: widget.onRecordPressed,
+        ),
+      ),
+    );
+    if (mounted) await _load();
   }
 
   /// Runs a flow for the selected hive, then reloads history so a saved

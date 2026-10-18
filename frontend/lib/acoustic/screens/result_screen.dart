@@ -22,6 +22,7 @@ class ResultScreen extends StatefulWidget {
     required this.result,
     this.waveform = const [],
     this.onRecordAgain,
+    this.readOnly = false,
   });
 
   final AcousticService service;
@@ -33,6 +34,10 @@ class ResultScreen extends StatefulWidget {
 
   /// Starts a new recording. Null hides the button.
   final VoidCallback? onRecordAgain;
+
+  /// True when opened from Sound History: no Save Result and no Record
+  /// Again, only the back button.
+  final bool readOnly;
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -217,7 +222,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              if (!_isUnclear) ...[
+              if (!_isUnclear && !widget.readOnly) ...[
                 ElevatedButton(
                   onPressed: _saving ? null : _save,
                   style: ElevatedButton.styleFrom(
@@ -241,7 +246,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-              if (widget.onRecordAgain != null)
+              if (widget.onRecordAgain != null && !widget.readOnly)
                 OutlinedButton.icon(
                   onPressed: _saving ? null : widget.onRecordAgain,
                   icon: const Icon(Icons.mic_none),

@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../utils/theme.dart';
 import '../acoustic_strings.dart';
 import '../services/acoustic_service.dart';
+import '../services/wav_waveform.dart';
 import 'result_screen.dart';
 
 /// Sends one audio file to [AcousticService] and shows "Analyzing hive
@@ -60,12 +61,17 @@ class _AnalyzeAudioScreenState extends State<AnalyzeAudioScreen> {
         filename: widget.filename,
       );
       if (!mounted) return;
+      // Uploads have no live levels, so draw the preview from the WAV bytes.
+      // MP3 and other formats give null and show no preview.
+      final waveform = widget.waveform.isNotEmpty
+          ? widget.waveform
+          : WavWaveform.decode(widget.bytes) ?? const <double>[];
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => ResultScreen(
             service: widget.service,
             result: result,
-            waveform: widget.waveform,
+            waveform: waveform,
             onRecordAgain: widget.onRecordAgain,
           ),
         ),

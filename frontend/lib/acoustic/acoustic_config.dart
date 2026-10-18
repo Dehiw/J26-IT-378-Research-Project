@@ -36,6 +36,9 @@ class AcousticConfig {
   /// make the whole recording Poor. 0.1% is 16 samples per second at 16 kHz.
   static const double maxClippedSampleRatio = 0.001;
 
+  /// Days shown in the Sound History abnormality trend, counting today.
+  static const int trendWindowDays = 7;
+
   /// No audio data this long after starting means the microphone is not
   /// delivering sound (for example, blocked by the Windows privacy setting).
   static const Duration noDataTimeout = Duration(milliseconds: 1500);

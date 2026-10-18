@@ -7,9 +7,21 @@ import 'package:frontend/acoustic/services/acoustic_service.dart';
 /// Fake [AcousticService]. Analysis throws for the first [failures] calls,
 /// then returns a result. Saved results are recorded for assertions.
 class FakeAcousticService implements AcousticService {
-  FakeAcousticService({this.failures = 1});
+  FakeAcousticService({
+    this.failures = 1,
+    this.historyFailures = 0,
+    List<AcousticResult> history = const [],
+  }) : _seeded = List.of(history);
 
   final int failures;
+
+  /// How many [getHistory] calls fail before one succeeds.
+  int historyFailures;
+
+  /// How many times [getHistory] has been called.
+  int historyCalls = 0;
+
+  final List<AcousticResult> _seeded;
 
   /// How many times [analyzeAudio] has been called.
   int analyzeCalls = 0;
@@ -47,7 +59,17 @@ class FakeAcousticService implements AcousticService {
   }
 
   @override
-  Future<List<AcousticResult>> getHistory() async => saved;
+  Future<List<AcousticResult>> getHistory({String? hiveId}) async {
+    historyCalls++;
+    if (historyFailures > 0) {
+      historyFailures--;
+      throw const AcousticException('Simulated history failure');
+    }
+    return [
+      for (final r in [..._seeded, ...saved])
+        if (hiveId == null || r.hiveId == hiveId) r,
+    ];
+  }
 
   @override
   Future<List<HiveOption>> getHives() async => const [
