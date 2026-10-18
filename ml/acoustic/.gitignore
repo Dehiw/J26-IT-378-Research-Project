@@ -1,0 +1,13 @@
+# Never commit audio or the derived data (manifest, features).
+data/
+
+# Local Python environment
+.venv/
+__pycache__/
+
+# Logs from background runs
+*.log
+
+# Trained models: large binaries (joblib ~54 MB, ONNX ~27 MB). Rebuild with
+# train_baseline.py and export_onnx.py.
+models/
