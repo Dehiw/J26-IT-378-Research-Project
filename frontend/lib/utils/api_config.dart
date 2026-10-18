@@ -1,13 +1,10 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  /// Default base URL for backend connection.
-  /// Android Emulator accesses host localhost via 10.0.2.2.
-  /// iOS Simulator / Desktop / Web accesses host localhost directly.
+  /// Backend API base URL.
+  /// Android emulators use 10.0.2.2 to reach the host machine's localhost.
+  /// Web, desktop, and iOS simulators use localhost directly.
   static String get baseUrl {
-    if (!kIsWeb && Platform.isAndroid) {
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:8000/api/v1';
     }
