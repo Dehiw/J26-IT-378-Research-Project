@@ -8,10 +8,14 @@ import '../models/apiary_model.dart';
 import '../services/auth_service.dart';
 import '../services/apiary_service.dart';
 import '../services/inference_service.dart';
+import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
-import '../widgets/main_bottom_nav.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
+import 'relocation_assessment_screen_IT23185302.dart';
+import 'wild_bee_hive_report_screen_IT23185302.dart';
+import 'my_requests_screen_IT23185302.dart';
+import 'beekeepers_directory_screen_IT23185302.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 
 /// Home Page for Hive Sense App.
@@ -29,7 +33,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+/// Route observer used to detect when the user returns to HomeScreen.
+final RouteObserver<ModalRoute<void>> homeRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _currentIndex = 0;
 
   // Apiary data
@@ -38,10 +46,83 @@ class _HomeScreenState extends State<HomeScreen> {
   List<HiveModel> _hives = [];
   bool _loadingApiaries = true;
 
+  // Normal User live stats
+  int _myReportCount = 0;
+  int _activeBeekeeperCount = 0;
+  int _completedCount = 0;
+  bool _loadingStats = true;
+
+  // Beekeeper dashboard stats & recent activity
+  int _bkPending = 0;
+  int _bkActive = 0;
+  int _bkCompleted = 0;
+  bool _loadingBkStats = true;
+  List<Map<String, dynamic>> _recentRelocationActivity = [];
+
   @override
   void initState() {
     super.initState();
+    if (!AuthService.instance.isLoggedIn) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) =>
+                LoginScreen(inferenceService: widget.inferenceService),
+          ),
+          (route) => false,
+        );
+      });
+      return;
+    }
     _loadApiaries();
+    _loadNormalUserStats();
+    _loadBeekeeperStats();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    homeRouteObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    homeRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  /// Called when this screen becomes active again (e.g. after popping from sub-screen)
+  @override
+  void didPopNext() {
+    _loadNormalUserStats();
+    _loadBeekeeperStats();
+  }
+
+  Future<void> _loadNormalUserStats() async {
+    setState(() => _loadingStats = true);
+    try {
+      // Fetch user's own reports
+      final reports = await WildBeeService.instance.fetchMyReports();
+      // Fetch registered beekeepers from auth endpoint
+      final bkRes = await AuthService.instance.fetchRegisteredBeekeepers();
+      final completed = reports
+          .where(
+            (r) => (r['status'] ?? '').toString().toLowerCase() == 'completed',
+          )
+          .length;
+      if (mounted) {
+        setState(() {
+          _myReportCount = reports.length;
+          _activeBeekeeperCount = bkRes.length;
+          _completedCount = completed;
+          _loadingStats = false;
+        });
+      }
+    } catch (e) {
+      developer.log('Stats load error: $e', name: 'HomeScreen');
+      if (mounted) setState(() => _loadingStats = false);
+    }
   }
 
   Future<void> _loadApiaries() async {
@@ -77,6 +158,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavTapped(int index) {
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const RelocationAssessmentScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+    setState(() => _currentIndex = index);
+    if (index == 0) return;
+    if (index == 1) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const DiseaseCheckScreen()),
+      );
+    } else if (index == 2) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ForageMapScreen()));
+    } else if (index == 4) {
     if (index == 0) {
       setState(() => _currentIndex = 0);
       return;
@@ -104,6 +204,52 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+  }
+
+  void _onNormalUserNavTapped(int index) {
+    if (index == 1) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const WildBeeHiveReportScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const MyRequestsScreenIT23185302()),
+      );
+      return;
+    }
+    if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+    if (index == 0) {
+      setState(() => _currentIndex = 0);
+      return;
+    }
+    final labels = ['Home', 'Report', 'Requests', 'Beekeepers'];
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '${labels[index]} feature will be available in the upcoming update.',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: AppColors.bgSecondary,
+          ),
+        ),
+        backgroundColor: AppColors.panelBlack,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   void _onMenuItemTapped(String title) {
@@ -197,9 +343,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final UserModel? user = AuthService.instance.currentUser;
+    final bool isNormalUser = user?.isNormalUser ?? false;
     final String initial = (user?.name.isNotEmpty == true)
         ? user!.name[0].toUpperCase()
-        : 'B';
+        : 'U';
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -242,73 +389,75 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.hiveLow,
-          onRefresh: _loadApiaries,
+          onRefresh: isNormalUser ? _loadNormalUserStats : _loadApiaries,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 16),
-                _buildGreeting(user),
-                const SizedBox(height: 20),
-                _buildApiarySelector(),
-                const SizedBox(height: 20),
-                _buildSummaryCards(),
-                const SizedBox(height: 20),
-                Text(
-                  'Quick Actions',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildQuickActions(),
-                const SizedBox(height: 20),
-                if (_hives.isNotEmpty) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: isNormalUser
+                ? _buildNormalUserBody(user)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const SizedBox(height: 16),
+                      _buildGreeting(user),
+                      const SizedBox(height: 20),
+                      _buildApiarySelector(),
+                      const SizedBox(height: 20),
+                      _buildSummaryCards(),
+                      const SizedBox(height: 20),
                       Text(
-                        'Hive Boxes',
+                        'Quick Actions',
                         style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      _buildQuickActions(),
+                      const SizedBox(height: 20),
+                      if (_hives.isNotEmpty) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Hive Boxes',
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${_hives.length} total',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildHiveOverview(),
+                        const SizedBox(height: 20),
+                      ],
                       Text(
-                        '${_hives.length} total',
+                        'Recent Activity',
                         style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      _buildRecentActivity(),
+                      const SizedBox(height: 32),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildHiveOverview(),
-                  const SizedBox(height: 20),
-                ],
-                Text(
-                  'Recent Activity',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildRecentActivity(),
-                const SizedBox(height: 32),
-              ],
-            ),
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNav(isNormalUser),
     );
   }
 
@@ -319,14 +468,69 @@ class _HomeScreenState extends State<HomeScreen> {
         : hour < 17
         ? 'Good Afternoon'
         : 'Good Evening';
-    final name = user?.name.split(' ').first ?? 'Beekeeper';
-    return Text(
-      '$greeting, $name',
-      style: GoogleFonts.inter(
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-      ),
+    final name = user?.name.split(' ').first ?? 'User';
+    final isNormalUser = user?.isNormalUser ?? false;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$greeting, $name',
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              isNormalUser
+                  ? 'Bee Conservation & Relocation Portal'
+                  : 'Apiary Intelligence Dashboard',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isNormalUser ? AppColors.badgeLeafBg : AppColors.badgeBeeBg,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isNormalUser ? AppColors.badgeLeafFg : AppColors.hiveLow,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isNormalUser ? Icons.person_rounded : Icons.hive_rounded,
+                size: 13,
+                color: isNormalUser ? AppColors.badgeLeafFg : AppColors.hiveLow,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                isNormalUser ? 'Normal User' : 'Beekeeper',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: isNormalUser
+                      ? AppColors.badgeLeafFg
+                      : AppColors.hiveLow,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -677,8 +881,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSidebar(UserModel? user, String initial) {
-    final String displayName = user?.name ?? 'Beekeeper';
-    final String displayEmail = user?.email ?? 'beekeeper@hivesense.org';
+    final String displayName = (user != null && user.name.isNotEmpty)
+        ? user.name
+        : 'Guest User';
+    final String displayEmail = (user != null && user.email.isNotEmpty)
+        ? user.email
+        : 'Not signed in';
     return Drawer(
       backgroundColor: AppColors.bgSecondary,
       child: SafeArea(
@@ -878,8 +1086,378 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBottomNav() {
-    return MainBottomNav(currentIndex: _currentIndex, onTap: _onNavTapped);
+  Widget _buildBottomNav(bool isNormalUser) {
+    if (isNormalUser) {
+      return BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.bgPrimary,
+        selectedItemColor: AppColors.hiveLow,
+        unselectedItemColor: AppColors.textSecondary,
+        showUnselectedLabels: true,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        currentIndex: _currentIndex.clamp(0, 3),
+        onTap: _onNormalUserNavTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_filled),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_location_alt_outlined),
+            activeIcon: Icon(Icons.add_location_alt_rounded),
+            label: 'Report',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_outlined),
+            activeIcon: Icon(Icons.assignment_rounded),
+            label: 'Requests',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups_outlined),
+            activeIcon: Icon(Icons.groups_rounded),
+            label: 'Beekeepers',
+          ),
+        ],
+      );
+    }
+
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: AppColors.bgPrimary,
+      selectedItemColor: AppColors.hiveLow,
+      unselectedItemColor: AppColors.textSecondary,
+      showUnselectedLabels: true,
+      selectedFontSize: 11,
+      unselectedFontSize: 11,
+      currentIndex: _currentIndex.clamp(0, 4),
+      onTap: _onNavTapped,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.monitor_heart_outlined),
+          label: 'Health',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.location_on_outlined),
+          label: 'Relocate',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.graphic_eq_rounded),
+          label: 'Acoustic',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.eco_outlined),
+          label: 'Environment',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNormalUserBody(UserModel? user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        _buildGreeting(user),
+        const SizedBox(height: 20),
+
+        // Hero Card: Report Wild Bee Colony
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: AppColors.accentGradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.hiveLow.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.panelBlack.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.panelBlack,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Found Bees on Property?',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.panelBlack,
+                          ),
+                        ),
+                        Text(
+                          'Report for ethical relocation',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.panelBlack.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Protect both your family and wild bees. Request an assessment to have a local beekeeper safely relocate the colony instead of harming it.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.panelBlack.withValues(alpha: 0.9),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.panelBlack,
+                    foregroundColor: AppColors.bgSecondary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_location_alt_rounded, size: 20),
+                  label: Text(
+                    'Report Wild Colony',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.bgSecondary,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const WildBeeHiveReportScreenIT23185302(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Quick Stats / Overview
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.assignment_outlined,
+                label: 'My Reports',
+                value: _loadingStats ? '...' : '$_myReportCount',
+                color: AppColors.hiveLow,
+                bg: AppColors.badgeBeeBg,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.verified_user_outlined,
+                label: 'Beekeepers',
+                value: _loadingStats ? '...' : '$_activeBeekeeperCount',
+                color: AppColors.success,
+                bg: AppColors.badgeLeafBg,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.eco_outlined,
+                label: 'Completed',
+                value: _loadingStats ? '...' : '$_completedCount',
+                color: AppColors.accent3,
+                bg: AppColors.badgeLeafBg,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+
+        Text(
+          'Quick Actions',
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.add_location_alt_outlined,
+                label: 'Report Colony',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const WildBeeHiveReportScreenIT23185302(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.checklist_rtl_rounded,
+                label: 'My Requests',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const MyRequestsScreenIT23185302(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.groups_outlined,
+                label: 'Beekeepers',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const BeekeepersDirectoryScreenIT23185302(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickAction(
+                icon: Icons.shield_outlined,
+                label: 'Safety Tips',
+                onTap: () => _onMenuItemTapped('Bee Safety Tips'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+
+        Text(
+          'Wild Bee Safety Guidelines',
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.bgSecondary,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            children: [
+              _buildSafetyTip(
+                icon: Icons.pan_tool_outlined,
+                color: AppColors.warning,
+                title: 'Do not disturb or throw objects',
+                subtitle: 'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance.',
+              ),
+              const Divider(height: 20, color: AppColors.border),
+              _buildSafetyTip(
+                icon: Icons.do_not_touch_outlined,
+                color: AppColors.error,
+                title: 'Avoid chemical insect sprays',
+                subtitle: 'Pesticides contaminate the ecosystem and make relocation impossible.',
+              ),
+              const Divider(height: 20, color: AppColors.border),
+              _buildSafetyTip(
+                icon: Icons.pets_outlined,
+                color: AppColors.info,
+                title: 'Secure pets and children indoors',
+                subtitle: 'Ensure animals stay clear of flight paths until the colony is assessed.',
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildSafetyTip({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: color),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -907,7 +1485,7 @@ class _StatCard extends StatelessWidget {
       border: Border.all(color: AppColors.border),
     ),
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           width: 32,
@@ -926,6 +1504,7 @@ class _StatCard extends StatelessWidget {
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimary,
           ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 2),
         Text(
@@ -934,6 +1513,7 @@ class _StatCard extends StatelessWidget {
             fontSize: 11,
             color: AppColors.textSecondary,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     ),

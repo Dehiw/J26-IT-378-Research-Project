@@ -38,3 +38,8 @@ frontend/build/
 frontend/.idea/
 frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
+
+# Crash and error logs
+*.log
+hs_err_pid*
+replay_pid*
