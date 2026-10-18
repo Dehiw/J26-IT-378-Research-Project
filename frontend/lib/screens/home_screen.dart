@@ -11,11 +11,22 @@ import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'login_screen.dart';
 import 'apiary_management_screen.dart';
+import 'health_screen.dart';
+import 'it23136274_alerts_history_screen.dart';
+import 'it23136274_sensor_trends_screen.dart';
+import 'it23136274_ai_health_assessment_screen.dart';
 import 'relocation_assessment_screen_IT23185302.dart';
-
+import 'wild_bee_hive_report_screen_IT23185302.dart';
+import 'my_requests_screen_IT23185302.dart';
+import 'beekeepers_directory_screen_IT23185302.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 import 'IT23183186_disease_check_screen.dart';
+import 'IT23183186_disease_risk_screen.dart';
+import 'IT23183186_disease_assessment_screen.dart';
 import 'IT23183186_forage_map_screen.dart';
+import 'IT23183186_hive_telemetry_screen.dart';
+import 'normal_user_home_screen.dart';
+import 'scanner_screen.dart';
 import '../services/wild_bee_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -155,6 +166,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _onNavTapped(int index) {
+    if (index == 0) {
+      setState(() => _currentIndex = 0);
+      return;
+    }
+
+    if (index == 1) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => HealthScreen(
+            inferenceService: widget.inferenceService,
+          ),
+        ),
+      );
+      return;
+    }
+
     if (index == 2) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -163,12 +190,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       );
       return;
     }
-    if (index == 0) {
-      setState(() => _currentIndex = 0);
+
+    if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScannerScreen(
+            inferenceService: widget.inferenceService,
+          ),
+        ),
+      );
       return;
     }
+
     if (index == 4) {
-      setState(() => _currentIndex = 4);
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => EnvironmentDashboardScreen(
@@ -178,8 +212,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       );
       return;
     }
-    // Health and Acoustic remain on the current screen. The IT23183186
-    // screens are reached from the Environment dashboard.
+
+    setState(() => _currentIndex = index);
   }
 
   void _onMenuItemTapped(String title) {
@@ -641,43 +675,55 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Widget _buildQuickActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.add_box_outlined,
-            label: 'Add Hive',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ApiaryManagementScreen()),
+    return Row(children: [
+      Expanded(
+        child: _QuickAction(
+          icon: Icons.add_box_outlined,
+          label: 'Add Hive',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const ApiaryManagementScreen(),
             ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.bar_chart_rounded,
-            label: 'Inspect',
-            onTap: () {},
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: _QuickAction(
+          icon: Icons.bar_chart_rounded,
+          label: 'Inspect',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => HealthScreen(inferenceService: widget.inferenceService),
+            ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.notifications_active_outlined,
-            label: 'Alerts',
-            onTap: () {},
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: _QuickAction(
+          icon: Icons.notifications_active_outlined,
+          label: 'Alerts',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const IT23136274AlertsHistoryScreen(),
+            ),
           ),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _QuickAction(
-            icon: Icons.share_outlined,
-            label: 'Report',
-            onTap: () {},
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: _QuickAction(
+          icon: Icons.share_outlined,
+          label: 'Report',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const WildBeeHiveReportScreenIT23185302(),
+            ),
           ),
         ),
-      ],
-    );
+      ),
+    ]);
   }
 
   Widget _buildHiveOverview() {
@@ -886,29 +932,266 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  _buildDrawerItem(
-                    icon: Icons.person_outline_rounded,
-                    title: 'Profile',
-                    subtitle: 'Personal details and credentials',
-                    onTap: () => _onMenuItemTapped('Profile'),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
+                    child: Text(
+                      'HEALTH & SENSORS (IT23136274)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                   _buildDrawerItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Settings',
-                    subtitle: 'Preferences and configurations',
-                    onTap: () => _onMenuItemTapped('Settings'),
+                    icon: Icons.monitor_heart_outlined,
+                    title: 'Colony Health & Hives',
+                    subtitle: 'AI health status & hive list',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => HealthScreen(
+                            inferenceService: widget.inferenceService,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _buildDrawerItem(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notification Settings',
-                    subtitle: 'Alerts, thresholds and push notices',
-                    onTap: () => _onMenuItemTapped('Notification Settings'),
+                    icon: Icons.show_chart_rounded,
+                    title: 'Sensor Trends & Telemetry',
+                    subtitle: 'Temperature, humidity & weight graphs',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => IT23136274SensorTrendsScreen(
+                            hiveName: _hives.isNotEmpty ? _hives.first.name : 'Hive 01',
+                            apiaryName: _selectedApiary?.locationName ?? 'Primary Apiary',
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _buildDrawerItem(
-                    icon: Icons.help_outline_rounded,
-                    title: 'Help & Support',
-                    subtitle: 'Guides, documentation and contact',
-                    onTap: () => _onMenuItemTapped('Help & Support'),
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Alerts & History',
+                    subtitle: 'Real-time colony alerts & notifications',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const IT23136274AlertsHistoryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(color: AppColors.border, height: 24, indent: 20, endIndent: 20),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+                    child: Text(
+                      'RELOCATION & RESCUE (IT23185302)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.location_on_outlined,
+                    title: 'Relocation Assessment',
+                    subtitle: 'Colony relocation management',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const RelocationAssessmentScreenIT23185302(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.add_location_alt_outlined,
+                    title: 'Report Wild Bee Colony',
+                    subtitle: 'Submit new wild nest report',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const WildBeeHiveReportScreenIT23185302(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.assignment_outlined,
+                    title: 'My Relocation Requests',
+                    subtitle: 'Track status of wild bee requests',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const MyRequestsScreenIT23185302(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.groups_outlined,
+                    title: 'Beekeepers Directory',
+                    subtitle: 'Find qualified local beekeepers',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(color: AppColors.border, height: 24, indent: 20, endIndent: 20),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+                    child: Text(
+                      'ENVIRONMENT & RISK (IT23183186)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.eco_outlined,
+                    title: 'Environment Dashboard',
+                    subtitle: 'Live weather, temp & humidity',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => EnvironmentDashboardScreen(
+                            inferenceService: widget.inferenceService,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.health_and_safety_outlined,
+                    title: 'Disease Check & Diagnostics',
+                    subtitle: 'Check symptoms & health indicators',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DiseaseCheckScreen(
+                            inferenceService: widget.inferenceService,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.assessment_outlined,
+                    title: 'Disease Risk Overview',
+                    subtitle: 'Predictive risk score & factors',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => DiseaseRiskScreen(
+                            inferenceService: widget.inferenceService,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.map_outlined,
+                    title: 'Forage & Resource Map',
+                    subtitle: 'Floral sources & nectar mapping',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ForageMapScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.sensors_rounded,
+                    title: 'Hive Telemetry',
+                    subtitle: 'Internal temperature & humidity sensors',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const HiveTelemetryScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(color: AppColors.border, height: 24, indent: 20, endIndent: 20),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
+                    child: Text(
+                      'AI SCANNER & ROLES',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.graphic_eq_rounded,
+                    title: 'Acoustic / AI Scanner',
+                    subtitle: 'Audio and camera inspection',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ScannerScreen(
+                            inferenceService: widget.inferenceService,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.switch_account_outlined,
+                    title: 'Switch to Citizen Mode',
+                    subtitle: 'Public wild bee reporting view',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => NormalUserHomeScreen(
+                            inferenceService: widget.inferenceService,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildDrawerItem(
+                    icon: Icons.hive_outlined,
+                    title: 'Apiary Management',
+                    subtitle: 'Manage apiaries and hive boxes',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ApiaryManagementScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
