@@ -141,6 +141,18 @@ Run:
 uvicorn app.main:app --reload
 ```
 
+### Configure live environment weather
+
+Create a free WeatherAPI.com account and copy its API key into `backend/.env`:
+
+```env
+WEATHERAPI_KEY=your_weatherapi_key_here
+```
+
+Restart the backend after adding the key. The environment dashboard requests
+current weather for the selected apiary's GPS coordinates or location name.
+The key stays on the backend and is not sent to the Flutter app.
+
 If it works, FastAPI should run at:
 
 ```text
