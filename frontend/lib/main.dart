@@ -7,6 +7,7 @@ import 'services/auth_service.dart';
 import 'services/inference_service.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/normal_user_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,8 +92,11 @@ class _AppLoaderState extends State<_AppLoader> {
   Widget build(BuildContext context) {
     if (_loading) return const _SplashScreen();
 
-    // If already logged in, enter HomeScreen with their authenticated profile
+    // If already logged in, enter appropriate home screen with authenticated profile
     if (AuthService.instance.isLoggedIn) {
+      if (AuthService.instance.currentUser?.isNormalUser ?? false) {
+        return NormalUserHomeScreen(inferenceService: _readyService);
+      }
       return HomeScreen(inferenceService: _readyService);
     }
 

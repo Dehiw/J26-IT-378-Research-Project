@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
+import 'normal_user_home_screen.dart';
 import 'register_screen.dart';
 import 'first_time_setup_screen.dart';
 
@@ -62,8 +63,16 @@ class _LoginScreenState extends State<LoginScreen> {
               FirstTimeSetupScreen(inferenceService: widget.inferenceService),
         ),
       );
+    } else if (isNormalUser) {
+      // Normal user -> straight to Wild Bee Normal User Home Screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) =>
+              NormalUserHomeScreen(inferenceService: widget.inferenceService),
+        ),
+      );
     } else {
-      // Normal user OR regular login -> straight to Home Screen
+      // Beekeeper regular login -> straight to Beekeeper Home Screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
