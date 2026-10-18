@@ -6,6 +6,9 @@ import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'it23136274_alerts_history_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
+import 'relocation_assessment_screen_IT23185302.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
+import 'scanner_screen.dart';
 
 /// Student Registration: IT23136274
 /// Research Component: AI-Based Colony Health Monitoring
@@ -82,22 +85,36 @@ class _IT23136274AiHealthAssessmentScreenState
       return;
     }
 
-    final labels = ['Home', 'Health', 'Relocate', 'Acoustic', 'Environment'];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${labels[index]} module will be available in the next update.',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.bgSecondary,
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const RelocationAssessmentScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScannerScreen(
+            inferenceService: widget.inferenceService,
           ),
         ),
-        backgroundColor: AppColors.panelBlack,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      );
+      return;
+    }
+
+    if (index == 4) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EnvironmentDashboardScreen(
+            inferenceService: widget.inferenceService,
+          ),
+        ),
+      );
+      return;
+    }
   }
 
   void _openSensorTrends() {

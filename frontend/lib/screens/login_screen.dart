@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
+import 'normal_user_home_screen.dart';
 import 'register_screen.dart';
 import 'first_time_setup_screen.dart';
 
@@ -53,16 +54,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navAfterAuth() {
     if (!mounted) return;
-    if (widget.isFirstLoginAfterRegister) {
-      // ONLY for 1st login after register -> Selection Part / First-Time Setup
+    final isNormalUser = AuthService.instance.currentUser?.isNormalUser ?? false;
+    if (widget.isFirstLoginAfterRegister && !isNormalUser) {
+      // ONLY for Bee Keeper 1st login after register -> Apiary First-Time Setup
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
               FirstTimeSetupScreen(inferenceService: widget.inferenceService),
         ),
       );
+    } else if (isNormalUser) {
+      // Normal user -> straight to Wild Bee Normal User Home Screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) =>
+              NormalUserHomeScreen(inferenceService: widget.inferenceService),
+        ),
+      );
     } else {
-      // Regular login -> straight to Home Screen
+      // Beekeeper regular login -> straight to Beekeeper Home Screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
@@ -76,6 +86,14 @@ class _LoginScreenState extends State<LoginScreen> {
       MaterialPageRoute(
         builder: (_) =>
             RegisterScreen(inferenceService: widget.inferenceService),
+      ),
+    );
+  }
+
+  void _continueAsGuest() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
       ),
     );
   }
@@ -348,6 +366,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
+
+                  TextButton(
+                    onPressed: _continueAsGuest,
+                    child: Text(
+                      'Continue as guest',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.hiveLow,
+                      ),
+                    ),
+                  ),
 
                   // Switch to Sign Up
                   Row(

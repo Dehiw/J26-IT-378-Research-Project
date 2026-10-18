@@ -10,8 +10,11 @@ import '../utils/theme.dart';
 import '../widgets/wooden_hive_box.dart';
 import 'add_hive_screen.dart';
 import 'apiary_management_screen.dart';
+import 'home_screen.dart';
 import 'scanner_screen.dart';
 import 'hive_health_dashboard_screen.dart';
+import 'relocation_assessment_screen_IT23185302.dart';
+import 'IT23183186_environment_dashboard_screen.dart';
 
 /// Colony Health Monitoring Screen
 /// Displays the active apiary selector, "+ Add Hive" action,
@@ -144,27 +147,50 @@ class _HealthScreenState extends State<HealthScreen> {
   void _onNavTapped(int index) {
     if (index == _tabIndex) return;
     if (index == 0) {
-      // Return to Home
-      Navigator.of(context).pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => HomeScreen(
+              inferenceService: widget.inferenceService,
+            ),
+          ),
+        );
+      }
       return;
     }
 
-    final labels = ['Home', 'Health', 'Relocate', 'Acoustic', 'Environment'];
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '${labels[index]} module will be available in the next update.',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.bgSecondary,
+    if (index == 2) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => const RelocationAssessmentScreenIT23185302(),
+        ),
+      );
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ScannerScreen(
+            inferenceService: widget.inferenceService,
           ),
         ),
-        backgroundColor: AppColors.panelBlack,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+      );
+      return;
+    }
+
+    if (index == 4) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => EnvironmentDashboardScreen(
+            inferenceService: widget.inferenceService,
+          ),
+        ),
+      );
+      return;
+    }
   }
 
   void _openAddHive() async {
