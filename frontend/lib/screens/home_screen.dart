@@ -13,19 +13,9 @@ import 'login_screen.dart';
 import 'apiary_management_screen.dart';
 import 'health_screen.dart';
 import 'it23136274_alerts_history_screen.dart';
-import 'it23136274_sensor_trends_screen.dart';
-import 'it23136274_ai_health_assessment_screen.dart';
-import 'relocation_assessment_screen_IT23185302.dart';
-import 'wild_bee_hive_report_screen_IT23185302.dart';
-import 'my_requests_screen_IT23185302.dart';
-import 'beekeepers_directory_screen_IT23185302.dart';
+import 'IT23185302_relocation_assessment_screen.dart';
+import 'IT23185302_wild_bee_hive_report_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
-import 'IT23183186_disease_check_screen.dart';
-import 'IT23183186_disease_risk_screen.dart';
-import 'IT23183186_disease_assessment_screen.dart';
-import 'IT23183186_forage_map_screen.dart';
-import 'IT23183186_hive_telemetry_screen.dart';
-import 'normal_user_home_screen.dart';
 import 'scanner_screen.dart';
 import '../services/wild_bee_service.dart';
 
@@ -932,265 +922,50 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 6),
-                    child: Text(
-                      'HEALTH & SENSORS (IT23136274)',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
                   _buildDrawerItem(
-                    icon: Icons.monitor_heart_outlined,
-                    title: 'Colony Health & Hives',
-                    subtitle: 'AI health status & hive list',
+                    icon: Icons.person_outline_rounded,
+                    title: 'My Profile',
+                    subtitle: 'Personal and contact details',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => HealthScreen(
-                            inferenceService: widget.inferenceService,
-                          ),
-                        ),
-                      );
+                      _showProfileSheet(context, user);
                     },
                   ),
                   _buildDrawerItem(
-                    icon: Icons.show_chart_rounded,
-                    title: 'Sensor Trends & Telemetry',
-                    subtitle: 'Temperature, humidity & weight graphs',
+                    icon: Icons.verified_user_outlined,
+                    title: 'Beekeeper Verification',
+                    subtitle: 'Credentials and verification status',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => IT23136274SensorTrendsScreen(
-                            hiveName: _hives.isNotEmpty ? _hives.first.name : 'Hive 01',
-                            apiaryName: _selectedApiary?.locationName ?? 'Primary Apiary',
-                          ),
-                        ),
-                      );
+                      _showVerificationSheet(context, user);
+                    },
+                  ),
+                  const Divider(color: AppColors.border, height: 20, indent: 20, endIndent: 20),
+                  _buildDrawerItem(
+                    icon: Icons.settings_outlined,
+                    title: 'Settings',
+                    subtitle: 'App preferences and notifications',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _showSettingsSheet(context);
                     },
                   ),
                   _buildDrawerItem(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Alerts & History',
-                    subtitle: 'Real-time colony alerts & notifications',
+                    icon: Icons.help_outline_rounded,
+                    title: 'Help & Support',
+                    subtitle: 'App guides and technical assistance',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const IT23136274AlertsHistoryScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(color: AppColors.border, height: 24, indent: 20, endIndent: 20),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-                    child: Text(
-                      'RELOCATION & RESCUE (IT23185302)',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.location_on_outlined,
-                    title: 'Relocation Assessment',
-                    subtitle: 'Colony relocation management',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const RelocationAssessmentScreenIT23185302(),
-                        ),
-                      );
+                      _showHelpSupportSheet(context);
                     },
                   ),
                   _buildDrawerItem(
-                    icon: Icons.add_location_alt_outlined,
-                    title: 'Report Wild Bee Colony',
-                    subtitle: 'Submit new wild nest report',
+                    icon: Icons.info_outline_rounded,
+                    title: 'About Hive Sense',
+                    subtitle: 'Research project information',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const WildBeeHiveReportScreenIT23185302(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.assignment_outlined,
-                    title: 'My Relocation Requests',
-                    subtitle: 'Track status of wild bee requests',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const MyRequestsScreenIT23185302(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.groups_outlined,
-                    title: 'Beekeepers Directory',
-                    subtitle: 'Find qualified local beekeepers',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(color: AppColors.border, height: 24, indent: 20, endIndent: 20),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-                    child: Text(
-                      'ENVIRONMENT & RISK (IT23183186)',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.eco_outlined,
-                    title: 'Environment Dashboard',
-                    subtitle: 'Live weather, temp & humidity',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => EnvironmentDashboardScreen(
-                            inferenceService: widget.inferenceService,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.health_and_safety_outlined,
-                    title: 'Disease Check & Diagnostics',
-                    subtitle: 'Check symptoms & health indicators',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => DiseaseCheckScreen(
-                            inferenceService: widget.inferenceService,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.assessment_outlined,
-                    title: 'Disease Risk Overview',
-                    subtitle: 'Predictive risk score & factors',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => DiseaseRiskScreen(
-                            inferenceService: widget.inferenceService,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.map_outlined,
-                    title: 'Forage & Resource Map',
-                    subtitle: 'Floral sources & nectar mapping',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ForageMapScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.sensors_rounded,
-                    title: 'Hive Telemetry',
-                    subtitle: 'Internal temperature & humidity sensors',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const HiveTelemetryScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(color: AppColors.border, height: 24, indent: 20, endIndent: 20),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-                    child: Text(
-                      'AI SCANNER & ROLES',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.graphic_eq_rounded,
-                    title: 'Acoustic / AI Scanner',
-                    subtitle: 'Audio and camera inspection',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ScannerScreen(
-                            inferenceService: widget.inferenceService,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.switch_account_outlined,
-                    title: 'Switch to Citizen Mode',
-                    subtitle: 'Public wild bee reporting view',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => NormalUserHomeScreen(
-                            inferenceService: widget.inferenceService,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerItem(
-                    icon: Icons.hive_outlined,
-                    title: 'Apiary Management',
-                    subtitle: 'Manage apiaries and hive boxes',
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const ApiaryManagementScreen(),
-                        ),
-                      );
+                      _showAboutSheet(context);
                     },
                   ),
                 ],
@@ -1285,6 +1060,798 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
       onTap: onTap,
+    );
+  }
+
+  void _showProfileSheet(BuildContext context, UserModel? user) {
+    final String displayName = (user != null && user.name.isNotEmpty) ? user.name : 'Beekeeper';
+    final String displayEmail = (user != null && user.email.isNotEmpty) ? user.email : 'Not signed in';
+    final String initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : 'B';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        decoration: const BoxDecoration(
+          color: AppColors.bgSecondary,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: AppColors.hiveLow,
+                  child: Text(
+                    initial,
+                    style: GoogleFonts.inter(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.bgPrimary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayName,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        displayEmail,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGreenCard,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Beekeeper',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.darkGreen,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Personal & Contact Details',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildInfoTile(Icons.person_outline_rounded, 'Full Name', displayName),
+            _buildInfoTile(Icons.email_outlined, 'Email Address', displayEmail),
+            _buildInfoTile(
+              Icons.hive_outlined,
+              'Primary Apiary',
+              _selectedApiary?.locationName ?? 'Primary Apiary',
+            ),
+            _buildInfoTile(
+              Icons.grid_view_rounded,
+              'Registered Hives',
+              '${_hives.length} active hives',
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  'Close',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVerificationSheet(BuildContext context, UserModel? user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        decoration: const BoxDecoration(
+          color: AppColors.bgSecondary,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: AppColors.lightGreenCard,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.verified_rounded,
+                    color: AppColors.darkGreen,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Beekeeper Verification',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Credentials and verification status',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.bgElevated,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  _buildVerificationRow('Status', 'Verified & Active', isBadge: true),
+                  const Divider(color: AppColors.border, height: 20),
+                  _buildVerificationRow('Credentials ID', 'HS-BK-2026-85302'),
+                  const Divider(color: AppColors.border, height: 20),
+                  _buildVerificationRow('Relocation Clearance', 'Authorized (Wild Colony)'),
+                  const Divider(color: AppColors.border, height: 20),
+                  _buildVerificationRow('Registry Body', 'National Apiculture Board'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.bgPrimary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.hiveLow),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Your beekeeper profile is verified to accept wild bee relocations and manage apiary telemetry.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  'Done',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSettingsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            decoration: const BoxDecoration(
+              color: AppColors.bgSecondary,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Settings',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'App preferences and notifications',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgElevated,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.notifications_active_outlined, size: 20, color: AppColors.hiveLow),
+                  ),
+                  title: Text(
+                    'Push Notifications',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  ),
+                  subtitle: Text(
+                    'Receive colony alert notifications',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  trailing: Switch(
+                    value: true,
+                    activeThumbColor: AppColors.accent,
+                    onChanged: (val) {},
+                  ),
+                ),
+                const Divider(color: AppColors.border, height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgElevated,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.location_on_outlined, size: 20, color: AppColors.hiveLow),
+                  ),
+                  title: Text(
+                    'Wild Bee Requests Alert',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  ),
+                  subtitle: Text(
+                    'Notify on new citizen relocation requests',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  trailing: Switch(
+                    value: true,
+                    activeThumbColor: AppColors.accent,
+                    onChanged: (val) {},
+                  ),
+                ),
+                const Divider(color: AppColors.border, height: 16),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgElevated,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.thermostat_outlined, size: 20, color: AppColors.hiveLow),
+                  ),
+                  title: Text(
+                    'Temperature Unit',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  ),
+                  subtitle: Text(
+                    'Celsius (°C)',
+                    style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(
+                      'Save Preferences',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showHelpSupportSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        decoration: const BoxDecoration(
+          color: AppColors.bgSecondary,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              'Help & Support',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'App guides and technical assistance',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 18),
+            _buildSupportTile(
+              Icons.menu_book_outlined,
+              'Beekeeper Guide',
+              'Learn how to review and accept wild colony requests.',
+            ),
+            const SizedBox(height: 10),
+            _buildSupportTile(
+              Icons.support_agent_rounded,
+              'Technical Assistance',
+              'For sensor telemetry or ESP32-CAM connection issues.',
+            ),
+            const SizedBox(height: 10),
+            _buildSupportTile(
+              Icons.email_outlined,
+              'Contact Project Team',
+              'Email support@hivesense.lk for assistance.',
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  'Close',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAboutSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        decoration: const BoxDecoration(
+          color: AppColors.bgSecondary,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.bgElevated,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.hive_rounded,
+                    color: AppColors.hiveLow,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'About Hive Sense',
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Research project information',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.bgElevated,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hive Sense: Smart Apiculture Platform',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'An intelligent IoT and AI-powered apiculture ecosystem integrating colony telemetry, brood health diagnostics, wild bee colony relocation & rescue, and environmental disease risk prediction.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _buildAboutRow('Project ID', 'J26-IT-378 Research Project'),
+            _buildAboutRow('App Version', 'v1.0.0'),
+            _buildAboutRow('Academic Institution', 'SLIIT'),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  'Close',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.bgElevated,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: AppColors.hiveLow),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationRow(String label, String value, {bool isBadge = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        if (isBadge)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.lightGreenCard,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkGreen,
+              ),
+            ),
+          )
+        else
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSupportTile(IconData icon, String title, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.bgElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: AppColors.hiveLow),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAboutRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

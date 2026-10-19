@@ -202,6 +202,21 @@ class WildBeeService {
     }
   }
 
+  /// Updates relocation lifecycle fields in Firestore
+  /// (status, schedule date/time, notes, completion photos).
+  Future<Map<String, dynamic>> manageReport({
+    required String reportId,
+    required Map<String, dynamic> updates,
+  }) async {
+    final endpoint = '${ApiConfig.baseUrl}/wild-bee-reports/$reportId/manage';
+    try {
+      return await _patchJson(endpoint, updates);
+    } catch (e) {
+      developer.log('Error managing report $reportId: $e', name: 'WildBeeService');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> _patchJson(
       String url, Map<String, dynamic> body) async {
     final token = AuthService.instance.token;

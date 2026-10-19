@@ -1,27 +1,30 @@
+import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/auth_service.dart';
+import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
-import 'IT23183186_environment_dashboard_screen.dart';
 import 'home_screen.dart';
+import 'normal_user_home_screen.dart';
+import 'IT23185302_my_requests_screen.dart';
+import 'IT23185302_beekeepers_directory_screen.dart';
 
 /// Research Component IT23185302:
-/// Wild Bee Colony Relocation Decision Support & Reporting System.
-class RelocationAssessmentScreenIT23185302 extends StatefulWidget {
-  const RelocationAssessmentScreenIT23185302({super.key});
+/// Wild Bee Hive Reporting & Decision Support System (Normal Users / Homeowners).
+class WildBeeHiveReportScreenIT23185302 extends StatefulWidget {
+  const WildBeeHiveReportScreenIT23185302({super.key});
 
   @override
-  State<RelocationAssessmentScreenIT23185302> createState() =>
-      _RelocationAssessmentScreenIT23185302State();
+  State<WildBeeHiveReportScreenIT23185302> createState() =>
+      _WildBeeHiveReportScreenIT23185302State();
 }
 
-class _RelocationAssessmentScreenIT23185302State
-    extends State<RelocationAssessmentScreenIT23185302> {
+class _WildBeeHiveReportScreenIT23185302State
+    extends State<WildBeeHiveReportScreenIT23185302> {
   final _picker = ImagePicker();
   final _formKey = GlobalKey<FormState>();
 
@@ -29,13 +32,13 @@ class _RelocationAssessmentScreenIT23185302State
   File? _pickedImage;
 
   // 2. Location state
-  final _addressController = TextEditingController(
-    text: '42 Flower Road, Colombo 07',
-  );
-  String _gpsCoordinates = '6.9061° N, 79.8636° E';
+  final _addressController = TextEditingController();
+  String _gpsCoordinates = '6.9271° N, 79.8612° E';
+  String? _detectedArea;
   bool _isFetchingGps = false;
 
-  // 3. Colony questions state
+
+  // 4. Colony questions state
   String? _selectedLocation; // 'Roof', 'Wall', 'Tree', 'Other'
   final _otherLocationController = TextEditingController();
 
@@ -44,6 +47,28 @@ class _RelocationAssessmentScreenIT23185302State
   String? _selectedSafeAccess; // 'Yes', 'No', 'Not sure'
 
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _detectInitialLocation();
+  }
+
+  Future<void> _detectInitialLocation() async {
+    final loc = await WildBeeService.instance.detectCurrentLocation();
+    if (loc != null && mounted) {
+      setState(() {
+        _gpsCoordinates = loc['coordinates'] ?? _gpsCoordinates;
+        _detectedArea = loc['city'] != null
+            ? '${loc['city']}, ${loc['country'] ?? 'Sri Lanka'}'
+            : null;
+        if (_addressController.text.trim().isEmpty) {
+          _addressController.text =
+              loc['address'] ?? '${loc['city'] ?? 'Colombo'}, Sri Lanka';
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -87,11 +112,14 @@ class _RelocationAssessmentScreenIT23185302State
   // ── GPS Auto-detection ──────────────────────────────────────
   Future<void> _refreshGps() async {
     setState(() => _isFetchingGps = true);
-    await Future.delayed(const Duration(milliseconds: 900));
+    final loc = await WildBeeService.instance.detectCurrentLocation();
     if (!mounted) return;
     setState(() {
-      _gpsCoordinates = '6.9124° N, 79.8587° E';
       _isFetchingGps = false;
+      if (loc != null) {
+        _gpsCoordinates = loc['coordinates'] ?? _gpsCoordinates;
+        _addressController.text = loc['address'] ?? _addressController.text;
+      }
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -99,100 +127,216 @@ class _RelocationAssessmentScreenIT23185302State
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         content: Text(
-          'Location updated via GPS pin.',
+          loc != null
+              ? 'Real location detected: $_gpsCoordinates (${loc['city']})'
+              : 'Location pin updated.',
           style: GoogleFonts.inter(
             color: AppColors.bgSecondary,
             fontWeight: FontWeight.w600,
           ),
         ),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
   void _openPinAdjustDialog() {
     final latLngCtrl = TextEditingController(text: _gpsCoordinates);
+    final addressCtrl = TextEditingController(text: _addressController.text);
+
+    final presets = [
+      {'name': 'Colombo', 'coords': '6.9271° N, 79.8612° E'},
+      {'name': 'Kandy', 'coords': '7.2906° N, 80.6337° E'},
+      {'name': 'Galle', 'coords': '6.0535° N, 80.2210° E'},
+      {'name': 'Gampaha', 'coords': '7.0840° N, 79.9939° E'},
+      {'name': 'Negombo', 'coords': '7.2008° N, 79.8736° E'},
+      {'name': 'Kurunegala', 'coords': '7.4863° N, 80.3623° E'},
+      {'name': 'Matara', 'coords': '5.9549° N, 80.5550° E'},
+      {'name': 'Kalutara', 'coords': '6.5854° N, 79.9607° E'},
+      {'name': 'Anuradhapura', 'coords': '8.3114° N, 80.4037° E'},
+      {'name': 'Jaffna', 'coords': '9.6615° N, 80.0255° E'},
+      {'name': 'Ratnapura', 'coords': '6.6828° N, 80.4034° E'},
+      {'name': 'Badulla', 'coords': '6.9934° N, 81.0550° E'},
+      {'name': 'Nuwara Eliya', 'coords': '6.9497° N, 80.7891° E'},
+      {'name': 'Trincomalee', 'coords': '8.5874° N, 81.2152° E'},
+      {'name': 'Batticaloa', 'coords': '7.7310° N, 81.6747° E'},
+    ];
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.bgSecondary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text(
-          'Adjust Location Pin',
-          style: GoogleFonts.inter(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.bgSecondary,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Text(
+            'Select / Adjust Location',
+            style: GoogleFonts.inter(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enter exact coordinates or landmark description:',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.textSecondary,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Quick Area Presets:',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: presets.map((p) {
+                    final isSel = latLngCtrl.text == p['coords'];
+                    return GestureDetector(
+                      onTap: () {
+                        setDialogState(() {
+                          latLngCtrl.text = p['coords']!;
+                          addressCtrl.text = '${p['name']}, Sri Lanka';
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: isSel
+                              ? AppColors.hiveLow
+                              : AppColors.bgElevated,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSel
+                                ? AppColors.hiveLow
+                                : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          p['name']!,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isSel
+                                ? AppColors.bgSecondary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Exact GPS Coordinates:',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: latLngCtrl,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: AppColors.bgPrimary,
+                    hintText: 'e.g. 6.9061° N, 79.8636° E',
+                    prefixIcon: const Icon(
+                      Icons.my_location_rounded,
+                      color: AppColors.hiveLow,
+                      size: 18,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Address / Landmark:',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: addressCtrl,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: AppColors.bgPrimary,
+                    hintText: 'e.g. 42 Flower Road, Colombo 07',
+                    prefixIcon: const Icon(
+                      Icons.location_city_rounded,
+                      color: AppColors.hiveLow,
+                      size: 18,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: latLngCtrl,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-              ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: AppColors.bgPrimary,
-                hintText: 'e.g. 6.9061° N, 79.8636° E',
-                prefixIcon: const Icon(
-                  Icons.edit_location_alt_rounded,
-                  color: AppColors.hiveLow,
-                  size: 20,
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.hiveLow,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.border),
+              ),
+              onPressed: () {
+                setState(() {
+                  if (latLngCtrl.text.trim().isNotEmpty) {
+                    _gpsCoordinates = latLngCtrl.text.trim();
+                  }
+                  if (addressCtrl.text.trim().isNotEmpty) {
+                    _addressController.text = addressCtrl.text.trim();
+                  }
+                });
+                Navigator.pop(ctx);
+              },
+              child: Text(
+                'Save Location',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.bgSecondary,
                 ),
               ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.inter(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.hiveLow,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () {
-              if (latLngCtrl.text.trim().isNotEmpty) {
-                setState(() => _gpsCoordinates = latLngCtrl.text.trim());
-              }
-              Navigator.pop(ctx);
-            },
-            child: Text(
-              'Save Pin',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w700,
-                color: AppColors.bgSecondary,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -235,35 +379,80 @@ class _RelocationAssessmentScreenIT23185302State
 
     setState(() => _isSubmitting = true);
 
-    // Simulate backend submission & request creation
-    await Future.delayed(const Duration(milliseconds: 1200));
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
     final finalLocation = _selectedLocation == 'Other'
         ? 'Other (${_otherLocationController.text.trim()})'
         : _selectedLocation!;
 
-    final requestId =
-        '#REL-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    try {
+      // Encode photo if user took or picked an image
+      String? photoUrl;
+      if (_pickedImage != null) {
+        try {
+          final bytes = await _pickedImage!.readAsBytes();
+          photoUrl = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        } catch (_) {}
+      }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => RelocationResultScreen(
-          requestId: requestId,
-          address: _addressController.text.trim().isNotEmpty
-              ? _addressController.text.trim()
-              : 'Current GPS Location',
-          gps: _gpsCoordinates,
-          colonySpot: finalLocation,
-          height: _selectedHeight!,
-          insideStructure: _selectedInsideStructure!,
-          safeAccess: _selectedSafeAccess!,
-          imageFile: _pickedImage,
+      // ── PERSIST IN FIRESTORE DATABASE VIA FASTAPI ─────────────
+      final effectiveAddress = _addressController.text.trim().isNotEmpty
+          ? _addressController.text.trim()
+          : (_detectedArea ?? 'Sri Lanka');
+
+      final res = await WildBeeService.instance.submitReport(
+        address: effectiveAddress,
+        gpsCoordinates: _gpsCoordinates,
+        colonyLocation: finalLocation,
+        height: _selectedHeight!,
+        insideStructure: _selectedInsideStructure!,
+        safeAccess: _selectedSafeAccess!,
+        hasPhoto: _pickedImage != null,
+        photoUrl: photoUrl,
+      );
+
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+
+      final requestId = res['report_id'] as String? ??
+          '#REL-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => WildBeeHiveResultScreen(
+            requestId: requestId,
+            address: _addressController.text.trim(),
+            gps: _gpsCoordinates,
+            colonySpot: finalLocation,
+            height: _selectedHeight!,
+            insideStructure: _selectedInsideStructure!,
+            safeAccess: _selectedSafeAccess!,
+            imageFile: _pickedImage,
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+
+      // Show error notice and option to proceed offline if server is unreachable
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          content: Text(
+            'Database error: $e\nMake sure the backend is running.',
+            style: GoogleFonts.inter(
+              color: AppColors.bgSecondary,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 
   // ── Bottom Nav Navigation ───────────────────────────────────
@@ -271,29 +460,40 @@ class _RelocationAssessmentScreenIT23185302State
     final activeIndex = isNormalUser ? 1 : 2;
     if (index == activeIndex) return;
 
-    // The Environment tab opens the IT23183186 module from the beekeeper nav.
-    if (!isNormalUser && index == 4) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const EnvironmentDashboardScreen(),
+    if (index == 0) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        if (isNormalUser) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const NormalUserHomeScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
+      }
+      return;
+    }
+
+    if (isNormalUser && index == 2) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const MyRequestsScreenIT23185302(),
         ),
       );
       return;
     }
 
-    if (index == 0) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      }
+    if (isNormalUser && index == 3) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
+        ),
+      );
       return;
     }
-
-    // Health and Acoustic do not have destinations on this screen.
-    if (!isNormalUser) return;
 
     final labels = isNormalUser
         ? const ['Home', 'Report', 'Requests', 'Beekeepers']
@@ -311,16 +511,20 @@ class _RelocationAssessmentScreenIT23185302State
         ),
         backgroundColor: AppColors.panelBlack,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final isNormalUser =
-        AuthService.instance.currentUser?.isNormalUser ?? false;
+        AuthService.instance.currentUser?.isNormalUser ?? true;
 
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
@@ -330,7 +534,7 @@ class _RelocationAssessmentScreenIT23185302State
         automaticallyImplyLeading: false, // No back button as requested
         centerTitle: true,
         title: Text(
-          'Report Wild Colony',
+          'Report Wild Bee Hive',
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -348,7 +552,7 @@ class _RelocationAssessmentScreenIT23185302State
               children: [
                 // Header intro
                 Text(
-                  'Colony Relocation Request',
+                  'Wild Bee Hive Report',
                   style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -358,7 +562,7 @@ class _RelocationAssessmentScreenIT23185302State
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Provide colony details to connect with local registered beekeepers for ethical removal.',
+                  'Found a wild bee hive on your property? Submit details so a local beekeeper can safely and ethically relocate them.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: AppColors.textSecondary,
@@ -370,7 +574,7 @@ class _RelocationAssessmentScreenIT23185302State
                 // ── SECTION 1: UPLOAD PHOTO ─────────────────────────
                 _buildSectionHeader(
                   title: 'Upload Photo',
-                  subtitle: 'Take a clear photo of the hive or nest entrance',
+                  subtitle: 'Take a photo or choose from gallery',
                   icon: Icons.camera_alt_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -380,7 +584,7 @@ class _RelocationAssessmentScreenIT23185302State
                 // ── SECTION 2: LOCATION ─────────────────────────────
                 _buildSectionHeader(
                   title: 'Location',
-                  subtitle: 'Colony address and GPS coordinates',
+                  subtitle: 'Hive address and GPS coordinates',
                   icon: Icons.location_on_outlined,
                 ),
                 const SizedBox(height: 12),
@@ -626,13 +830,15 @@ class _RelocationAssessmentScreenIT23185302State
         child: Column(
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(15),
-              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(15)),
               child: SizedBox(
                 height: 180,
                 width: double.infinity,
-                child: Image.file(_pickedImage!, fit: BoxFit.cover),
+                child: Image.file(
+                  _pickedImage!,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             Padding(
@@ -698,7 +904,10 @@ class _RelocationAssessmentScreenIT23185302State
       decoration: BoxDecoration(
         color: AppColors.bgSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+        border: Border.all(
+          color: AppColors.border,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Column(
         children: [
@@ -717,7 +926,7 @@ class _RelocationAssessmentScreenIT23185302State
           ),
           const SizedBox(height: 10),
           Text(
-            'Attach Colony Photo (Optional)',
+            'Attach Hive Photo (Optional)',
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -801,17 +1010,16 @@ class _RelocationAssessmentScreenIT23185302State
             height: 120,
             decoration: BoxDecoration(
               color: AppColors.bgElevated,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(15),
-              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(15)),
             ),
             child: Stack(
               children: [
-                // Stylized map grid pattern
                 Positioned.fill(
-                  child: CustomPaint(painter: _MapCanvasPainter()),
+                  child: CustomPaint(
+                    painter: _MapCanvasPainter(),
+                  ),
                 ),
-                // Center pin
                 Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -838,9 +1046,7 @@ class _RelocationAssessmentScreenIT23185302State
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppColors.panelBlack.withValues(alpha: 0.75),
                           borderRadius: BorderRadius.circular(6),
@@ -857,7 +1063,6 @@ class _RelocationAssessmentScreenIT23185302State
                     ],
                   ),
                 ),
-                // Adjust pin button overlay
                 Positioned(
                   top: 8,
                   right: 8,
@@ -865,9 +1070,7 @@ class _RelocationAssessmentScreenIT23185302State
                     onTap: _openPinAdjustDialog,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.bgSecondary,
                         borderRadius: BorderRadius.circular(8),
@@ -925,8 +1128,7 @@ class _RelocationAssessmentScreenIT23185302State
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.hiveLow,
-                                ),
+                                    AppColors.hiveLow),
                               ),
                             )
                           else
@@ -952,6 +1154,40 @@ class _RelocationAssessmentScreenIT23185302State
                   ],
                 ),
                 const SizedBox(height: 6),
+                if (_detectedArea != null) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: AppColors.hiveLow.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: AppColors.hiveLow.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          size: 14,
+                          color: AppColors.hiveLow,
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Text(
+                            'Estimated area: $_detectedArea. Please type your exact street, building, or landmark below.',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: AppColors.textPrimary,
+                              height: 1.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 TextFormField(
                   controller: _addressController,
                   style: GoogleFonts.inter(
@@ -961,9 +1197,7 @@ class _RelocationAssessmentScreenIT23185302State
                   decoration: InputDecoration(
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
+                        horizontal: 12, vertical: 10),
                     hintText: 'Enter street name, house number, area',
                     filled: true,
                     fillColor: AppColors.bgPrimary,
@@ -980,6 +1214,8 @@ class _RelocationAssessmentScreenIT23185302State
       ),
     );
   }
+
+
 
   Widget _buildColonySpotGrid() {
     final spots = [
@@ -1005,9 +1241,8 @@ class _RelocationAssessmentScreenIT23185302State
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.bgElevated
-                      : AppColors.bgSecondary,
+                  color:
+                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1028,9 +1263,8 @@ class _RelocationAssessmentScreenIT23185302State
                       label,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
                             ? AppColors.textPrimary
                             : AppColors.textSecondary,
@@ -1067,14 +1301,11 @@ class _RelocationAssessmentScreenIT23185302State
               onTap: () => setState(() => _selectedHeight = id),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.bgElevated
-                      : AppColors.bgSecondary,
+                  color:
+                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1087,9 +1318,8 @@ class _RelocationAssessmentScreenIT23185302State
                       label,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight: isSelected
-                            ? FontWeight.w700
-                            : FontWeight.w600,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w600,
                         color: isSelected
                             ? AppColors.textPrimary
                             : AppColors.textPrimary,
@@ -1131,9 +1361,8 @@ class _RelocationAssessmentScreenIT23185302State
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.bgElevated
-                      : AppColors.bgSecondary,
+                  color:
+                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1145,9 +1374,8 @@ class _RelocationAssessmentScreenIT23185302State
                     choice,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected
                           ? AppColors.textPrimary
                           : AppColors.textSecondary,
@@ -1188,24 +1416,21 @@ class _MapCanvasPainter extends CustomPainter {
 
     final path3 = Path()
       ..moveTo(0, size.height * 0.65)
-      ..quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 0.2,
-        size.width,
-        size.height * 0.45,
-      );
+      ..quadraticBezierTo(size.width * 0.5, size.height * 0.2, size.width,
+          size.height * 0.45);
 
     canvas.drawPath(path1, roadPaint);
     canvas.drawPath(path2, roadPaintSecondary);
     canvas.drawPath(path3, roadPaintSecondary);
 
-    // Subtle radial ring around center pin
     final ringPaint = Paint()
       ..color = AppColors.hiveLow.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), 24, ringPaint);
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), 44, ringPaint);
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), 24, ringPaint);
+    canvas.drawCircle(
+        Offset(size.width / 2, size.height / 2), 44, ringPaint);
   }
 
   @override
@@ -1213,7 +1438,7 @@ class _MapCanvasPainter extends CustomPainter {
 }
 
 // ── RELOCATION RESULT / STATUS SCREEN ─────────────────────────────
-class RelocationResultScreen extends StatelessWidget {
+class WildBeeHiveResultScreen extends StatelessWidget {
   final String requestId;
   final String address;
   final String gps;
@@ -1222,8 +1447,10 @@ class RelocationResultScreen extends StatelessWidget {
   final String insideStructure;
   final String safeAccess;
   final File? imageFile;
+  final String? assignedBeekeeper;
+  final String? assignedPhone;
 
-  const RelocationResultScreen({
+  const WildBeeHiveResultScreen({
     super.key,
     required this.requestId,
     required this.address,
@@ -1233,6 +1460,8 @@ class RelocationResultScreen extends StatelessWidget {
     required this.insideStructure,
     required this.safeAccess,
     this.imageFile,
+    this.assignedBeekeeper,
+    this.assignedPhone,
   });
 
   @override
@@ -1309,15 +1538,15 @@ class RelocationResultScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: AppColors.panelBlack.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        'Status: Pending Beekeeper Assignment',
+                        assignedBeekeeper != null && assignedBeekeeper!.isNotEmpty
+                            ? 'Status: Accepted & Assigned to $assignedBeekeeper'
+                            : 'Status: Pending Beekeeper Assignment',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
@@ -1350,12 +1579,17 @@ class RelocationResultScreen extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 20, color: AppColors.border),
-                    _buildSummaryRow('Location Spot', colonySpot),
+                    _buildSummaryRow('Colony Spot', colonySpot),
                     _buildSummaryRow('Approx. Height', height),
                     _buildSummaryRow('Inside Structure', insideStructure),
                     _buildSummaryRow('Safe Access', safeAccess),
                     _buildSummaryRow('Address', address),
                     _buildSummaryRow('GPS Pin', gps),
+                    if (assignedBeekeeper != null && assignedBeekeeper!.isNotEmpty) ...[
+                      _buildSummaryRow('Assigned Beekeeper', assignedBeekeeper!),
+                      if (assignedPhone != null && assignedPhone!.isNotEmpty)
+                        _buildSummaryRow('Beekeeper Phone', assignedPhone!),
+                    ],
                     if (imageFile != null) ...[
                       const SizedBox(height: 10),
                       Row(
@@ -1392,8 +1626,7 @@ class RelocationResultScreen extends StatelessWidget {
                   color: AppColors.badgeLeafBg,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppColors.badgeLeafFg.withValues(alpha: 0.3),
-                  ),
+                      color: AppColors.badgeLeafFg.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1436,7 +1669,7 @@ class RelocationResultScreen extends StatelessWidget {
               // Action buttons
               SizedBox(
                 height: 50,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.hiveLow,
                     elevation: 0,
@@ -1444,18 +1677,46 @@ class RelocationResultScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const HomeScreen()),
-                    );
-                  },
-                  child: Text(
-                    'Back to Home',
+                  icon: const Icon(Icons.assignment_outlined,
+                      color: AppColors.bgSecondary, size: 18),
+                  label: Text(
+                    'Track in My Requests',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppColors.bgSecondary,
                     ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => const MyRequestsScreenIT23185302(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.textPrimary,
+                  side: const BorderSide(color: AppColors.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                },
+                child: Text(
+                  'Back to Home',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -1473,7 +1734,7 @@ class RelocationResultScreen extends StatelessWidget {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
                       builder: (_) =>
-                          const RelocationAssessmentScreenIT23185302(),
+                          const WildBeeHiveReportScreenIT23185302(),
                     ),
                   );
                 },
@@ -1524,5 +1785,6 @@ class RelocationResultScreen extends StatelessWidget {
   }
 }
 
-/// Typedef for general reference
-typedef RelocationAssessmentScreen = RelocationAssessmentScreenIT23185302;
+/// Typedefs for general reference
+typedef WildBeeHiveReportScreen = WildBeeHiveReportScreenIT23185302;
+typedef RelocationResultScreen = WildBeeHiveResultScreen;

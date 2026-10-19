@@ -9,7 +9,7 @@ import 'it23136274_ai_health_assessment_screen.dart';
 import 'it23136274_alerts_history_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
 import 'scanner_screen.dart';
-import 'relocation_assessment_screen_IT23185302.dart';
+import 'IT23185302_relocation_assessment_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 
 /// Hive Health Dashboard Screen (Live Monitoring)

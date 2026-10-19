@@ -7,8 +7,8 @@ import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'normal_user_home_screen.dart';
-import 'wild_bee_hive_report_screen_IT23185302.dart';
-import 'beekeepers_directory_screen_IT23185302.dart';
+import 'IT23185302_wild_bee_hive_report_screen.dart';
+import 'IT23185302_beekeepers_directory_screen.dart';
 
 /// Research Component IT23185302:
 /// My Requests Page & Relocation Tracking Workflow for Normal Users.
