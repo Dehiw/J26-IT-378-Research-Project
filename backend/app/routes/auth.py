@@ -40,3 +40,10 @@ def login(request: UserLoginRequest):
 def get_current_profile(user_id: str = Depends(get_current_user_id)):
     """Retrieve current authenticated beekeeper's profile."""
     return auth_service.get_user_by_id(user_id)
+
+
+@router.get("/beekeepers")
+def get_registered_beekeepers():
+    """Retrieve all registered users who have registered as Bee Keepers."""
+    return auth_service.get_registered_beekeepers()
+

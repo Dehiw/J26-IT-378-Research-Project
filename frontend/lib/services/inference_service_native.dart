@@ -5,7 +5,25 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:onnxruntime/onnxruntime.dart';
-import 'prediction_result.dart';
+
+/// Result from a single hive-health inference pass.
+class PredictionResult {
+  final String predictedClass;
+  final double confidence;
+  final double oodScore;
+  final double oodThreshold;
+  final bool isOod;
+  final Map<String, double> classScores;
+
+  const PredictionResult({
+    required this.predictedClass,
+    required this.confidence,
+    required this.oodScore,
+    required this.oodThreshold,
+    required this.isOod,
+    required this.classScores,
+  });
+}
 
 /// Wraps the two ONNX models (classifier + feature extractor)
 /// and the OOD Mahalanobis detector exported from the training notebook.

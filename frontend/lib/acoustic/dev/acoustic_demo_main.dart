@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../utils/theme.dart';
-import '../models/recording_capture.dart';
-import '../screens/acoustic_flows.dart';
-import '../screens/hive_sound_monitor_screen.dart';
-import '../services/file_picker_audio_picker.dart';
-import '../services/mock_acoustic_service.dart';
-import 'wav_debug_saver.dart';
+import 'package:frontend/utils/theme.dart';
+import 'package:frontend/models/acoustic/recording_capture.dart';
+import 'package:frontend/screens/acoustic/acoustic_flows.dart';
+import 'package:frontend/screens/acoustic/hive_sound_monitor_screen.dart';
+import 'package:frontend/services/acoustic/file_picker_audio_picker.dart';
+import 'package:frontend/services/acoustic/mock_acoustic_service.dart';
+import 'package:frontend/acoustic/dev/wav_debug_saver.dart';
 
 /// Stand-alone preview of the acoustic module on mock data. Used only for
 /// development; the app itself is not changed.

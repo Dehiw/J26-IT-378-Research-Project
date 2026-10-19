@@ -7,6 +7,7 @@ import 'services/auth_service.dart';
 import 'services/inference_service.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/normal_user_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,15 +37,13 @@ class HiveSenseApp extends StatelessWidget {
       title: 'Hive Sense',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      navigatorObservers: [homeRouteObserver],
       home: const _AppLoader(),
     );
   }
 }
 
-/// Tries to initialise the ONNX inference service before showing the app.
-/// Unlike a hard-fail loader, a missing model degrades gracefully to demo
-/// mode (HomeScreen with inferenceService: null) so the UI is usable
-/// before the .onnx files are bundled.
+/// Initialises services and checks for saved login session before presenting UI.
 class _AppLoader extends StatefulWidget {
   const _AppLoader();
 
@@ -64,14 +63,16 @@ class _AppLoaderState extends State<_AppLoader> {
   }
 
   Future<void> _init() async {
-    // Keep splash screen visible for at least 2.2 seconds for branding
-    final splashTimer = Future.delayed(const Duration(milliseconds: 2200));
+    final splashTimer = Future.delayed(const Duration(milliseconds: 1500));
 
     try {
-      await _inferenceService.init();
+      await Future.wait([
+        _inferenceService.init().catchError((_) {}),
+        AuthService.instance.restoreSession().catchError((_) => false),
+      ]);
       _readyService = _inferenceService;
     } catch (_) {
-      // Model files not bundled yet — continue in demo mode.
+      // Degrade gracefully if models not bundled yet
     }
 
     await splashTimer;
@@ -91,7 +92,15 @@ class _AppLoaderState extends State<_AppLoader> {
   Widget build(BuildContext context) {
     if (_loading) return const _SplashScreen();
 
-    // App always begins with the 3 Onboarding Pages
+    // If already logged in, enter appropriate home screen with authenticated profile
+    if (AuthService.instance.isLoggedIn) {
+      if (AuthService.instance.currentUser?.isNormalUser ?? false) {
+        return NormalUserHomeScreen(inferenceService: _readyService);
+      }
+      return HomeScreen(inferenceService: _readyService);
+    }
+
+    // When not logged in, begin with Onboarding/Registration flow
     return OnboardingScreen(
       key: ValueKey(_readyService != null),
       inferenceService: _readyService,

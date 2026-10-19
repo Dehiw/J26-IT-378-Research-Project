@@ -2,6 +2,8 @@
     <!-- Backend access + on-device photo capture -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Acoustic module: hive sound recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="Hive Sense"

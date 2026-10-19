@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import '../models/recording_capture.dart';
+import 'package:frontend/models/acoustic/recording_capture.dart';
 
 /// Debug-only helper for the dev entry. Writes the last recording to the
 /// system temp folder so its format can be checked in an audio player.

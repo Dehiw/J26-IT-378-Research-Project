@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_model.dart';
@@ -49,17 +49,20 @@ class AuthService {
   }
 
   /// Sends register request to FastAPI backend
-  /// Sends register request to FastAPI backend
   Future<UserModel> register({
     required String name,
     required String email,
     required String password,
+    String? phone,
+    String userType = 'Bee Keeper',
   }) async {
     final endpoint = '${ApiConfig.baseUrl}/auth/register';
     final payload = {
       'name': name.trim(),
       'email': email.trim().toLowerCase(),
       'password': password,
+      if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+      'user_type': userType,
     };
 
     final responseMap = await _postJson(endpoint, payload);
@@ -71,6 +74,23 @@ class AuthService {
 
     await _persistSession(_token!, _currentUser!);
     return _currentUser!;
+  }
+
+  /// Fetches registered beekeepers from backend/Firestore
+  Future<List<Map<String, dynamic>>> fetchRegisteredBeekeepers() async {
+    final endpoint = '${ApiConfig.baseUrl}/auth/beekeepers';
+    try {
+      final res = await _getJson(endpoint, token: _token);
+      final rawList = res['beekeepers'] as List<dynamic>? ?? [];
+      final list = rawList
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+      return list;
+    } catch (e) {
+      developer.log('Error fetching registered beekeepers: $e',
+          name: 'AuthService');
+      rethrow;
+    }
   }
 
   /// Sends login request to FastAPI backend
@@ -181,20 +201,12 @@ class AuthService {
 
   /// Native HTTP GET request
   Future<Map<String, dynamic>> _getJson(String url, {String? token}) async {
-    HttpClient? client;
     try {
-      client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 12);
-
-      final uri = Uri.parse(url);
-      final request = await client.getUrl(uri);
-      request.headers.set('accept', 'application/json');
-      if (token != null) {
-        request.headers.set('authorization', 'Bearer $token');
-      }
-
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
+      final response = await http.get(Uri.parse(url), headers: {
+        'accept': 'application/json',
+        if (token != null) 'authorization': 'Bearer $token',
+      }).timeout(const Duration(seconds: 30));
+      final responseBody = response.body;
       final jsonResponse = jsonDecode(responseBody) as Map<String, dynamic>;
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -202,11 +214,12 @@ class AuthService {
       }
       throw AuthException(
           jsonResponse['detail']?.toString() ?? 'Request failed');
+    } on http.ClientException {
+      throw const AuthException(
+          'Cannot connect to backend server. Make sure the FastAPI server is running.');
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());
-    } finally {
-      client?.close();
     }
   }
 
@@ -216,25 +229,15 @@ class AuthService {
     Map<String, dynamic> body, {
     String? token,
   }) async {
-    HttpClient? client;
     try {
-      client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 12);
-
-      final uri = Uri.parse(url);
-      final request = await client.postUrl(uri);
-      request.headers.set('content-type', 'application/json; charset=utf-8');
-      request.headers.set('accept', 'application/json');
-      if (token != null) {
-        request.headers.set('authorization', 'Bearer $token');
-      }
-
-      final bodyBytes = utf8.encode(jsonEncode(body));
-      request.contentLength = bodyBytes.length;
-      request.add(bodyBytes);
-
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
+      final response = await http.post(Uri.parse(url),
+          headers: {
+            'content-type': 'application/json; charset=utf-8',
+            'accept': 'application/json',
+            if (token != null) 'authorization': 'Bearer $token',
+          },
+          body: jsonEncode(body)).timeout(const Duration(seconds: 30));
+      final responseBody = response.body;
 
       Map<String, dynamic> jsonResponse;
       try {
@@ -259,16 +262,12 @@ class AuthService {
         throw AuthException(
             jsonResponse['message']?.toString() ?? 'Authentication failed');
       }
-    } on SocketException catch (_) {
+    } on http.ClientException catch (_) {
       throw const AuthException(
           'Cannot connect to backend server. Make sure the FastAPI server is running.');
-    } on HandshakeException catch (_) {
-      throw const AuthException('SSL/TLS connection failed with server.');
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());
-    } finally {
-      client?.close();
     }
   }
 }
