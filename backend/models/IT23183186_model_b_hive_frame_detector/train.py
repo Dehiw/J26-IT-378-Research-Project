@@ -20,7 +20,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--device", default="", help="For example: 0, cpu; empty lets Ultralytics choose")
     parser.add_argument("--project", type=Path, default=Path(__file__).resolve().parent / "runs")
-    parser.add_argument("--name", default="fairhive_yolo11n")
+    parser.add_argument("--name", default="IT23183186_ModelB_YOLO11n")
     args = parser.parse_args()
 
     data_yaml = args.data.expanduser().resolve()

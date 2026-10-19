@@ -1,0 +1,193 @@
+{
+  "annotation_format": "whitespace-delimited: relative_image_path label [zero or more x1 y1 x2 y2 boxes]",
+  "annotation_rows": 13509,
+  "cross_split_group_leakage": {},
+  "data_license": "CC-BY-4.0 (Zenodo metadata)",
+  "dataset": "VarroaDataset",
+  "duplicate_annotation_paths": [
+    {
+      "action": "one classification sample retained; original gt.csv unchanged",
+      "bbox_annotation_sets": [
+        [
+          [
+            94.0,
+            76.0,
+            120.0,
+            118.0
+          ]
+        ],
+        [
+          [
+            92.0,
+            75.0,
+            126.0,
+            114.0
+          ]
+        ]
+      ],
+      "raw_labels": [
+        1,
+        1
+      ],
+      "relpath": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10000-54690-1.png",
+      "rows": 2
+    },
+    {
+      "action": "one classification sample retained; original gt.csv unchanged",
+      "bbox_annotation_sets": [
+        [],
+        []
+      ],
+      "raw_labels": [
+        0,
+        0
+      ],
+      "relpath": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10001-54690-1.png",
+      "rows": 2
+    }
+  ],
+  "ground_truth_file": "<original dataset>\\gt.csv",
+  "image_dimensions_documented_width_height": [
+    160,
+    280
+  ],
+  "label_mapping": {
+    "0": "healthy",
+    "1": "varroa_positive",
+    "3": "varroa_positive"
+  },
+  "label_mapping_note": "The global gt.csv includes raw labels 0, 1, and 3. Labels 1 and 3 together match the official infected count; label 3 is therefore retained as Varroa-positive in the binary task. Unknown values fail validation.",
+  "mapping": {
+    "0": "healthy",
+    "1": "varroa_positive",
+    "3": "varroa_positive"
+  },
+  "official_split_count_mismatches": {},
+  "official_split_strategy": "Use released train/val/test splits; source video group identities are retained and audited.",
+  "raw_label_counts": {
+    "0": 9562,
+    "1": 3083,
+    "3": 864
+  },
+  "source": "https://zenodo.org/records/4085044",
+  "source_files": {
+    "gt.csv": {
+      "checksum_ok": true,
+      "exists": true,
+      "expected_md5": "46889d2689eac833c6eb89a95085b8ef",
+      "expected_size_bytes": 1226427,
+      "md5": "46889d2689eac833c6eb89a95085b8ef",
+      "size_bytes": 1226427
+    },
+    "test.zip": {
+      "archive_files": 6817,
+      "checksum_ok": true,
+      "exists": true,
+      "expected_md5": "a510921655dae21c10b5389fa0cfeef5",
+      "expected_size_bytes": 291715596,
+      "image_files": 3408,
+      "md5": "a510921655dae21c10b5389fa0cfeef5",
+      "sample_entries": [
+        "test/gt_one.csv",
+        "test/labels/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_7741-15-1.txt",
+        "test/labels/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_7742-15-1.txt",
+        "test/labels/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_7743-390-1.txt",
+        "test/labels/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_7744-390-1.txt"
+      ],
+      "size_bytes": 291715596,
+      "valid_zip": true
+    },
+    "train.zip": {
+      "archive_files": 16449,
+      "checksum_ok": true,
+      "exists": true,
+      "expected_md5": "87cb443aa28650ef34e83b2d1b3fa26d",
+      "expected_size_bytes": 703410525,
+      "image_files": 8223,
+      "md5": "87cb443aa28650ef34e83b2d1b3fa26d",
+      "sample_entries": [
+        "train/gt_one.csv",
+        "train/labels/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_6695-15-1.txt",
+        "train/labels/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_6696-15-1.txt",
+        "train/labels/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_6697-30-1.txt",
+        "train/labels/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_6698-165-1.txt"
+      ],
+      "size_bytes": 703410525,
+      "valid_zip": true
+    },
+    "val.zip": {
+      "archive_files": 3753,
+      "checksum_ok": true,
+      "exists": true,
+      "expected_md5": "631318f802b059e5274b0b26c4c0a593",
+      "expected_size_bytes": 163050592,
+      "image_files": 1876,
+      "md5": "631318f802b059e5274b0b26c4c0a593",
+      "sample_entries": [
+        "val/gt_one.csv",
+        "val/labels/2017-08-28_16-32-55_30_sec/2017-08-28_16-32-55_30_sec.mp4-bee_id_6642-60-1.txt",
+        "val/labels/2017-08-28_16-32-55_30_sec/2017-08-28_16-32-55_30_sec.mp4-bee_id_6643-75-1.txt",
+        "val/labels/2017-08-28_16-32-55_30_sec/2017-08-28_16-32-55_30_sec.mp4-bee_id_6644-90-1.txt",
+        "val/labels/2017-08-28_16-32-55_30_sec/2017-08-28_16-32-55_30_sec.mp4-bee_id_6645-105-1.txt"
+      ],
+      "size_bytes": 163050592,
+      "valid_zip": true
+    }
+  },
+  "source_video_group_count": 13,
+  "source_video_groups_crossing_splits": {},
+  "split_rows": {
+    "test": {
+      "annotation_rows": 3408,
+      "class_counts": {
+        "healthy": 2466,
+        "varroa_positive": 942
+      },
+      "expected_official_class_counts": {
+        "healthy": 2466,
+        "varroa_positive": 942
+      },
+      "expected_official_rows": 3408,
+      "unique_class_counts": {
+        "healthy": 2466,
+        "varroa_positive": 942
+      },
+      "unique_image_paths": 3408
+    },
+    "train": {
+      "annotation_rows": 8225,
+      "class_counts": {
+        "healthy": 5671,
+        "varroa_positive": 2554
+      },
+      "expected_official_class_counts": {
+        "healthy": 5671,
+        "varroa_positive": 2554
+      },
+      "expected_official_rows": 8225,
+      "unique_class_counts": {
+        "healthy": 5670,
+        "varroa_positive": 2553
+      },
+      "unique_image_paths": 8223
+    },
+    "val": {
+      "annotation_rows": 1876,
+      "class_counts": {
+        "healthy": 1425,
+        "varroa_positive": 451
+      },
+      "expected_official_class_counts": {
+        "healthy": 1425,
+        "varroa_positive": 451
+      },
+      "expected_official_rows": 1876,
+      "unique_class_counts": {
+        "healthy": 1425,
+        "varroa_positive": 451
+      },
+      "unique_image_paths": 1876
+    }
+  },
+  "unique_image_paths": 13507
+}

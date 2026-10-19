@@ -185,14 +185,14 @@ def run_phase(
                 "torch_version": torch.__version__,
                 "torchvision_version": torchvision.__version__,
             }
-            torch.save(checkpoint, output_dir / "best_model.pt")
+            torch.save(checkpoint, output_dir / "IT23183186_ModelA_MobileNetV2.pt")
             best_phase_f1 = score
         else:
             stale_epochs += 1
         if stale_epochs >= patience:
             print(f"Early stopping {phase_name} after {epoch} epochs without validation improvement.")
             break
-    checkpoint = torch.load(output_dir / "best_model.pt", map_location=device, weights_only=False)
+    checkpoint = torch.load(output_dir / "IT23183186_ModelA_MobileNetV2.pt", map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
     return model, best_macro_f1
 
@@ -295,7 +295,7 @@ def main() -> None:
             weight_decay=1e-4,
         )
 
-    checkpoint = torch.load(args.output_dir / "best_model.pt", map_location=device, weights_only=False)
+    checkpoint = torch.load(args.output_dir / "IT23183186_ModelA_MobileNetV2.pt", map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     with (args.output_dir / "training_history.csv").open("w", encoding="utf-8", newline="") as stream:
@@ -341,7 +341,7 @@ def main() -> None:
         "best_epoch": checkpoint["epoch"],
         "train_manifest": str(args.prepared_dir / "manifests" / "train.csv"),
         "validation_manifest": str(args.prepared_dir / "manifests" / "val.csv"),
-        "checkpoint": str(args.output_dir / "best_model.pt"),
+        "checkpoint": str(args.output_dir / "IT23183186_ModelA_MobileNetV2.pt"),
     }
     write_json(args.output_dir / "training_config.json", training_config)
     write_json(args.output_dir / "model_metadata.json", {

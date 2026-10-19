@@ -13,6 +13,7 @@ import 'IT23183186_disease_check_screen.dart';
 import 'IT23183186_disease_risk_screen.dart';
 import 'IT23183186_forage_map_screen.dart';
 import 'IT23183186_hive_telemetry_screen.dart';
+import 'image_model_analysis_screen.dart';
 
 class EnvironmentDashboardScreen extends StatefulWidget {
   final InferenceService? inferenceService;
@@ -417,6 +418,12 @@ class _EnvironmentDashboardScreenState
               ),
               icon: const Icon(Icons.add_a_photo_outlined),
               label: const Text('Upload hive images'),
+            ),
+            const SizedBox(height: 8),
+            FilledButton.tonalIcon(
+              onPressed: () => _open(context, const ImageModelAnalysisScreen()),
+              icon: const Icon(Icons.hub_outlined),
+              label: const Text('Analyze outside and inside images'),
             ),
             const SizedBox(height: 14),
             Row(

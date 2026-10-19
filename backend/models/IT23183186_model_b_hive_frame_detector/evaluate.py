@@ -18,7 +18,7 @@ def main() -> None:
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--device", default="", help="For example: 0, cpu; empty lets Ultralytics choose")
     parser.add_argument("--project", type=Path, default=Path(__file__).resolve().parent / "runs")
-    parser.add_argument("--name", default="fairhive_yolo11n_test")
+    parser.add_argument("--name", default="IT23183186_ModelB_YOLO11n_test")
     args = parser.parse_args()
 
     data_yaml = args.data.expanduser().resolve()

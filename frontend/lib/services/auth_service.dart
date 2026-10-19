@@ -28,6 +28,7 @@ class AuthService {
   bool _isGuest = false;
 
   UserModel? get currentUser => _currentUser;
+  String? get accessToken => _token;
   String? get token => _token;
   bool get isLoggedIn => _token != null && _token!.isNotEmpty;
   bool get isGuest => _isGuest;

@@ -71,7 +71,7 @@ def main() -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.set_num_threads(max(1, args.cpu_threads))
 
-    checkpoint_path = args.model_dir / "best_model.pt"
+    checkpoint_path = args.model_dir / "IT23183186_ModelA_MobileNetV2.pt"
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
     model = create_mobilenet_v2_classifier(pretrained=False)
     model.load_state_dict(checkpoint["model_state_dict"])
