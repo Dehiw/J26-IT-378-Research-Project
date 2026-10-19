@@ -11,6 +11,7 @@ import 'home_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 import 'IT23185302_beekeeper_requests_screen.dart';
 import 'IT23185302_hive_repositioning_screen.dart';
+import 'IT23185302_post_relocation_monitoring_screen.dart';
 
 /// Research Component IT23185302:
 /// Beekeeper Relocation Hub — Dashboard with overview, services, and activity.
@@ -165,16 +166,9 @@ class _RelocationAssessmentScreenIT23185302State
         backgroundColor: AppColors.bgPrimary,
         elevation: 0,
         centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textPrimary, size: 24),
-          tooltip: 'Back',
-          onPressed: () {
-            if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-          },
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
-          'Bee Keeper Relocate | IT23185302',
+          'Bee Keeper Relocate',
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w800,
@@ -387,21 +381,10 @@ class _RelocationAssessmentScreenIT23185302State
               'Use ESP32-CAM to observe hive entrance activity after relocation.',
           actionLabel: 'View Monitoring',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Post-Relocation Monitoring module coming in the next update.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.bgSecondary,
-                  ),
-                ),
-                backgroundColor: AppColors.panelBlack,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                duration: const Duration(seconds: 2),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    const PostRelocationMonitoringScreenIT23185302(),
               ),
             );
           },

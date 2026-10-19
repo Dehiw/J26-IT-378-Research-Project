@@ -179,19 +179,9 @@ class _RelocationAssessmentScreenIT23185302State
         backgroundColor: AppColors.bgPrimary,
         elevation: 0,
         centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_rounded,
-            color: AppColors.textPrimary,
-            size: 24,
-          ),
-          tooltip: 'Back',
-          onPressed: () {
-            if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-          },
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
-          'Bee Keeper Relocate | IT23185302',
+          'Bee Keeper Relocate',
           style: GoogleFonts.inter(
             fontSize: 18,
             fontWeight: FontWeight.w800,
