@@ -7,8 +7,8 @@ import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'normal_user_home_screen.dart';
-import 'IT23185302.my_requests_screen.dart';
-import 'IT23185302.wild_bee_hive_report_screen.dart';
+import 'IT23185302_my_requests_screen.dart';
+import 'IT23185302_wild_bee_hive_report_screen.dart';
 
 /// Research Component IT23185302:
 /// Beekeepers Directory Screen (Only queries real users registered as Bee Keepers in Firestore DB).

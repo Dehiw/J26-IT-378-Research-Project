@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import 'it23136274_sensor_trends_screen.dart';
-import 'IT23185302.relocation_assessment_screen.dart';
+import 'IT23185302_relocation_assessment_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 import 'scanner_screen.dart';
 

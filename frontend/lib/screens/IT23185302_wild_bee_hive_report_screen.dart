@@ -10,8 +10,8 @@ import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
 import 'home_screen.dart';
 import 'normal_user_home_screen.dart';
-import 'IT23185302.my_requests_screen.dart';
-import 'IT23185302.beekeepers_directory_screen.dart';
+import 'IT23185302_my_requests_screen.dart';
+import 'IT23185302_beekeepers_directory_screen.dart';
 
 /// Research Component IT23185302:
 /// Wild Bee Hive Reporting & Decision Support System (Normal Users / Homeowners).

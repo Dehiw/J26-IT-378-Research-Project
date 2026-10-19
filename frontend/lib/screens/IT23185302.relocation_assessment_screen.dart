@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +10,8 @@ import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
-import 'IT23185302.beekeeper_requests_screen.dart';
+import 'IT23185302_beekeeper_requests_screen.dart';
+import 'IT23185302_hive_repositioning_screen.dart';
 
 /// Research Component IT23185302:
 /// Beekeeper Relocation Hub — Dashboard with overview, services, and activity.
@@ -38,19 +40,22 @@ class _RelocationAssessmentScreenIT23185302State
   }
 
   bool _isAssignedToCurrentBeekeeper(
-      Map<String, dynamic> report, UserModel? beekeeper) {
+    Map<String, dynamic> report,
+    UserModel? beekeeper,
+  ) {
     if (beekeeper == null) return false;
 
     final bkId = (report['assigned_beekeeper_id'] ?? '').toString().trim();
-    final bkName =
-        (report['assigned_beekeeper'] ?? '').toString().trim().toLowerCase();
-    final bkPhone = (report['assigned_phone'] ?? '').toString().trim();
-    final bkEmail = (report['assigned_email'] ??
-            report['assigned_beekeeper_email'] ??
-            '')
+    final bkName = (report['assigned_beekeeper'] ?? '')
         .toString()
         .trim()
         .toLowerCase();
+    final bkPhone = (report['assigned_phone'] ?? '').toString().trim();
+    final bkEmail =
+        (report['assigned_email'] ?? report['assigned_beekeeper_email'] ?? '')
+            .toString()
+            .trim()
+            .toLowerCase();
 
     final currentId = beekeeper.id.trim();
     final currentName = beekeeper.name.trim().toLowerCase();
@@ -70,11 +75,15 @@ class _RelocationAssessmentScreenIT23185302State
       }
     }
     // 3. Match by Beekeeper Email
-    if (currentEmail.isNotEmpty && bkEmail.isNotEmpty && bkEmail == currentEmail) {
+    if (currentEmail.isNotEmpty &&
+        bkEmail.isNotEmpty &&
+        bkEmail == currentEmail) {
       return true;
     }
     // 4. Match by Beekeeper Phone
-    if (currentPhone.isNotEmpty && bkPhone.isNotEmpty && bkPhone == currentPhone) {
+    if (currentPhone.isNotEmpty &&
+        bkPhone.isNotEmpty &&
+        bkPhone == currentPhone) {
       return true;
     }
     return false;
@@ -94,9 +103,13 @@ class _RelocationAssessmentScreenIT23185302State
         final status = (r['status'] ?? '').toString().toLowerCase();
         if (status == 'pending' || status == 'submitted') {
           pending++;
-        } else if (status == 'accepted' || status == 'in_progress' || status == 'active') {
+        } else if (status == 'accepted' ||
+            status == 'in_progress' ||
+            status == 'active') {
           active++;
-        } else if (status == 'completed' || status == 'done' || status == 'closed') {
+        } else if (status == 'completed' ||
+            status == 'done' ||
+            status == 'closed') {
           completed++;
         }
       }
@@ -112,8 +125,10 @@ class _RelocationAssessmentScreenIT23185302State
         });
       }
     } catch (e) {
-      developer.log('Error loading relocation stats: $e',
-          name: 'RelocationHub');
+      developer.log(
+        'Error loading relocation stats: $e',
+        name: 'RelocationHub',
+      );
       if (mounted) setState(() => _loadingStats = false);
     }
   }
@@ -165,8 +180,11 @@ class _RelocationAssessmentScreenIT23185302State
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textPrimary, size: 24),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+            size: 24,
+          ),
           tooltip: 'Back',
           onPressed: () {
             if (Navigator.of(context).canPop()) Navigator.of(context).pop();
@@ -182,8 +200,11 @@ class _RelocationAssessmentScreenIT23185302State
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded,
-                color: AppColors.textPrimary, size: 22),
+            icon: const Icon(
+              Icons.refresh_rounded,
+              color: AppColors.textPrimary,
+              size: 22,
+            ),
             tooltip: 'Refresh',
             onPressed: _loadStats,
           ),
@@ -267,8 +288,9 @@ class _RelocationAssessmentScreenIT23185302State
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.hiveLow),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.hiveLow,
+                      ),
                     ),
                   ),
                 ),
@@ -289,13 +311,15 @@ class _RelocationAssessmentScreenIT23185302State
           iconColor: AppColors.accent2,
           valueColor: AppColors.accent2,
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const BeekeeperRequestsScreenIT23185302(
-                  initialFilter: 'Pending',
-                ),
-              ),
-            ).then((_) => _loadStats());
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) => const BeekeeperRequestsScreenIT23185302(
+                      initialFilter: 'Pending',
+                    ),
+                  ),
+                )
+                .then((_) => _loadStats());
           },
         ),
         const SizedBox(width: 10),
@@ -307,13 +331,15 @@ class _RelocationAssessmentScreenIT23185302State
           iconColor: AppColors.hiveLow,
           valueColor: AppColors.hiveLow,
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const BeekeeperRequestsScreenIT23185302(
-                  initialFilter: 'Accepted',
-                ),
-              ),
-            ).then((_) => _loadStats());
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) => const BeekeeperRequestsScreenIT23185302(
+                      initialFilter: 'Accepted',
+                    ),
+                  ),
+                )
+                .then((_) => _loadStats());
           },
         ),
         const SizedBox(width: 10),
@@ -325,13 +351,15 @@ class _RelocationAssessmentScreenIT23185302State
           iconColor: AppColors.success,
           valueColor: AppColors.success,
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const BeekeeperRequestsScreenIT23185302(
-                  initialFilter: 'Completed',
-                ),
-              ),
-            ).then((_) => _loadStats());
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) => const BeekeeperRequestsScreenIT23185302(
+                      initialFilter: 'Completed',
+                    ),
+                  ),
+                )
+                .then((_) => _loadStats());
           },
         ),
       ],
@@ -348,15 +376,16 @@ class _RelocationAssessmentScreenIT23185302State
           iconBg: AppColors.badgeTempBg,
           iconColor: AppColors.accent2,
           title: 'Wild Bee Relocation Requests',
-          description:
-              'View reported wild colonies, review assessments, and accept or decline requests.',
+          description: 'View reported wild colonies, review assessments, and accept or decline requests.',
           actionLabel: 'View Requests',
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const BeekeeperRequestsScreenIT23185302(),
-              ),
-            ).then((_) => _loadStats());
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) => const BeekeeperRequestsScreenIT23185302(),
+                  ),
+                )
+                .then((_) => _loadStats());
           },
         ),
         const SizedBox(height: 12),
@@ -365,25 +394,12 @@ class _RelocationAssessmentScreenIT23185302State
           iconBg: AppColors.badgeBeeBg,
           iconColor: AppColors.hiveLow,
           title: 'Hive Repositioning',
-          description:
-              'Upload an apiary land photo, analyze candidate zones, and recommend better hive positions within the same apiary.',
+          description: 'Upload an apiary land photo, analyze candidate zones, and recommend better hive positions within the same apiary.',
           actionLabel: 'Analyze Apiary',
           onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Hive Repositioning module coming in the next update.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.bgSecondary,
-                  ),
-                ),
-                backgroundColor: AppColors.panelBlack,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                duration: const Duration(seconds: 2),
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const HiveRepositioningScreenIT23185302(),
               ),
             );
           },
@@ -394,8 +410,7 @@ class _RelocationAssessmentScreenIT23185302State
           iconBg: AppColors.badgeWaveBg,
           iconColor: AppColors.badgeWaveFg,
           title: 'Post-Relocation Monitoring',
-          description:
-              'Use ESP32-CAM to observe hive entrance activity after relocation.',
+          description: 'Use ESP32-CAM to observe hive entrance activity after relocation.',
           actionLabel: 'View Monitoring',
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -411,7 +426,8 @@ class _RelocationAssessmentScreenIT23185302State
                 backgroundColor: AppColors.panelBlack,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 duration: const Duration(seconds: 2),
               ),
             );
@@ -495,12 +511,14 @@ class _RelocationAssessmentScreenIT23185302State
           report: r,
           index: i,
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    BeekeeperRequestDetailsScreenIT23185302(request: r),
-              ),
-            ).then((_) => _loadStats());
+            Navigator.of(context)
+                .push(
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        BeekeeperRequestDetailsScreenIT23185302(request: r),
+                  ),
+                )
+                .then((_) => _loadStats());
           },
         );
       }).toList(),
@@ -521,10 +539,7 @@ class _RelocationAssessmentScreenIT23185302State
       currentIndex: _currentNavIndex,
       onTap: _onNavTapped,
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.monitor_heart_outlined),
           label: 'Health',
@@ -591,39 +606,39 @@ class _OverviewCard extends StatelessWidget {
             children: [
               Container(
                 width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: iconBg,
-                borderRadius: BorderRadius.circular(9),
+                height: 34,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(icon, size: 18, color: iconColor),
               ),
-              child: Icon(icon, size: 18, color: iconColor),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: valueColor,
+              const SizedBox(height: 8),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: valueColor,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-                height: 1.3,
+              const SizedBox(height: 2),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  height: 1.3,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 // ── Service card sub-widget ───────────────────────────────────────────
@@ -735,11 +750,7 @@ class _ActivityRow extends StatelessWidget {
   final int index;
   final VoidCallback? onTap;
 
-  const _ActivityRow({
-    required this.report,
-    required this.index,
-    this.onTap,
-  });
+  const _ActivityRow({required this.report, required this.index, this.onTap});
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -839,68 +850,68 @@ class _ActivityRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  caseName,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  address,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (dateDisplay.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    dateDisplay,
+                    caseName,
                     style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: AppColors.textMuted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    address,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (dateDisplay.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      dateDisplay,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              statusLabel,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: statusColor,
               ),
             ),
-          ),
-          const SizedBox(width: 6),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 18,
-            color: AppColors.textSecondary,
-          ),
-        ],
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                statusLabel,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -940,8 +951,11 @@ class _WildBeeAssessmentFormScreenState
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppColors.bgSecondary, size: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.bgSecondary,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -957,8 +971,9 @@ class _WildBeeAssessmentFormScreenState
           ),
           backgroundColor: AppColors.accent2,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -978,7 +993,8 @@ class _WildBeeAssessmentFormScreenState
   }
 
   void _showAssessmentResultSheet() {
-    final bool isHighUrgency = _selectedBehavior == 'Aggressive' ||
+    final bool isHighUrgency =
+        _selectedBehavior == 'Aggressive' ||
         (_selectedHumanProximity == 'High' && _selectedHeight == 'Below 2 m');
     final bool isInsideStructure = _selectedInsideStructure == 'Yes';
 
@@ -990,22 +1006,19 @@ class _WildBeeAssessmentFormScreenState
 
     if (isHighUrgency) {
       recommendationTitle = 'Priority Live Relocation Required';
-      recommendationDesc =
-          'Due to elevated bee defensiveness or high public proximity, professional live bee-rescue dispatch is strongly advised. Maintain a 6-meter clearance perimeter until assistance arrives.';
+      recommendationDesc = 'Due to elevated bee defensiveness or high public proximity, professional live bee-rescue dispatch is strongly advised. Maintain a 6-meter clearance perimeter until assistance arrives.';
       statusColor = AppColors.error;
       statusBg = AppColors.badgeTempBg;
       statusIcon = Icons.emergency_rounded;
     } else if (isInsideStructure || _selectedAccessibility == 'Difficult') {
       recommendationTitle = 'Specialized Live Extraction Recommended';
-      recommendationDesc =
-          'The colony is located within structural cavity or challenging reach. A humane cut-out specialist equipped with gentle bee-vacuum hardware should be deployed to prevent property damage.';
+      recommendationDesc = 'The colony is located within structural cavity or challenging reach. A humane cut-out specialist equipped with gentle bee-vacuum hardware should be deployed to prevent property damage.';
       statusColor = AppColors.warning;
       statusBg = AppColors.badgeBeeBg;
       statusIcon = Icons.handyman_outlined;
     } else {
       recommendationTitle = 'Safe Standard Live Relocation Suitable';
-      recommendationDesc =
-          'Colony is in a manageable position with calm bee activity. A registered community beekeeper can safely collect and rehome this colony to a protected apiary.';
+      recommendationDesc = 'Colony is in a manageable position with calm bee activity. A registered community beekeeper can safely collect and rehome this colony to a protected apiary.';
       statusColor = AppColors.success;
       statusBg = AppColors.badgeLeafBg;
       statusIcon = Icons.check_circle_outline_rounded;
@@ -1096,7 +1109,9 @@ class _WildBeeAssessmentFormScreenState
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.bgElevated,
                     borderRadius: BorderRadius.circular(12),
@@ -1104,8 +1119,11 @@ class _WildBeeAssessmentFormScreenState
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.my_location_rounded,
-                          size: 16, color: AppColors.hiveLow),
+                      const Icon(
+                        Icons.my_location_rounded,
+                        size: 16,
+                        color: AppColors.hiveLow,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         '6.9271° N, 79.8612° E  •  GPS Confirmed',
@@ -1126,7 +1144,8 @@ class _WildBeeAssessmentFormScreenState
                       backgroundColor: AppColors.hiveLow,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     onPressed: () {
                       Navigator.of(ctx).pop();
@@ -1143,7 +1162,8 @@ class _WildBeeAssessmentFormScreenState
                           backgroundColor: AppColors.panelBlack,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       );
                     },
@@ -1188,8 +1208,11 @@ class _WildBeeAssessmentFormScreenState
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppColors.textPrimary, size: 24),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+            size: 24,
+          ),
           tooltip: 'Back',
           onPressed: () {
             if (Navigator.of(context).canPop()) Navigator.of(context).pop();
@@ -1230,8 +1253,7 @@ class _WildBeeAssessmentFormScreenState
               _buildSectionHeader(
                 questionNumber: '2',
                 title: 'Is the colony inside a structure?',
-                subtitle:
-                    'Indicate whether bees have penetrated walls, ceilings, or cavities',
+                subtitle: 'Indicate whether bees have penetrated walls, ceilings, or cavities',
               ),
               const SizedBox(height: 12),
               _buildInsideStructureSection(),
@@ -1240,8 +1262,7 @@ class _WildBeeAssessmentFormScreenState
               _buildSectionHeader(
                 questionNumber: '3',
                 title: 'Approximately how high is the colony?',
-                subtitle:
-                    'Helps determine whether ladders or lifting platforms are required',
+                subtitle: 'Helps determine whether ladders or lifting platforms are required',
               ),
               const SizedBox(height: 12),
               _buildHeightSection(),
@@ -1250,8 +1271,7 @@ class _WildBeeAssessmentFormScreenState
               _buildSectionHeader(
                 questionNumber: '4',
                 title: 'How easy is it to access the colony location?',
-                subtitle:
-                    'Physical clearance and footing safety for relocation specialists',
+                subtitle: 'Physical clearance and footing safety for relocation specialists',
               ),
               const SizedBox(height: 12),
               _buildAccessibilitySection(),
@@ -1260,8 +1280,7 @@ class _WildBeeAssessmentFormScreenState
               _buildSectionHeader(
                 questionNumber: '5',
                 title: 'How are the bees behaving?',
-                subtitle:
-                    'Assess colony defensiveness from a safe observation distance',
+                subtitle: 'Assess colony defensiveness from a safe observation distance',
               ),
               const SizedBox(height: 12),
               _buildBehaviorSection(),
@@ -1270,8 +1289,7 @@ class _WildBeeAssessmentFormScreenState
               _buildSectionHeader(
                 questionNumber: '6',
                 title: 'Are many people normally close to this area?',
-                subtitle:
-                    'Identifies public stinging risk near walkways or home entrances',
+                subtitle: 'Identifies public stinging risk near walkways or home entrances',
               ),
               const SizedBox(height: 12),
               _buildProximitySection(),
@@ -1315,8 +1333,11 @@ class _WildBeeAssessmentFormScreenState
               gradient: AppColors.accentGradient,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.shield_outlined,
-                color: AppColors.textPrimary, size: 24),
+            child: const Icon(
+              Icons.shield_outlined,
+              color: AppColors.textPrimary,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1324,8 +1345,10 @@ class _WildBeeAssessmentFormScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.badgeBeeBg,
                     borderRadius: BorderRadius.circular(6),
@@ -1420,10 +1443,26 @@ class _WildBeeAssessmentFormScreenState
 
   Widget _buildLocationSection() {
     final options = [
-      {'title': 'Roof', 'icon': Icons.roofing_rounded, 'desc': 'Eaves & rafters'},
-      {'title': 'Wall', 'icon': Icons.grid_view_rounded, 'desc': 'Cavities & vents'},
-      {'title': 'Tree', 'icon': Icons.park_rounded, 'desc': 'Trunks & branches'},
-      {'title': 'Other', 'icon': Icons.more_horiz_rounded, 'desc': 'Sheds & furniture'},
+      {
+        'title': 'Roof',
+        'icon': Icons.roofing_rounded,
+        'desc': 'Eaves & rafters',
+      },
+      {
+        'title': 'Wall',
+        'icon': Icons.grid_view_rounded,
+        'desc': 'Cavities & vents',
+      },
+      {
+        'title': 'Tree',
+        'icon': Icons.park_rounded,
+        'desc': 'Trunks & branches',
+      },
+      {
+        'title': 'Other',
+        'icon': Icons.more_horiz_rounded,
+        'desc': 'Sheds & furniture',
+      },
     ];
 
     return GridView.builder(
@@ -1490,8 +1529,11 @@ class _WildBeeAssessmentFormScreenState
                       ),
                     ),
                     if (isSelected)
-                      const Icon(Icons.check_circle_rounded,
-                          size: 18, color: AppColors.hiveLow),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 18,
+                        color: AppColors.hiveLow,
+                      ),
                   ],
                 ),
                 Column(
@@ -1501,8 +1543,9 @@ class _WildBeeAssessmentFormScreenState
                       title,
                       style: GoogleFonts.inter(
                         fontSize: 14,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w700,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -1552,8 +1595,9 @@ class _WildBeeAssessmentFormScreenState
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  color: isSelected
+                      ? AppColors.bgElevated
+                      : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1574,8 +1618,9 @@ class _WildBeeAssessmentFormScreenState
                       title,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -1627,11 +1672,11 @@ class _WildBeeAssessmentFormScreenState
             onTap: () => setState(() => _selectedHeight = title),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color:
-                    isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                color: isSelected
+                    ? AppColors.bgElevated
+                    : AppColors.bgSecondary,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1666,8 +1711,9 @@ class _WildBeeAssessmentFormScreenState
                           title,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            fontWeight:
-                                isSelected ? FontWeight.w800 : FontWeight.w700,
+                            fontWeight: isSelected
+                                ? FontWeight.w800
+                                : FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -1684,7 +1730,9 @@ class _WildBeeAssessmentFormScreenState
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.hiveLow.withValues(alpha: 0.15)
@@ -1748,8 +1796,9 @@ class _WildBeeAssessmentFormScreenState
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                  color: isSelected
+                      ? AppColors.bgElevated
+                      : AppColors.bgSecondary,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1768,8 +1817,9 @@ class _WildBeeAssessmentFormScreenState
                       title,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -1876,8 +1926,11 @@ class _WildBeeAssessmentFormScreenState
                       ),
                     ),
                     if (isSelected)
-                      const Icon(Icons.check_circle_rounded,
-                          size: 18, color: AppColors.hiveLow),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        size: 18,
+                        color: AppColors.hiveLow,
+                      ),
                   ],
                 ),
                 Column(
@@ -1887,8 +1940,9 @@ class _WildBeeAssessmentFormScreenState
                       title,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w800 : FontWeight.w700,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -1946,11 +2000,11 @@ class _WildBeeAssessmentFormScreenState
             onTap: () => setState(() => _selectedHumanProximity = title),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color:
-                    isSelected ? AppColors.bgElevated : AppColors.bgSecondary,
+                color: isSelected
+                    ? AppColors.bgElevated
+                    : AppColors.bgSecondary,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: isSelected ? AppColors.hiveLow : AppColors.border,
@@ -1985,8 +2039,9 @@ class _WildBeeAssessmentFormScreenState
                           title,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            fontWeight:
-                                isSelected ? FontWeight.w800 : FontWeight.w700,
+                            fontWeight: isSelected
+                                ? FontWeight.w800
+                                : FontWeight.w700,
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -2002,8 +2057,11 @@ class _WildBeeAssessmentFormScreenState
                     ),
                   ),
                   if (isSelected)
-                    const Icon(Icons.check_circle_rounded,
-                        size: 20, color: AppColors.hiveLow),
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      size: 20,
+                      color: AppColors.hiveLow,
+                    ),
                 ],
               ),
             ),
@@ -2033,8 +2091,11 @@ class _WildBeeAssessmentFormScreenState
               color: AppColors.badgeWaveBg,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.my_location_rounded,
-                size: 20, color: AppColors.badgeWaveFg),
+            child: const Icon(
+              Icons.my_location_rounded,
+              size: 20,
+              color: AppColors.badgeWaveFg,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2097,8 +2158,9 @@ class _WildBeeAssessmentFormScreenState
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.hiveLow,
           elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
         onPressed: _isSubmitting ? null : _submitAssessment,
         child: _isSubmitting
@@ -2110,8 +2172,9 @@ class _WildBeeAssessmentFormScreenState
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.textPrimary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.textPrimary,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -2137,8 +2200,11 @@ class _WildBeeAssessmentFormScreenState
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded,
-                      color: AppColors.textPrimary, size: 20),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: AppColors.textPrimary,
+                    size: 20,
+                  ),
                 ],
               ),
       ),
