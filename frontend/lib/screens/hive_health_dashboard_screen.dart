@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
+import '../models/sensor_reading_model.dart';
 import '../services/inference_service.dart';
+import '../services/sensor_reading_service.dart';
 import '../utils/theme.dart';
 import '../widgets/bee_illustration.dart';
 import 'it23136274_ai_health_assessment_screen.dart';
@@ -43,6 +47,78 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
   static const int _tabIndex = 1; // Health tab
 
   bool get _isHealthy => widget.status.toLowerCase() == 'healthy';
+
+  static const Duration _refreshInterval = Duration(seconds: 30);
+
+  SensorReading? _reading;
+  bool _sensorLoading = true;
+  String? _sensorError;
+  Timer? _refreshTimer;
+
+  /// App hive IDs are not yet linked to ESP32 device IDs, so fall back to
+  /// the default device unless the hive ID is already a device ID.
+  String get _sensorHiveId => widget.hiveId.startsWith('HIVE_')
+      ? widget.hiveId
+      : SensorReadingService.defaultHiveId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestReading();
+    _refreshTimer = Timer.periodic(_refreshInterval, (_) => _loadLatestReading());
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadLatestReading() async {
+    try {
+      final reading = await SensorReadingService.instance.fetchLatestReading(_sensorHiveId);
+      if (!mounted) return;
+      setState(() {
+        _reading = reading;
+        _sensorError = null;
+        _sensorLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sensorError = e.toString();
+        _sensorLoading = false;
+      });
+    }
+  }
+
+  String get _lastUpdatedText {
+    if (_sensorLoading && _reading == null) return 'Loading sensor data...';
+    if (_sensorError != null && _reading == null) return 'Unable to load sensor data';
+    final timestamp = _reading?.timestamp;
+    if (timestamp == null) return 'No sensor data yet';
+    final now = DateTime.now();
+    final isToday = timestamp.year == now.year &&
+        timestamp.month == now.month &&
+        timestamp.day == now.day;
+    final formatted = isToday
+        ? DateFormat.jm().format(timestamp)
+        : DateFormat('MMM d, h:mm a').format(timestamp);
+    return 'Last updated: $formatted';
+  }
+
+  String _formatValue(double? value, String pattern, String unit) =>
+      value == null ? '-- $unit' : '${NumberFormat(pattern).format(value)} $unit';
+
+  /// Status pill based on the alert thresholds shown in hive settings.
+  ({String text, Color color, Color bg}) _rangePill(double? value, double min, double max) {
+    if (value == null) {
+      return (text: 'No data', color: AppColors.textSecondary, bg: AppColors.bgElevated);
+    }
+    if (value < min) return (text: 'Low', color: AppColors.warning, bg: AppColors.bgElevated);
+    if (value > max) return (text: 'High', color: AppColors.warning, bg: AppColors.bgElevated);
+    return (text: 'Normal', color: AppColors.success, bg: AppColors.lightGreenCard);
+  }
 
   void _onNavTapped(int index) {
     if (index == _tabIndex) {
@@ -269,8 +345,11 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+        child: RefreshIndicator(
+          color: AppColors.darkGreen,
+          onRefresh: _loadLatestReading,
+          child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -307,6 +386,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               const SizedBox(height: 24),
             ],
           ),
+        ),
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -482,7 +562,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Last updated: 2 min ago',
+              _lastUpdatedText,
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
@@ -522,6 +602,9 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
 
   // ── 2x2 Sensor Metric Cards ───────────────────────────────────────
   Widget _buildSensorGrid() {
+    final tempPill = _rangePill(_reading?.temperature, 30, 36);
+    final humidityPill = _rangePill(_reading?.humidity, 55, 80);
+
     return Column(
       children: [
         Row(
@@ -535,10 +618,10 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                   size: 26,
                 ),
                 title: 'Temperature',
-                value: '31.2 °C',
-                pillText: 'Normal',
-                pillColor: AppColors.success,
-                pillBg: AppColors.lightGreenCard,
+                value: _formatValue(_reading?.temperature, '0.#', '°C'),
+                pillText: tempPill.text,
+                pillColor: tempPill.color,
+                pillBg: tempPill.bg,
               ),
             ),
             const SizedBox(width: 12),
@@ -551,10 +634,10 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
                   size: 26,
                 ),
                 title: 'Humidity',
-                value: '75 %',
-                pillText: 'Normal',
-                pillColor: AppColors.success,
-                pillBg: AppColors.lightGreenCard,
+                value: _formatValue(_reading?.humidity, '0.#', '%'),
+                pillText: humidityPill.text,
+                pillColor: humidityPill.color,
+                pillBg: humidityPill.bg,
               ),
             ),
           ],
@@ -567,9 +650,8 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
               child: _MetricCard(
                 iconWidget: const _HoneyJarIcon(),
                 title: 'Hive Weight',
-                value: '12.4 kg',
-                trendText: '+0.3 kg today',
-                trendColor: AppColors.success,
+                value: _formatValue(_reading?.weight, '0.###', 'kg'),
+                subText: 'Load cell reading',
               ),
             ),
             const SizedBox(width: 12),
