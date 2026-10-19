@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/disease_risk_service.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
+import '../widgets/confidence_bar.dart';
 import 'IT23183186_disease_assessment_screen.dart';
 
 class DiseaseRiskScreen extends StatelessWidget {
@@ -42,7 +43,9 @@ class DiseaseRiskScreen extends StatelessWidget {
               context: context,
               applicationName: 'Hive Sense',
               children: const [
-                Text('This baseline summarizes classifier outputs. It is not a veterinary diagnosis or calibrated disease probability.'),
+                Text(
+                  'This baseline summarizes classifier outputs. It is not a veterinary diagnosis or calibrated disease probability.',
+                ),
               ],
             ),
             icon: const Icon(Icons.info_outline_rounded),
@@ -56,7 +59,7 @@ class DiseaseRiskScreen extends StatelessWidget {
             _scoreCard(assessment, scoreColor),
             const SizedBox(height: 18),
             Text(
-              'Model evidence',
+              'Model class scores',
               style: _style(16, FontWeight.w700, AppColors.textPrimary),
             ),
             const SizedBox(height: 9),
@@ -64,7 +67,13 @@ class DiseaseRiskScreen extends StatelessWidget {
               _emptyEvidence(),
             ] else ...[
               for (final entry in assessment.classScores.entries)
-                _scoreRow(entry.key, entry.value),
+                ConfidenceBar(
+                  label: entry.key,
+                  confidence: entry.value,
+                  isTopPrediction:
+                      !predictionResult!.isOod &&
+                      entry.key == predictionResult!.predictedClass,
+                ),
               const SizedBox(height: 4),
               Text(
                 'Baseline score = Disease Signs + Stressed Colony model scores. The model has four broad classes and cannot identify a specific disease.',
@@ -126,7 +135,10 @@ class DiseaseRiskScreen extends StatelessWidget {
                         : '${assessment.score}',
                     style: _style(34, FontWeight.w800, AppColors.textPrimary),
                   ),
-                  Text('/ 100', style: _style(12, FontWeight.w500, AppColors.textPrimary)),
+                  Text(
+                    '/ 100',
+                    style: _style(12, FontWeight.w500, AppColors.textPrimary),
+                  ),
                 ],
               ),
             ),
@@ -144,8 +156,7 @@ class DiseaseRiskScreen extends StatelessWidget {
             ),
             const SizedBox(height: 9),
             Text(
-              assessment?.explanation ??
-                  'No image inference is available yet. Upload a hive image when a compatible model is bundled.',
+              assessment?.explanation ?? 'No image inference is available yet. Upload a hive image when a compatible model is bundled.',
               textAlign: TextAlign.center,
               style: _style(11, FontWeight.w500, AppColors.textPrimary),
             ),
@@ -169,40 +180,6 @@ class DiseaseRiskScreen extends StatelessWidget {
       ],
     ),
   );
-
-  Widget _scoreRow(String name, double score) {
-    final color = switch (name) {
-      'Disease Signs' => AppColors.error,
-      'Stressed Colony' => AppColors.warning,
-      'Healthy Colony' => AppColors.accent3,
-      _ => AppColors.blue,
-    };
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(13),
-      decoration: _card(),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(name, style: _style(13, FontWeight.w700, AppColors.textPrimary))),
-              Text('${(score * 100).toStringAsFixed(1)}%', style: _style(12, FontWeight.w700, color)),
-            ],
-          ),
-          const SizedBox(height: 9),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: score.clamp(0, 1),
-              minHeight: 6,
-              color: color,
-              backgroundColor: AppColors.border,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 BoxDecoration _card() => BoxDecoration(
@@ -213,4 +190,3 @@ BoxDecoration _card() => BoxDecoration(
 
 TextStyle _style(double size, FontWeight weight, Color color) =>
     GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color);
-

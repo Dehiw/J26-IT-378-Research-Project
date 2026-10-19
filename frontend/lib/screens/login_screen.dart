@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -53,7 +54,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navAfterAuth() {
     if (!mounted) return;
-    final isNormalUser = AuthService.instance.currentUser?.isNormalUser ?? false;
+    final isNormalUser =
+        AuthService.instance.currentUser?.isNormalUser ?? false;
     if (widget.isFirstLoginAfterRegister && !isNormalUser) {
       // ONLY for Bee Keeper 1st login after register -> Apiary First-Time Setup
       Navigator.of(context).pushReplacement(
@@ -82,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _continueAsGuest() {
+    AuthService.instance.continueAsGuest();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
         builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
@@ -99,10 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
     developer.log('Initiating backend login for: $email', name: 'LoginScreen');
 
     try {
-      await AuthService.instance.login(
-        email: email,
-        password: password,
-      );
+      await AuthService.instance.login(email: email, password: password);
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -242,8 +242,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter your email';
                       }
-                      final emailRegex =
-                          RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                      final emailRegex = RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      );
                       if (!emailRegex.hasMatch(value.trim())) {
                         return 'Please enter a valid email address';
                       }
@@ -272,7 +273,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               content: Text(
                                 'Password reset link sent to registered email',
                                 style: GoogleFonts.inter(
-                                    color: AppColors.bgPrimary),
+                                  color: AppColors.bgPrimary,
+                                ),
                               ),
                             ),
                           );

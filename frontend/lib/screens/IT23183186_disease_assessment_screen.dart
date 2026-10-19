@@ -8,6 +8,7 @@ import '../services/disease_risk_service.dart';
 import '../services/inference_service.dart';
 import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
+import '../widgets/result_card.dart';
 import 'IT23183186_disease_risk_screen.dart';
 
 class DiseaseAssessmentScreen extends StatefulWidget {
@@ -15,7 +16,8 @@ class DiseaseAssessmentScreen extends StatefulWidget {
   const DiseaseAssessmentScreen({super.key, this.inferenceService});
 
   @override
-  State<DiseaseAssessmentScreen> createState() => _DiseaseAssessmentScreenState();
+  State<DiseaseAssessmentScreen> createState() =>
+      _DiseaseAssessmentScreenState();
 }
 
 class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
@@ -29,11 +31,17 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
       final photo = await _picker.pickImage(source: source, imageQuality: 90);
       if (photo == null || !mounted) return;
       setState(() {
-        if (_photos.length < 6) _photos.add(photo);
+        if (_photos.length < 6) {
+          _photos.add(photo);
+        }
         _errorMessage = null;
       });
     } catch (error) {
-      if (mounted) setState(() => _errorMessage = 'Could not open the image picker: $error');
+      if (mounted) {
+        setState(
+          () => _errorMessage = 'Could not open the image picker: $error',
+        );
+      }
     }
   }
 
@@ -59,9 +67,15 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
       final classNames = results.first.classScores.keys;
       final meanScores = <String, double>{
         for (final name in classNames)
-          name: results.map((result) => result.classScores[name] ?? 0).reduce((a, b) => a + b) / results.length,
+          name:
+              results
+                  .map((result) => result.classScores[name] ?? 0)
+                  .reduce((a, b) => a + b) /
+              results.length,
       };
-      final top = meanScores.entries.reduce((a, b) => a.value >= b.value ? a : b);
+      final top = meanScores.entries.reduce(
+        (a, b) => a.value >= b.value ? a : b,
+      );
       final isOod = results.every((result) => result.isOod);
       final combined = PredictionResult(
         predictedClass: isOod ? 'OOD — Rejected' : top.key,
@@ -98,7 +112,10 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
-        leading: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded)),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close_rounded),
+        ),
         title: const Text('New Image Assessment'),
       ),
       body: SafeArea(
@@ -113,9 +130,7 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
             _infoCard(
               Icons.camera_alt_outlined,
               'Image classifier',
-              modelReady
-                  ? 'Ready · analyzes each selected image'
-                  : 'Model unavailable · upload and preview work, inference needs ONNX weights',
+              modelReady ? 'Ready · analyzes each selected image' : 'Model unavailable · upload and preview work, inference needs ONNX weights',
               modelReady ? AppColors.accent3 : AppColors.warning,
             ),
             const SizedBox(height: 9),
@@ -152,10 +167,24 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.add_a_photo_outlined, color: AppColors.accent, size: 26),
+                    const Icon(
+                      Icons.add_a_photo_outlined,
+                      color: AppColors.accent,
+                      size: 26,
+                    ),
                     const SizedBox(height: 6),
-                    Text('Choose hive photos', style: _style(14, FontWeight.w700, AppColors.textPrimary)),
-                    Text('${_photos.length}/6 · JPG or PNG', style: _style(11, FontWeight.w400, AppColors.textSecondary)),
+                    Text(
+                      'Choose hive photos',
+                      style: _style(14, FontWeight.w700, AppColors.textPrimary),
+                    ),
+                    Text(
+                      '${_photos.length}/6 · JPG or PNG',
+                      style: _style(
+                        11,
+                        FontWeight.w400,
+                        AppColors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -178,11 +207,19 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
             ],
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: _photos.isEmpty || _isAnalyzing ? null : _runAssessment,
+              onPressed: _photos.isEmpty || _isAnalyzing
+                  ? null
+                  : _runAssessment,
               icon: _isAnalyzing
-                  ? const SizedBox(width: 17, height: 17, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 17,
+                      height: 17,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.analytics_outlined),
-              label: Text(_isAnalyzing ? 'Analyzing images…' : 'Run image assessment'),
+              label: Text(
+                _isAnalyzing ? 'Analyzing images…' : 'Run image assessment',
+              ),
             ),
             const SizedBox(height: 9),
             Text(
@@ -203,8 +240,21 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
         child: FutureBuilder(
           future: _photos[index].readAsBytes(),
           builder: (context, snapshot) => snapshot.hasData
-              ? Image.memory(snapshot.data!, width: 112, height: 112, fit: BoxFit.cover)
-              : Container(width: 112, height: 112, color: AppColors.bgElevated, child: const Icon(Icons.image_outlined, color: AppColors.textSecondary)),
+              ? Image.memory(
+                  snapshot.data!,
+                  width: 112,
+                  height: 112,
+                  fit: BoxFit.cover,
+                )
+              : Container(
+                  width: 112,
+                  height: 112,
+                  color: AppColors.bgElevated,
+                  child: const Icon(
+                    Icons.image_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
         ),
       ),
       Positioned(
@@ -235,9 +285,15 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: _style(13, FontWeight.w700, AppColors.textPrimary)),
+                  Text(
+                    title,
+                    style: _style(13, FontWeight.w700, AppColors.textPrimary),
+                  ),
                   const SizedBox(height: 3),
-                  Text(subtitle, style: _style(11, FontWeight.w400, AppColors.textSecondary)),
+                  Text(
+                    subtitle,
+                    style: _style(11, FontWeight.w400, AppColors.textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -252,7 +308,10 @@ class _DiseaseAssessmentScreenState extends State<DiseaseAssessmentScreen> {
       borderRadius: BorderRadius.circular(12),
       border: Border.all(color: AppColors.warning.withValues(alpha: .35)),
     ),
-    child: Text(message, style: _style(12, FontWeight.w500, AppColors.textPrimary)),
+    child: Text(
+      message,
+      style: _style(12, FontWeight.w500, AppColors.textPrimary),
+    ),
   );
 }
 
@@ -274,39 +333,23 @@ class DiseaseAssessmentResultScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       appBar: AppBar(
-        leading: IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.arrow_back_rounded)),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const Text('Image assessment'),
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.bgSecondary,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    result.isOod ? Icons.help_outline_rounded : Icons.analytics_outlined,
-                    color: result.isOod ? AppColors.warning : AppColors.accent3,
-                    size: 44,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(result.predictedClass, style: _style(19, FontWeight.w700, AppColors.textPrimary), textAlign: TextAlign.center),
-                  const SizedBox(height: 5),
-                  Text('${(result.confidence * 100).toStringAsFixed(1)}% model score · $imageCount image${imageCount == 1 ? '' : 's'}', style: _style(12, FontWeight.w500, AppColors.textSecondary), textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  Text(assessment.explanation, style: _style(12, FontWeight.w400, AppColors.textSecondary), textAlign: TextAlign.center),
-                ],
-              ),
+            ResultCard(result: result),
+            const SizedBox(height: 12),
+            Text(
+              'Analyzed $imageCount image${imageCount == 1 ? '' : 's'}. ${assessment.explanation}',
+              textAlign: TextAlign.center,
+              style: _style(12, FontWeight.w500, AppColors.textSecondary),
             ),
-            const SizedBox(height: 16),
-            for (final entry in result.classScores.entries)
-              _resultScore(entry.key, entry.value),
             const SizedBox(height: 8),
             Text(
               'Baseline indicator from the classifier only. It is not a calibrated disease probability or veterinary diagnosis.',
@@ -333,23 +376,5 @@ class DiseaseAssessmentResultScreen extends StatelessWidget {
   }
 }
 
-Widget _resultScore(String name, double value) => Container(
-  margin: const EdgeInsets.only(bottom: 8),
-  padding: const EdgeInsets.all(12),
-  decoration: BoxDecoration(color: AppColors.bgSecondary, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
-  child: Row(
-    children: [
-      Expanded(child: Text(name, style: _style(12, FontWeight.w600, AppColors.textPrimary))),
-      SizedBox(
-        width: 86,
-        child: LinearProgressIndicator(value: value.clamp(0, 1), minHeight: 6, color: AppColors.accent, backgroundColor: AppColors.border, borderRadius: BorderRadius.circular(4)),
-      ),
-      const SizedBox(width: 8),
-      Text('${(value * 100).toStringAsFixed(1)}%', style: _style(11, FontWeight.w700, AppColors.textPrimary)),
-    ],
-  ),
-);
-
 TextStyle _style(double size, FontWeight weight, Color color) =>
     GoogleFonts.inter(fontSize: size, fontWeight: weight, color: color);
-

@@ -1,0 +1,15 @@
+# Copy and edit after the official archive is available and its annotations
+# have been validated. Create a group-aware test holdout from official train;
+# the paper release only has official train and validation splits.
+path: C:/datasets/FAIRHiveFrames_prepared
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: CappedHoneyCell
+  1: CappedWorkerBroodCell
+  2: EmptyCombCell
+  3: PollenCell
+  4: UncappedNectarCell
+  5: UncappedWorkerLarvaCell
+  6: BeeHiveFrame

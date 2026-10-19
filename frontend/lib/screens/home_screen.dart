@@ -18,7 +18,6 @@ import 'my_requests_screen_IT23185302.dart';
 import 'beekeepers_directory_screen_IT23185302.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 
-
 class HomeScreen extends StatefulWidget {
   final InferenceService? inferenceService;
 
@@ -58,16 +57,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void initState() {
     super.initState();
     if (!AuthService.instance.isLoggedIn) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) =>
-                LoginScreen(inferenceService: widget.inferenceService),
-          ),
-          (route) => false,
-        );
-      });
+      if (!AuthService.instance.isGuest) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) =>
+                  LoginScreen(inferenceService: widget.inferenceService),
+            ),
+            (route) => false,
+          );
+        });
+        return;
+      }
+      _loadingApiaries = false;
+      _loadingStats = false;
+      _loadingBkStats = false;
       return;
     }
     _loadApiaries();
@@ -90,11 +95,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   /// Called when this screen becomes active again (e.g. after popping from sub-screen)
   @override
   void didPopNext() {
+    if (AuthService.instance.isGuest) return;
     _loadNormalUserStats();
     _loadBeekeeperStats();
   }
 
   Future<void> _loadNormalUserStats() async {
+    if (AuthService.instance.isGuest) {
+      if (mounted) setState(() => _loadingStats = false);
+      return;
+    }
     setState(() => _loadingStats = true);
     try {
       // Fetch user's own reports
@@ -354,7 +364,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final UserModel? user = AuthService.instance.currentUser;
-    final bool isNormalUser = user?.isNormalUser ?? false;
+    final bool isNormalUser =
+        user?.isNormalUser ?? AuthService.instance.isGuest;
     final String initial = (user?.name.isNotEmpty == true)
         ? user!.name[0].toUpperCase()
         : 'U';
@@ -400,7 +411,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.hiveLow,
-          onRefresh: isNormalUser ? _loadNormalUserStats : _loadApiaries,
+          onRefresh: AuthService.instance.isGuest
+              ? () async {}
+              : isNormalUser
+              ? _loadNormalUserStats
+              : _loadApiaries,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -480,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ? 'Good Afternoon'
         : 'Good Evening';
     final name = user?.name.split(' ').first ?? 'User';
-    final isNormalUser = user?.isNormalUser ?? false;
+    final isNormalUser = user?.isNormalUser ?? AuthService.instance.isGuest;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1172,6 +1187,25 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       children: [
         const SizedBox(height: 16),
         _buildGreeting(user),
+        if (AuthService.instance.isGuest) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.bgElevated,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Guest preview: account data and reports require sign-in. Some live features also need the backend connection.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
 
         // Hero Card: Report Wild Bee Colony
