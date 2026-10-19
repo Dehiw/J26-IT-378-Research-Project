@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../models/user_model.dart';
+import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
@@ -35,10 +37,58 @@ class _RelocationAssessmentScreenIT23185302State
     _loadStats();
   }
 
+  bool _isAssignedToCurrentBeekeeper(
+      Map<String, dynamic> report, UserModel? beekeeper) {
+    if (beekeeper == null) return false;
+
+    final bkId = (report['assigned_beekeeper_id'] ?? '').toString().trim();
+    final bkName =
+        (report['assigned_beekeeper'] ?? '').toString().trim().toLowerCase();
+    final bkPhone = (report['assigned_phone'] ?? '').toString().trim();
+    final bkEmail = (report['assigned_email'] ??
+            report['assigned_beekeeper_email'] ??
+            '')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    final currentId = beekeeper.id.trim();
+    final currentName = beekeeper.name.trim().toLowerCase();
+    final currentEmail = beekeeper.email.trim().toLowerCase();
+    final currentPhone = (beekeeper.phone ?? '').trim();
+
+    // 1. Match by Beekeeper ID
+    if (currentId.isNotEmpty && bkId.isNotEmpty && bkId == currentId) {
+      return true;
+    }
+    // 2. Match by Beekeeper Name
+    if (currentName.isNotEmpty && bkName.isNotEmpty) {
+      if (bkName == currentName ||
+          bkName.contains(currentName) ||
+          currentName.contains(bkName)) {
+        return true;
+      }
+    }
+    // 3. Match by Beekeeper Email
+    if (currentEmail.isNotEmpty && bkEmail.isNotEmpty && bkEmail == currentEmail) {
+      return true;
+    }
+    // 4. Match by Beekeeper Phone
+    if (currentPhone.isNotEmpty && bkPhone.isNotEmpty && bkPhone == currentPhone) {
+      return true;
+    }
+    return false;
+  }
+
   Future<void> _loadStats() async {
     if (mounted) setState(() => _loadingStats = true);
     try {
-      final reports = await WildBeeService.instance.fetchAllReports();
+      final allReports = await WildBeeService.instance.fetchAllReports();
+      final currentBeekeeper = AuthService.instance.currentUser;
+      final reports = allReports
+          .where((r) => _isAssignedToCurrentBeekeeper(r, currentBeekeeper))
+          .toList();
+
       int pending = 0, active = 0, completed = 0;
       for (final r in reports) {
         final status = (r['status'] ?? '').toString().toLowerCase();

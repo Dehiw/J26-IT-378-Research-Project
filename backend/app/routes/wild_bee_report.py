@@ -228,3 +228,47 @@ def assign_beekeeper_to_report(
     }
 
 
+@router.patch("/{report_id}/manage")
+def manage_wild_bee_report(report_id: str, payload: dict):
+    """
+    Updates relocation lifecycle fields for a report:
+    Status (Accepted, Declined, Scheduled, In Progress, Completed),
+    scheduling date/time, notes, and completion photos.
+    Updates Firestore immediately.
+    """
+    doc_ref = db.collection("wild_bee_reports").document(report_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Report {report_id} not found."
+        )
+
+    allowed_keys = {
+        "status",
+        "assigned_beekeeper",
+        "assigned_phone",
+        "assigned_beekeeper_id",
+        "scheduled_date",
+        "scheduled_time",
+        "notes",
+        "relocation_notes",
+        "completion_notes",
+        "completion_photos",
+        "declined_reason",
+    }
+    updates = {}
+    for k, v in payload.items():
+        if k in allowed_keys and v is not None:
+            updates[k] = v
+
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    doc_ref.update(updates)
+    data = doc_ref.get().to_dict()
+    return {
+        "success": True,
+        "message": f"Report {report_id} updated successfully.",
+        "report": data,
+    }
+
+

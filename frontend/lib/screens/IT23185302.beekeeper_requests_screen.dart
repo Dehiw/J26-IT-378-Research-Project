@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
@@ -48,31 +49,19 @@ class _BeekeeperRequestsScreenIT23185302State
       developer.log('Loaded ${fetched.length} reports from Firestore',
           name: 'BeekeeperRequests');
 
-      // Seed with comprehensive demonstration cases including the exact user prompt case #E50E
-      final sampleCases = _getSampleDemonstrationRequests();
+      final currentBeekeeper = AuthService.instance.currentUser;
 
-      // Merge: Live fetched reports first, supplemented by sample cases if not duplicated
-      final merged = <Map<String, dynamic>>[];
-      final seenIds = <String>{};
-
+      // Filter: Only keep real reports where the user selected this beekeeper
+      final filteredForBeekeeper = <Map<String, dynamic>>[];
       for (final r in fetched) {
-        final id = (r['id'] ?? r['report_id'] ?? '').toString();
-        if (id.isNotEmpty) {
-          seenIds.add(id);
-          merged.add(Map<String, dynamic>.from(r));
-        }
-      }
-
-      for (final s in sampleCases) {
-        final id = s['id'].toString();
-        if (!seenIds.contains(id)) {
-          merged.add(s);
+        if (_isAssignedToCurrentBeekeeper(r, currentBeekeeper)) {
+          filteredForBeekeeper.add(Map<String, dynamic>.from(r));
         }
       }
 
       if (mounted) {
         setState(() {
-          _allRequests = merged;
+          _allRequests = filteredForBeekeeper;
           _isLoading = false;
         });
       }
@@ -80,129 +69,54 @@ class _BeekeeperRequestsScreenIT23185302State
       developer.log('Error loading requests: $e', name: 'BeekeeperRequests');
       if (mounted) {
         setState(() {
-          _allRequests = _getSampleDemonstrationRequests();
+          _allRequests = [];
           _isLoading = false;
         });
       }
     }
   }
 
-  List<Map<String, dynamic>> _getSampleDemonstrationRequests() {
-    return [
-      {
-        'id': 'REL-2026-E50E',
-        'display_id': '#E50E',
-        'address': 'Nittambuwa, Sri Lanka',
-        'created_at': '2026-10-18T10:15:00Z',
-        'date_display': '18 Oct 2026',
-        'status': 'Pending',
-        'colony_location': 'Roof',
-        'height': '2–5 m',
-        'inside_structure': 'Yes',
-        'safe_access': 'Yes',
-        'assessment_level': 'Expert Assistance Required',
-        'confidence': '94%',
-        'main_concerns': [
-          'High elevation roof cavity',
-          'Enclosed rafters near wiring',
-          'Risk of stinging nearby occupants',
-        ],
-        'recommended_action':
-            'Perform specialized bee-vacuum extraction with safety ladder and thermal comb imaging. Isolate attic entrance before opening soffit.',
-        'homeowner_name': 'Sunil Jayawardena',
-        'homeowner_phone': '+94 77 123 4567',
-        'homeowner_email': 'sunil.j@gmail.com',
-        'gps_coordinates': '7.1444° N, 80.0983° E',
-        'notes': 'Large cluster of wild bees entered through the roof fascia board last Wednesday. Buzzing is audible in bedroom.',
-        'has_photo': true,
-        'photo_url': null,
-      },
-      {
-        'id': 'REL-2026-A28F',
-        'display_id': '#A28F',
-        'address': 'Negombo Road, Kurunegala',
-        'created_at': '2026-10-17T14:30:00Z',
-        'date_display': '17 Oct 2026',
-        'status': 'Accepted',
-        'scheduled_date': '2026-10-21',
-        'scheduled_time': '09:00 AM',
-        'colony_location': 'Tree',
-        'height': 'Below 2 m',
-        'inside_structure': 'No',
-        'safe_access': 'Yes',
-        'assessment_level': 'Routine Professional Relocation',
-        'confidence': '96%',
-        'main_concerns': [
-          'Direct sunlight exposure',
-          'Garden walkway proximity',
-        ],
-        'recommended_action':
-            'Direct swarm capture into standard brood box using lemongrass attractant pheromone.',
-        'homeowner_name': 'Malini Perera',
-        'homeowner_phone': '+94 71 884 2190',
-        'homeowner_email': 'malini.p@yahoo.com',
-        'gps_coordinates': '7.4863° N, 80.3623° E',
-        'notes': 'Bivouac swarm hanging from low mango branch. No structure damage.',
-        'has_photo': false,
-      },
-      {
-        'id': 'REL-2026-B91C',
-        'display_id': '#B91C',
-        'address': 'Galle Fort, Southern Province',
-        'created_at': '2026-10-16T11:20:00Z',
-        'date_display': '16 Oct 2026',
-        'status': 'In Progress',
-        'scheduled_date': '2026-10-19',
-        'scheduled_time': '08:30 AM',
-        'colony_location': 'Wall',
-        'height': '2–5 m',
-        'inside_structure': 'Yes',
-        'safe_access': 'Yes',
-        'assessment_level': 'Expert Assistance Required',
-        'confidence': '91%',
-        'main_concerns': [
-          'Brick masonry cavity nest',
-          'Heavy propolis adhesion',
-        ],
-        'recommended_action':
-            'Careful mortar cutout and smoke sedation to recover queen bee without brood damage.',
-        'homeowner_name': 'Kavinda Rathnayake',
-        'homeowner_phone': '+94 76 550 1982',
-        'homeowner_email': 'kavinda.r@gmail.com',
-        'gps_coordinates': '6.0535° N, 80.2210° E',
-        'notes': 'Bees entering through ventilation brick on external facade.',
-        'has_photo': false,
-      },
-      {
-        'id': 'REL-2026-C44D',
-        'display_id': '#C44D',
-        'address': 'Kandy Road, Kadawatha',
-        'created_at': '2026-10-14T09:00:00Z',
-        'date_display': '14 Oct 2026',
-        'status': 'Completed',
-        'scheduled_date': '2026-10-15',
-        'scheduled_time': '10:00 AM',
-        'colony_location': 'Tree',
-        'height': 'Below 2 m',
-        'inside_structure': 'No',
-        'safe_access': 'Yes',
-        'assessment_level': 'Low Risk Relocation',
-        'confidence': '98%',
-        'main_concerns': [
-          'Weather exposure before heavy rains',
-        ],
-        'recommended_action':
-            'Safely transferred to 8-frame Langstroth hive and relocated to Gampaha apiary.',
-        'homeowner_name': 'Chathura Alwis',
-        'homeowner_phone': '+94 77 663 8812',
-        'homeowner_email': 'chathura.alwis@gmail.com',
-        'gps_coordinates': '7.0012° N, 79.9540° E',
-        'notes': 'Successfully relocated Apis cerana colony. Queen confirmed active.',
-        'completion_notes':
-            'Queen caged and transferred safely. All foraging workers collected at dusk. Homeowner given advice on preventive sealants.',
-        'has_photo': false,
-      },
-    ];
+  bool _isAssignedToCurrentBeekeeper(
+      Map<String, dynamic> report, UserModel? beekeeper) {
+    if (beekeeper == null) return false;
+
+    final bkId = (report['assigned_beekeeper_id'] ?? '').toString().trim();
+    final bkName =
+        (report['assigned_beekeeper'] ?? '').toString().trim().toLowerCase();
+    final bkPhone = (report['assigned_phone'] ?? '').toString().trim();
+    final bkEmail = (report['assigned_email'] ??
+            report['assigned_beekeeper_email'] ??
+            '')
+        .toString()
+        .trim()
+        .toLowerCase();
+
+    final currentId = beekeeper.id.trim();
+    final currentName = beekeeper.name.trim().toLowerCase();
+    final currentEmail = beekeeper.email.trim().toLowerCase();
+    final currentPhone = (beekeeper.phone ?? '').trim();
+
+    // 1. Match by Beekeeper ID
+    if (currentId.isNotEmpty && bkId.isNotEmpty && bkId == currentId) {
+      return true;
+    }
+    // 2. Match by Beekeeper Name
+    if (currentName.isNotEmpty && bkName.isNotEmpty) {
+      if (bkName == currentName ||
+          bkName.contains(currentName) ||
+          currentName.contains(bkName)) {
+        return true;
+      }
+    }
+    // 3. Match by Beekeeper Email
+    if (currentEmail.isNotEmpty && bkEmail.isNotEmpty && bkEmail == currentEmail) {
+      return true;
+    }
+    // 4. Match by Beekeeper Phone
+    if (currentPhone.isNotEmpty && bkPhone.isNotEmpty && bkPhone == currentPhone) {
+      return true;
+    }
+    return false;
   }
 
   List<Map<String, dynamic>> get _filteredRequests {
@@ -549,18 +463,18 @@ class _WildBeeRequestCard extends StatelessWidget {
 
   String _formatDisplayId(String? id, String? displayId) {
     if (displayId != null && displayId.isNotEmpty) return displayId;
-    if (id == null || id.isEmpty) return '#E50E';
+    if (id == null || id.isEmpty) return '#REQ';
     final parts = id.split('-');
     if (parts.isNotEmpty) {
       final last = parts.last;
       return '#${last.length > 5 ? last.substring(0, 4) : last}';
     }
-    return '#E50E';
+    return '#REQ';
   }
 
   String _formatDate(String? raw, String? fallback) {
     if (fallback != null && fallback.isNotEmpty) return fallback;
-    if (raw == null || raw.isEmpty) return '18 Oct 2026';
+    if (raw == null || raw.isEmpty) return 'Recent';
     try {
       final dt = DateTime.parse(raw);
       final months = [
@@ -636,10 +550,10 @@ class _WildBeeRequestCard extends StatelessWidget {
     final status = (request['status'] ?? 'Pending').toString();
     final displayId =
         _formatDisplayId(request['id']?.toString(), request['display_id']?.toString());
-    final address = request['address']?.toString() ?? 'Nittambuwa, Sri Lanka';
+    final address = request['address']?.toString() ?? 'Sri Lanka';
     final dateStr =
         _formatDate(request['created_at']?.toString(), request['date_display']?.toString());
-    final colonyLocation = request['colony_location']?.toString() ?? 'Roof';
+    final colonyLocation = request['colony_location']?.toString() ?? 'Colony';
     final assessment = _getAssessmentLevel(request);
 
     final statusColor = _statusColor(status);
@@ -921,13 +835,13 @@ class _BeekeeperRequestDetailsScreenIT23185302State
 
   String _getDisplayId() {
     final id = _data['id']?.toString() ?? _data['display_id']?.toString() ?? '';
-    if (id.isEmpty) return '#E50E';
+    if (id.isEmpty) return '#REQ';
     final parts = id.split('-');
     if (parts.isNotEmpty) {
       final last = parts.last;
       return '#${last.length > 5 ? last.substring(0, 4) : last}';
     }
-    return '#E50E';
+    return '#REQ';
   }
 
   // ── Firestore Sync Handler ────────────────────────────────────────
