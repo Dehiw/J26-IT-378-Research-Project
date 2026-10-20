@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../models/sensor_reading_model.dart';
 import '../services/inference_service.dart';
+import '../services/sensor_reading_service.dart';
+import '../utils/sensor_analytics.dart';
 import '../utils/theme.dart';
 import 'it23136274_alerts_history_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
@@ -55,24 +59,114 @@ class _IT23136274AiHealthAssessmentScreenState
     extends State<IT23136274AiHealthAssessmentScreen> {
   static const int _tabIndex = 1; // Health tab
 
+  // DEMO DATA: Firestore has no bee activity field yet. Replace these when the
+  // ESP32 (or acoustic component) starts sending bee activity readings.
+  static const String _demoBeeActivityValue = '18/min';
+  static const String _demoBeeActivityBadge = 'Low';
+  static const String _demoBeeActivityIndicator = 'Bee activity lower than normal';
+
+  /// Readings used for the weight trend (never a single reading).
+  static const Duration _weightTrendWindow = Duration(hours: 24);
+
   late String _status;
   late double _confidence;
-  late List<String> _indicators;
   late String _recommendation;
+
+  SensorReading? _latest;
+  List<SensorReading> _recentReadings = const [];
+  bool _latestLoading = true;
+  bool _recentLoading = true;
+  String? _sensorError;
+  StreamSubscription<SensorReading?>? _latestSub;
+  StreamSubscription<List<SensorReading>>? _recentSub;
 
   @override
   void initState() {
     super.initState();
     _status = widget.initialStatus;
     _confidence = widget.confidence;
-    _indicators = widget.indicators ??
-        const [
-          'Hive weight is decreasing',
-          'Bee activity lower than normal',
-          'Humidity higher than usual',
-        ];
     _recommendation = widget.recommendation ??
         'Inspect the colony and continue monitoring for the next 24 hours.';
+    _listenToSensorData();
+  }
+
+  @override
+  void dispose() {
+    _latestSub?.cancel();
+    _recentSub?.cancel();
+    super.dispose();
+  }
+
+  void _listenToSensorData() {
+    final service = SensorReadingService.instance;
+    final sensorHiveId = SensorReadingService.resolveSensorHiveId(widget.hiveId);
+
+    _latestSub = service.streamLatestReading(sensorHiveId).listen(
+      (reading) {
+        if (!mounted) return;
+        setState(() {
+          _latest = reading;
+          _latestLoading = false;
+          _sensorError = null;
+        });
+      },
+      onError: _onSensorError,
+    );
+
+    _recentSub = service
+        .streamReadingsForRange(sensorHiveId, DateTime.now().subtract(_weightTrendWindow))
+        .listen(
+      (readings) {
+        if (!mounted) return;
+        setState(() {
+          _recentReadings = readings;
+          _recentLoading = false;
+        });
+      },
+      onError: _onSensorError,
+    );
+  }
+
+  void _onSensorError(Object error) {
+    if (!mounted) return;
+    setState(() {
+      _sensorError = error.toString();
+      _latestLoading = false;
+      _recentLoading = false;
+    });
+  }
+
+  SensorDisplayStatus get _temperatureStatus =>
+      SensorDisplayRules.temperatureStatus(_latest?.temperature);
+
+  SensorDisplayStatus get _humidityStatus => SensorDisplayRules.humidityStatus(_latest?.humidity);
+
+  WeightTrend get _weightTrend {
+    final cutoff = DateTime.now().subtract(_weightTrendWindow);
+    return calculateWeightTrend(
+      _recentReadings.where((r) => r.timestamp!.isAfter(cutoff)).toList(),
+    );
+  }
+
+  /// Indicators passed in by the caller win; otherwise they are derived from
+  /// live sensor data with the display-only rules, plus the demo bee indicator.
+  List<String> get _indicators =>
+      widget.indicators ??
+      [
+        ...SensorDisplayRules.indicators(
+          temperature: _temperatureStatus,
+          humidity: _humidityStatus,
+          weightTrend: _weightTrend,
+        ),
+        _demoBeeActivityIndicator,
+      ];
+
+  String get _lastUpdatedText {
+    if (_latestLoading && _latest == null) return 'Loading sensor data...';
+    if (_sensorError != null && _latest == null) return 'Unable to load sensor data';
+    final timestamp = _latest?.timestamp;
+    if (timestamp == null) return 'No sensor data available';
+    return 'Last updated: ${formatReadingTime(timestamp)}';
   }
 
   void _onNavTapped(int index) {
@@ -493,12 +587,33 @@ class _IT23136274AiHealthAssessmentScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Text(
+                'Sensor Summary',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              if (_latestLoading && _latest == null) ...[
+                const SizedBox(width: 8),
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 2),
           Text(
-            'Sensor Summary',
+            _lastUpdatedText,
             style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 14),
@@ -508,9 +623,10 @@ class _IT23136274AiHealthAssessmentScreenState
             icon: Icons.thermostat_rounded,
             iconColor: AppColors.accent2,
             name: 'Temperature',
-            value: '31.2 °C',
-            badgeText: 'Normal',
-            isWarning: false,
+            value: formatSensorValue(_latest?.temperature, '°C'),
+            badgeText: _temperatureStatus.label,
+            isWarning: _temperatureStatus.isWarning,
+            isNeutral: _temperatureStatus == SensorDisplayStatus.unknown,
           ),
           const Divider(color: AppColors.border, height: 20, thickness: 0.6),
 
@@ -519,30 +635,32 @@ class _IT23136274AiHealthAssessmentScreenState
             icon: Icons.water_drop_rounded,
             iconColor: AppColors.info,
             name: 'Humidity',
-            value: '75 %',
-            badgeText: 'High',
-            isWarning: true,
+            value: formatSensorValue(_latest?.humidity, '%'),
+            badgeText: _humidityStatus.label,
+            isWarning: _humidityStatus.isWarning,
+            isNeutral: _humidityStatus == SensorDisplayStatus.unknown,
           ),
           const Divider(color: AppColors.border, height: 20, thickness: 0.6),
 
-          // Row 3: Hive Weight
+          // Row 3: Hive Weight (badge = trend over recent readings)
           _buildSensorSummaryRow(
             icon: Icons.scale_rounded,
             iconColor: AppColors.accent,
             name: 'Hive Weight',
-            value: '12.4 kg',
-            badgeText: 'Decreasing',
-            isWarning: true,
+            value: formatSensorValue(_latest?.weight, 'kg', pattern: '0.###'),
+            badgeText: _recentLoading ? '...' : _weightTrend.label,
+            isWarning: _weightTrend == WeightTrend.decreasing,
+            isNeutral: _recentLoading || _weightTrend == WeightTrend.insufficientData,
           ),
           const Divider(color: AppColors.border, height: 20, thickness: 0.6),
 
-          // Row 4: Bee Activity
+          // Row 4: Bee Activity (DEMO DATA, see _demoBeeActivity*)
           _buildSensorSummaryRow(
             icon: Icons.scatter_plot_rounded,
             iconColor: AppColors.hiveDoor,
             name: 'Bee Activity',
-            value: '18/min',
-            badgeText: 'Low',
+            value: _demoBeeActivityValue,
+            badgeText: _demoBeeActivityBadge,
             isWarning: true,
           ),
         ],
@@ -557,9 +675,14 @@ class _IT23136274AiHealthAssessmentScreenState
     required String value,
     required String badgeText,
     required bool isWarning,
+    bool isNeutral = false,
   }) {
-    final badgeBg = isWarning ? AppColors.badgeTempBg : AppColors.badgeLeafBg;
-    final badgeFg = isWarning ? AppColors.error : AppColors.success;
+    final badgeBg = isNeutral
+        ? AppColors.bgElevated
+        : (isWarning ? AppColors.badgeTempBg : AppColors.badgeLeafBg);
+    final badgeFg = isNeutral
+        ? AppColors.textSecondary
+        : (isWarning ? AppColors.error : AppColors.success);
 
     return Row(
       children: [
