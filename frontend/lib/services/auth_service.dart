@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,13 +25,24 @@ class AuthService {
 
   UserModel? _currentUser;
   String? _token;
+  bool _isGuest = false;
 
   UserModel? get currentUser => _currentUser;
+  String? get accessToken => _token;
   String? get token => _token;
   bool get isLoggedIn => _token != null && _token!.isNotEmpty;
+  bool get isGuest => _isGuest;
+
+  /// Opens the local preview without creating an authenticated backend session.
+  void continueAsGuest() {
+    _token = null;
+    _currentUser = null;
+    _isGuest = true;
+  }
 
   /// Restores saved session from SharedPreferences on app start
   Future<bool> restoreSession() async {
+    _isGuest = false;
     try {
       final prefs = await SharedPreferences.getInstance();
       _token = prefs.getString(_keyToken);
@@ -38,8 +51,10 @@ class AuthService {
       if (_token != null && userJsonStr != null) {
         final Map<String, dynamic> userMap = jsonDecode(userJsonStr);
         _currentUser = UserModel.fromJson(userMap, token: _token);
-        developer.log('Restored session for ${_currentUser?.email}',
-            name: 'AuthService');
+        developer.log(
+          'Restored session for ${_currentUser?.email}',
+          name: 'AuthService',
+        );
         return true;
       }
     } catch (e) {
@@ -70,6 +85,7 @@ class AuthService {
     final accessToken = responseMap['access_token'] as String;
 
     _token = accessToken;
+    _isGuest = false;
     _currentUser = UserModel.fromJson(userMap, token: accessToken);
 
     await _persistSession(_token!, _currentUser!);
@@ -87,8 +103,10 @@ class AuthService {
           .toList();
       return list;
     } catch (e) {
-      developer.log('Error fetching registered beekeepers: $e',
-          name: 'AuthService');
+      developer.log(
+        'Error fetching registered beekeepers: $e',
+        name: 'AuthService',
+      );
       rethrow;
     }
   }
@@ -99,16 +117,14 @@ class AuthService {
     required String password,
   }) async {
     final endpoint = '${ApiConfig.baseUrl}/auth/login';
-    final payload = {
-      'email': email.trim().toLowerCase(),
-      'password': password,
-    };
+    final payload = {'email': email.trim().toLowerCase(), 'password': password};
 
     final responseMap = await _postJson(endpoint, payload);
     final userMap = responseMap['user'] as Map<String, dynamic>;
     final accessToken = responseMap['access_token'] as String;
 
     _token = accessToken;
+    _isGuest = false;
     _currentUser = UserModel.fromJson(userMap, token: accessToken);
 
     await _persistSession(_token!, _currentUser!);
@@ -124,8 +140,10 @@ class AuthService {
 
     if (_token != null) {
       try {
-        final statusRes = await _getJson('${ApiConfig.baseUrl}/apiary/status',
-            token: _token);
+        final statusRes = await _getJson(
+          '${ApiConfig.baseUrl}/apiary/status',
+          token: _token,
+        );
         final completed = statusRes['setup_completed'] as bool? ?? false;
         await prefs.setBool('setup_completed_${_currentUser!.id}', completed);
         return completed;
@@ -154,8 +172,11 @@ class AuthService {
       'num_frames': numFrames,
     };
 
-    await _postJson('${ApiConfig.baseUrl}/apiary/setup', payload,
-        token: _token);
+    await _postJson(
+      '${ApiConfig.baseUrl}/apiary/setup',
+      payload,
+      token: _token,
+    );
 
     if (_currentUser != null) {
       final prefs = await SharedPreferences.getInstance();
@@ -167,8 +188,10 @@ class AuthService {
   Future<String> getNextHiveSuggestion() async {
     if (_token != null) {
       try {
-        final res = await _getJson('${ApiConfig.baseUrl}/apiary/next-hive-number',
-            token: _token);
+        final res = await _getJson(
+          '${ApiConfig.baseUrl}/apiary/next-hive-number',
+          token: _token,
+        );
         return res['suggested_name'] as String? ?? 'Hive Box #01';
       } catch (_) {}
     }
@@ -179,6 +202,7 @@ class AuthService {
   Future<void> logout() async {
     _token = null;
     _currentUser = null;
+    _isGuest = false;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_keyToken);
@@ -202,10 +226,15 @@ class AuthService {
   /// Native HTTP GET request
   Future<Map<String, dynamic>> _getJson(String url, {String? token}) async {
     try {
-      final response = await http.get(Uri.parse(url), headers: {
-        'accept': 'application/json',
-        if (token != null) 'authorization': 'Bearer $token',
-      }).timeout(const Duration(seconds: 30));
+      final response = await http
+          .get(
+            Uri.parse(url),
+            headers: {
+              'accept': 'application/json',
+              if (token != null) 'authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 30));
       final responseBody = response.body;
       final jsonResponse = jsonDecode(responseBody) as Map<String, dynamic>;
 
@@ -213,10 +242,12 @@ class AuthService {
         return jsonResponse;
       }
       throw AuthException(
-          jsonResponse['detail']?.toString() ?? 'Request failed');
+        jsonResponse['detail']?.toString() ?? 'Request failed',
+      );
     } on http.ClientException {
       throw const AuthException(
-          'Cannot connect to backend server. Make sure the FastAPI server is running.');
+        'Cannot connect to backend server. Make sure the FastAPI server is running.',
+      );
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());
@@ -230,13 +261,17 @@ class AuthService {
     String? token,
   }) async {
     try {
-      final response = await http.post(Uri.parse(url),
-          headers: {
-            'content-type': 'application/json; charset=utf-8',
-            'accept': 'application/json',
-            if (token != null) 'authorization': 'Bearer $token',
-          },
-          body: jsonEncode(body)).timeout(const Duration(seconds: 30));
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {
+              'content-type': 'application/json; charset=utf-8',
+              'accept': 'application/json',
+              if (token != null) 'authorization': 'Bearer $token',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
       final responseBody = response.body;
 
       Map<String, dynamic> jsonResponse;
@@ -260,11 +295,17 @@ class AuthService {
           throw AuthException(msg.toString());
         }
         throw AuthException(
-            jsonResponse['message']?.toString() ?? 'Authentication failed');
+          jsonResponse['message']?.toString() ?? 'Authentication failed',
+        );
       }
+    } on TimeoutException {
+      throw const AuthException(
+        'The backend did not respond. Check that it is running and that API_BASE_URL points to your computer on the same Wi-Fi. You can continue as a guest.',
+      );
     } on http.ClientException catch (_) {
       throw const AuthException(
-          'Cannot connect to backend server. Make sure the FastAPI server is running.');
+        'Cannot connect to backend server. Make sure the FastAPI server is running.',
+      );
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException(e.toString());

@@ -29,6 +29,7 @@ hyperframe==6.1.0
 idna==3.20
 msgpack==1.2.3
 numpy==2.5.3
+Pillow==11.3.0
 onnxruntime==1.30.0
 opentelemetry-api==1.45.0
 packaging==26.3
@@ -48,3 +49,17 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 urllib3==2.8.0
 uvicorn==0.54.0
+python-multipart==0.0.20
+
+
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+# Optional CPU inference dependencies for the research image models.
+# Install the base backend requirements first; this set is intentionally separate
+# because it installs the larger PyTorch and Ultralytics runtime.
+numpy==2.2.6
+torch==2.7.1+cpu
+torchvision==0.22.1+cpu
+ultralytics>=8.3,<9
+PyYAML>=6,<7

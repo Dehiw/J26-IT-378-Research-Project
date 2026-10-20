@@ -53,16 +53,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void initState() {
     super.initState();
     if (!AuthService.instance.isLoggedIn) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) =>
-                LoginScreen(inferenceService: widget.inferenceService),
-          ),
-          (route) => false,
-        );
-      });
+      if (!AuthService.instance.isGuest) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (_) =>
+                  LoginScreen(inferenceService: widget.inferenceService),
+            ),
+            (route) => false,
+          );
+        });
+        return;
+      }
+      _loadingApiaries = false;
+      _loadingStats = false;
+      _loadingBkStats = false;
       return;
     }
     _loadApiaries();
@@ -83,6 +89,39 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   /// Called when this screen becomes active again (e.g. after popping from sub-screen)
   @override
   void didPopNext() {
+    if (AuthService.instance.isGuest) return;
+    _loadNormalUserStats();
+    _loadBeekeeperStats();
+  }
+
+  Future<void> _loadNormalUserStats() async {
+    if (AuthService.instance.isGuest) {
+      if (mounted) setState(() => _loadingStats = false);
+      return;
+    }
+    setState(() => _loadingStats = true);
+    try {
+      // Fetch user's own reports
+      final reports = await WildBeeService.instance.fetchMyReports();
+      // Fetch registered beekeepers from auth endpoint
+      final bkRes = await AuthService.instance.fetchRegisteredBeekeepers();
+      final completed = reports
+          .where(
+            (r) => (r['status'] ?? '').toString().toLowerCase() == 'completed',
+          )
+          .length;
+      if (mounted) {
+        setState(() {
+          _myReportCount = reports.length;
+          _activeBeekeeperCount = bkRes.length;
+          _completedCount = completed;
+          _loadingStats = false;
+        });
+      }
+    } catch (e) {
+      developer.log('Stats load error: $e', name: 'HomeScreen');
+      if (mounted) setState(() => _loadingStats = false);
+    }
     _loadApiaries();
   }
 
@@ -291,6 +330,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final UserModel? user = AuthService.instance.currentUser;
+    final bool isNormalUser =
+        user?.isNormalUser ?? AuthService.instance.isGuest;
     final String initial = (user?.name.isNotEmpty == true)
         ? user!.name[0].toUpperCase()
         : 'U';
@@ -336,6 +377,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.hiveLow,
+          onRefresh: AuthService.instance.isGuest
+              ? () async {}
+              : isNormalUser
+              ? _loadNormalUserStats
+              : _loadApiaries,
           onRefresh: _loadApiaries,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -414,6 +460,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ? 'Good Afternoon'
         : 'Good Evening';
     final name = user?.name.split(' ').first ?? 'User';
+    final isNormalUser = user?.isNormalUser ?? AuthService.instance.isGuest;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1057,6 +1104,180 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
+  Widget _buildBottomNav(bool isNormalUser) {
+    if (isNormalUser) {
+      return BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.bgPrimary,
+        selectedItemColor: AppColors.hiveLow,
+        unselectedItemColor: AppColors.textSecondary,
+        showUnselectedLabels: true,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        currentIndex: _currentIndex.clamp(0, 3),
+        onTap: _onNormalUserNavTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_filled),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_location_alt_outlined),
+            activeIcon: Icon(Icons.add_location_alt_rounded),
+            label: 'Report',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_outlined),
+            activeIcon: Icon(Icons.assignment_rounded),
+            label: 'Requests',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups_outlined),
+            activeIcon: Icon(Icons.groups_rounded),
+            label: 'Beekeepers',
+          ),
+        ],
+      );
+    }
+
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: AppColors.bgPrimary,
+      selectedItemColor: AppColors.hiveLow,
+      unselectedItemColor: AppColors.textSecondary,
+      showUnselectedLabels: true,
+      selectedFontSize: 11,
+      unselectedFontSize: 11,
+      currentIndex: _currentIndex.clamp(0, 4),
+      onTap: _onNavTapped,
+      items: const [
+        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Home'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.monitor_heart_outlined),
+          label: 'Health',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.location_on_outlined),
+          label: 'Relocate',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.graphic_eq_rounded),
+          label: 'Acoustic',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.eco_outlined),
+          label: 'Environment',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNormalUserBody(UserModel? user) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        _buildGreeting(user),
+        if (AuthService.instance.isGuest) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.bgElevated,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Guest preview: account data and reports require sign-in. Some live features also need the backend connection.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 20),
+
+        // Hero Card: Report Wild Bee Colony
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: AppColors.accentGradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.hiveLow.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.panelBlack.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.panelBlack,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Found Bees on Property?',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.panelBlack,
+                          ),
+                        ),
+                        Text(
+                          'Report for ethical relocation',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.panelBlack.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Protect both your family and wild bees. Request an assessment to have a local beekeeper safely relocate the colony instead of harming it.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: AppColors.panelBlack.withValues(alpha: 0.9),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.panelBlack,
+                    foregroundColor: AppColors.bgSecondary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
   void _showProfileSheet(BuildContext context, UserModel? user) {
     final String displayName = (user != null && user.name.isNotEmpty) ? user.name : 'Beekeeper';
     final String displayEmail = (user != null && user.email.isNotEmpty) ? user.email : 'Not signed in';
