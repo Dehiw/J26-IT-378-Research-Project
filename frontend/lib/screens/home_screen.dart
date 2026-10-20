@@ -16,7 +16,7 @@ import 'it23136274_alerts_history_screen.dart';
 import 'IT23185302_relocation_assessment_screen.dart';
 import 'IT23185302_wild_bee_hive_report_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
-import 'scanner_screen.dart';
+import 'IT23139930_acoustic_entry.dart';
 import '../services/wild_bee_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -182,13 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
 
     if (index == 3) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ScannerScreen(
-            inferenceService: widget.inferenceService,
-          ),
-        ),
-      );
+      openSoundMonitor(context, inferenceService: widget.inferenceService);
       return;
     }
 
