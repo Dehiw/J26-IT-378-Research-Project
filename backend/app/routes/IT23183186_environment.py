@@ -5,7 +5,7 @@ from datetime import date, timedelta
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
-from app.services.environmental_impact import analyze_environment
+from app.services.IT23183186_environmental_impact import analyze_environment
 
 router = APIRouter(prefix="/environment", tags=["Environment"])
 

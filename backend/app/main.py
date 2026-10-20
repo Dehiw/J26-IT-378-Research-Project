@@ -7,9 +7,9 @@ from app.firebase.firebase_config import db
 from app.routes.auth import router as auth_router
 from app.routes.apiary import router as apiary_router
 from app.routes.wild_bee_report import router as wild_bee_router
-from app.routes.environment import router as environment_router
-from app.routes.image_inference import router as image_inference_router
-from app.services.image_model_service import ImageModelService
+from app.routes.IT23183186_environment import router as environment_router
+from app.routes.IT23183186_image_inference import router as image_inference_router
+from app.services.IT23183186_image_model_service import ImageModelService
 
 
 @asynccontextmanager

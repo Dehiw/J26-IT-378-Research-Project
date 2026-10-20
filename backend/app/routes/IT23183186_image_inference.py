@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from starlette.concurrency import run_in_threadpool
 
 from app.core.security import get_current_user_id
-from app.services.image_model_service import MAX_IMAGE_BYTES, ImageModelService, decode_image
+from app.services.IT23183186_image_model_service import MAX_IMAGE_BYTES, ImageModelService, decode_image
 
 router = APIRouter(prefix="/inference", tags=["Image inference"])
 
