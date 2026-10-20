@@ -1,0 +1,22 @@
+{
+  "dataset_yaml": "dataset.yaml.example",
+  "classes": [
+    "CappedHoneyCell",
+    "CappedWorkerBroodCell",
+    "EmptyCombCell",
+    "PollenCell",
+    "UncappedNectarCell",
+    "UncappedWorkerLarvaCell",
+    "BeeHiveFrame"
+  ],
+  "splits": {},
+  "errors": [
+    {
+      "error": "The configured local training split is unavailable. Supply the official FAIRHiveFrames images and YOLO annotations before preprocessing or training."
+    }
+  ],
+  "duplicate_image_bytes": [],
+  "near_duplicate_candidates_dhash_le_4": [],
+  "group_overlap": [],
+  "passed": false
+}

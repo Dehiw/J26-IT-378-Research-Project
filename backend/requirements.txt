@@ -29,6 +29,7 @@ hyperframe==6.1.0
 idna==3.20
 msgpack==1.2.3
 numpy==2.5.3
+Pillow==11.3.0
 onnxruntime==1.30.0
 opentelemetry-api==1.45.0
 packaging==26.3
@@ -41,6 +42,7 @@ pydantic==2.13.5
 pydantic_core==2.46.5
 PyJWT==2.15.1
 python-dotenv==1.2.4
+python-multipart==0.0.20
 requests==2.34.2
 starlette==1.7.0
 typing-inspection==0.4.4

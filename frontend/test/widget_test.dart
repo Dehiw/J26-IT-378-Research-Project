@@ -12,7 +12,10 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const HiveSenseApp());
-    await tester.pumpAndSettle();
+    // The splash includes an indeterminate progress indicator, so the whole
+    // widget tree never settles. Advance past the splash timer directly.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
 
     expect(find.text('Hive Sense'), findsWidgets);
   });

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../utils/theme.dart';
 import '../services/inference_service.dart';
 import 'confidence_bar.dart';
@@ -14,43 +15,38 @@ class ResultCard extends StatelessWidget {
   static const Map<String, _HealthInfo> _healthInfo = {
     'Healthy Colony': _HealthInfo(
       icon: '🐝',
-      description:
-          'No stress signs detected. The colony appears active with normal behavior. Continue regular monitoring and forage checks.',
-      severity: 'Good',
-      severityColor: Color(0xFF4C8C4A),
+      description: 'The model favored Healthy Colony for this image. This does not rule out health problems; continue regular hive monitoring.',
+      severity: 'Lower signal',
+      severityColor: AppColors.success,
     ),
     'Stressed Colony': _HealthInfo(
       icon: '⚠️',
-      description:
-          'Early stress indicators detected — check temperature, humidity and noise levels. Inspect for overcrowding or poor ventilation.',
-      severity: 'Watch',
-      severityColor: Color(0xFFC98A1B),
+      description: 'The model found a possible stress indicator. Compare it with current in-hive readings and inspect the colony.',
+      severity: 'Monitor',
+      severityColor: AppColors.warning,
     ),
     'Disease Signs': _HealthInfo(
       icon: '🦠',
-      description:
-          'Possible disease or parasite signs. Inspect brood frames closely, consider expert review, and isolate if symptoms spread.',
-      severity: 'High',
-      severityColor: Color(0xFFB44436),
+      description: 'The model found possible disease-related visual indicators. This is not a diagnosis; request an expert inspection.',
+      severity: 'Review',
+      severityColor: AppColors.error,
     ),
     'Empty / Other': _HealthInfo(
       icon: '🍂',
-      description:
-          'No active colony detected in this image. Check hive occupancy or retake with the entrance frames clearly visible.',
+      description: 'The model did not identify a supported colony-health class. Try a clear, well-lit image of bees or brood frames.',
       severity: 'Info',
-      severityColor: Color(0xFF3A4A63),
+      severityColor: AppColors.blue,
     ),
     'OOD — Rejected': _HealthInfo(
       icon: '🚨',
-      description:
-          'The image does not resemble a beehive based on the model\'s distribution. Please use a clear, close-up photo of the hive.',
+      description: 'The image is outside the model training distribution, so no supported assessment is available. Choose a clear bee or hive image.',
       severity: 'N/A',
-      severityColor: Color(0xFF6B5B3E),
+      severityColor: AppColors.warning,
     ),
   };
 
   Color get _statusColor {
-    if (result.isOod) return AppColors.purple;
+    if (result.isOod) return AppColors.warning;
     if (result.predictedClass == 'Healthy Colony') return AppColors.success;
     if (result.confidence >= 0.75) return AppColors.error;
     return AppColors.warning;
@@ -83,15 +79,17 @@ class ResultCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: AppColors.cardGradient,
               borderRadius: BorderRadius.circular(16),
-              border:
-                  Border.all(color: _statusColor.withValues(alpha: 0.4), width: 1),
+              border: Border.all(
+                color: _statusColor.withValues(alpha: 0.4),
+                width: 1,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Text(info.icon, style: const TextStyle(fontSize: 28)),
+                    Text(info.icon, style: GoogleFonts.inter(fontSize: 28)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -107,7 +105,7 @@ class ResultCard extends StatelessWidget {
                           ),
                           if (!result.isOod)
                             Text(
-                              'Confidence: ${(result.confidence * 100).toStringAsFixed(1)}%',
+                              'Model score: ${(result.confidence * 100).toStringAsFixed(1)}%',
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 color: AppColors.textSecondary,
@@ -119,12 +117,15 @@ class ResultCard extends StatelessWidget {
                     // Severity badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: info.severityColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: info.severityColor.withValues(alpha: 0.4)),
+                          color: info.severityColor.withValues(alpha: 0.4),
+                        ),
                       ),
                       child: Text(
                         info.severity,
@@ -214,7 +215,7 @@ class ResultCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Class Probabilities',
+                  'Model class scores',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

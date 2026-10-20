@@ -1,0 +1,746 @@
+{
+  "bbox_note": "Bounding boxes are not used in this image-classification task. Invalid boxes are retained in the original annotation file and reported; image-level class labels remain unchanged.",
+  "class_mapping": {
+    "0": "healthy",
+    "1": "varroa_positive",
+    "3": "varroa_positive"
+  },
+  "dataset": "VarroaDataset",
+  "duplicate_annotation_paths": [
+    {
+      "action": "one classification sample retained; original gt.csv unchanged",
+      "bbox_annotation_sets": [
+        [
+          [
+            94.0,
+            76.0,
+            120.0,
+            118.0
+          ]
+        ],
+        [
+          [
+            92.0,
+            75.0,
+            126.0,
+            114.0
+          ]
+        ]
+      ],
+      "raw_labels": [
+        1,
+        1
+      ],
+      "relpath": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10000-54690-1.png",
+      "rows": 2
+    },
+    {
+      "action": "one classification sample retained; original gt.csv unchanged",
+      "bbox_annotation_sets": [
+        [],
+        []
+      ],
+      "raw_labels": [
+        0,
+        0
+      ],
+      "relpath": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10001-54690-1.png",
+      "rows": 2
+    }
+  ],
+  "exact_duplicate_images_across_splits": [],
+  "exact_duplicate_images_within_split": [],
+  "exclusion_policy": "No images are discarded because of near-duplicate candidates: cross-split candidates are reassigned to training and recorded. Duplicate annotation rows for one path and exact duplicate image bytes within a split are reduced to one classifier-manifest row with each case recorded. Corrupt, missing, cross-split exact duplicates, or video-group leakage stop preparation. Invalid boxes are reported but do not affect this classifier's image-level labels.",
+  "grouped_split_strategy": {
+    "method": "Official train/val/test splits retained; no confirmed near-duplicate candidates cross split.",
+    "official_split_preserved": true,
+    "source_video_group_count": 13
+  },
+  "image_validation": {
+    "expected_dimensions": [
+      160,
+      280
+    ],
+    "invalid_bbox_count": 1,
+    "invalid_bboxes": [
+      {
+        "errors": [
+          "box 0: (0,120,0,126) outside valid 160x280 bounds"
+        ],
+        "relpath": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_11104-105630-1.png"
+      }
+    ],
+    "missing_image_count": 0,
+    "missing_images": [],
+    "unreadable_image_count": 0,
+    "unreadable_images": [],
+    "wrong_dimension_count": 0,
+    "wrong_dimensions": []
+  },
+  "near_duplicate_audit": {
+    "cross_split_confirmed_near_duplicate_count": 0,
+    "cross_split_examples": [
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.4880162878880217,
+        "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_2996-5190-1.png",
+        "left_split": "train",
+        "right": "val/videos/2017-09-25_16-03-38/2017-09-25_16-03-38.mp4-bee_id_1851-62985-1.png",
+        "right_split": "val"
+      },
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.5165406149906421,
+        "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9250-5595-1.png",
+        "left_split": "train",
+        "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8101-35490-1.png",
+        "right_split": "test"
+      },
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.2969733815866521,
+        "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3813-27525-1.png",
+        "left_split": "train",
+        "right": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3785-8520-1.png",
+        "right_split": "test"
+      }
+    ],
+    "cross_split_examples_limit": 1000,
+    "cross_split_perceptual_hash_candidate_count": 3,
+    "method": "64-bit DCT perceptual hash; Hamming distance <= 4 is flagged for review",
+    "within_split": {
+      "test": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.790730058116877,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8229-46125-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8252-48540-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.6260525044256633,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8338-57600-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8628-87660-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.833827925652271,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8374-62265-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7653241950580977,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8374-62265-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7874594885696823,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.6695805051815005,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.8588448424715353,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7849485821073798,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8419-65970-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7852939596777465,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8402-64470-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8420-65970-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7237034967562938,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8462-69240-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8484-71055-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 0,
+            "global_ssim": 0.8114261399545238,
+            "left": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3981-14445-1.png",
+            "right": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3994-14745-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 11
+      },
+      "train": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.48702953996601916,
+            "left": "train/videos/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_7181-33720-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3933-30900-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.5456033065376816,
+            "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10024-55500-1.png",
+            "right": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9892-49185-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.32991538774729745,
+            "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9587-33690-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5666-79860-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.30099238460367456,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3146-9555-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5063-62535-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.5022528470298039,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3161-10080-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5107-63825-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.30914654583782114,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_4548-48600-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_6470-101835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.3846154159463189,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_6161-93615-1.png",
+            "right": "train/videos/2017-09-25_16-03-38-2/2017-09-25_16-03-38.mp4-bee_id_380-12120-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 7
+      },
+      "val": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7670502350677744,
+            "left": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_89-35580-1.png",
+            "right": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_90-35805-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.6141321483570955,
+            "left": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_94-40320-1.png",
+            "right": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_97-42120-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.694314180945149,
+            "left": "val/videos/2017-09-01_3-01-01/2017-09-01_3-01-01.mp4-bee_id_2565-70485-1.png",
+            "right": "val/videos/2017-09-01_3-01-01/2017-09-01_3-01-01.mp4-bee_id_2566-70830-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 3
+      }
+    }
+  },
+  "near_duplicate_audit_after_split_policy": {
+    "cross_split_confirmed_near_duplicate_count": 0,
+    "cross_split_examples": [
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.4880162878880217,
+        "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_2996-5190-1.png",
+        "left_split": "train",
+        "right": "val/videos/2017-09-25_16-03-38/2017-09-25_16-03-38.mp4-bee_id_1851-62985-1.png",
+        "right_split": "val"
+      },
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.5165406149906421,
+        "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9250-5595-1.png",
+        "left_split": "train",
+        "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8101-35490-1.png",
+        "right_split": "test"
+      },
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.2969733815866521,
+        "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3813-27525-1.png",
+        "left_split": "train",
+        "right": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3785-8520-1.png",
+        "right_split": "test"
+      }
+    ],
+    "cross_split_examples_limit": 1000,
+    "cross_split_perceptual_hash_candidate_count": 3,
+    "method": "64-bit DCT perceptual hash; Hamming distance <= 4 is flagged for review",
+    "within_split": {
+      "test": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.790730058116877,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8229-46125-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8252-48540-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.6260525044256633,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8338-57600-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8628-87660-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.833827925652271,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8374-62265-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7653241950580977,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8374-62265-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7874594885696823,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.6695805051815005,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.8588448424715353,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7849485821073798,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8419-65970-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7852939596777465,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8402-64470-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8420-65970-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7237034967562938,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8462-69240-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8484-71055-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 0,
+            "global_ssim": 0.8114261399545238,
+            "left": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3981-14445-1.png",
+            "right": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3994-14745-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 11
+      },
+      "train": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.48702953996601916,
+            "left": "train/videos/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_7181-33720-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3933-30900-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.5456033065376816,
+            "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10024-55500-1.png",
+            "right": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9892-49185-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.32991538774729745,
+            "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9587-33690-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5666-79860-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.30099238460367456,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3146-9555-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5063-62535-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.5022528470298039,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3161-10080-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5107-63825-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.30914654583782114,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_4548-48600-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_6470-101835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.3846154159463189,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_6161-93615-1.png",
+            "right": "train/videos/2017-09-25_16-03-38-2/2017-09-25_16-03-38.mp4-bee_id_380-12120-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 7
+      },
+      "val": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7670502350677744,
+            "left": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_89-35580-1.png",
+            "right": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_90-35805-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.6141321483570955,
+            "left": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_94-40320-1.png",
+            "right": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_97-42120-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.694314180945149,
+            "left": "val/videos/2017-09-01_3-01-01/2017-09-01_3-01-01.mp4-bee_id_2565-70485-1.png",
+            "right": "val/videos/2017-09-01_3-01-01/2017-09-01_3-01-01.mp4-bee_id_2566-70830-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 3
+      }
+    }
+  },
+  "near_duplicate_audit_before_reassignment": {
+    "cross_split_confirmed_near_duplicate_count": 0,
+    "cross_split_examples": [
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.4880162878880217,
+        "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_2996-5190-1.png",
+        "left_split": "train",
+        "right": "val/videos/2017-09-25_16-03-38/2017-09-25_16-03-38.mp4-bee_id_1851-62985-1.png",
+        "right_split": "val"
+      },
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.5165406149906421,
+        "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9250-5595-1.png",
+        "left_split": "train",
+        "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8101-35490-1.png",
+        "right_split": "test"
+      },
+      {
+        "confirmed_near_duplicate": false,
+        "distance": 4,
+        "global_ssim": 0.2969733815866521,
+        "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3813-27525-1.png",
+        "left_split": "train",
+        "right": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3785-8520-1.png",
+        "right_split": "test"
+      }
+    ],
+    "cross_split_examples_limit": 1000,
+    "cross_split_perceptual_hash_candidate_count": 3,
+    "method": "64-bit DCT perceptual hash; Hamming distance <= 4 is flagged for review",
+    "within_split": {
+      "test": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.790730058116877,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8229-46125-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8252-48540-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.6260525044256633,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8338-57600-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8628-87660-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.833827925652271,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8374-62265-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7653241950580977,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8374-62265-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7874594885696823,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.6695805051815005,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8376-62610-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.8588448424715353,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8378-62835-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.7849485821073798,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8401-64470-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8419-65970-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7852939596777465,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8402-64470-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8420-65970-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7237034967562938,
+            "left": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8462-69240-1.png",
+            "right": "test/videos/2017-09-01_10-54-26/2017-09-01_10-54-26.mp4-bee_id_8484-71055-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 0,
+            "global_ssim": 0.8114261399545238,
+            "left": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3981-14445-1.png",
+            "right": "test/videos/2017-10-17_1-39-36/2017-10-17_1-39-36.mp4-bee_id_3994-14745-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 11
+      },
+      "train": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.48702953996601916,
+            "left": "train/videos/2017-08-28_09-30-00-1_500_dirty_glass/2017-08-28_09-30-00-1_500_dirty_glass.mp4-bee_id_7181-33720-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3933-30900-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.5456033065376816,
+            "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_10024-55500-1.png",
+            "right": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9892-49185-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.32991538774729745,
+            "left": "train/videos/2017-08-30_15-42-59/2017-08-30_15-42-59.mp4-bee_id_9587-33690-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5666-79860-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.30099238460367456,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3146-9555-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5063-62535-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.5022528470298039,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_3161-10080-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_5107-63825-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.30914654583782114,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_4548-48600-1.png",
+            "right": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_6470-101835-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.3846154159463189,
+            "left": "train/videos/2017-09-20_19-24-55/2017-09-20_19-24-55.mp4-bee_id_6161-93615-1.png",
+            "right": "train/videos/2017-09-25_16-03-38-2/2017-09-25_16-03-38.mp4-bee_id_380-12120-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 7
+      },
+      "val": {
+        "candidate_pairs": [
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 4,
+            "global_ssim": 0.7670502350677744,
+            "left": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_89-35580-1.png",
+            "right": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_90-35805-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.6141321483570955,
+            "left": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_94-40320-1.png",
+            "right": "val/videos/2017-09-01_20-00-17/2017-09-01_20-00-17.mp4-bee_id_97-42120-1.png"
+          },
+          {
+            "confirmed_near_duplicate": false,
+            "distance": 2,
+            "global_ssim": 0.694314180945149,
+            "left": "val/videos/2017-09-01_3-01-01/2017-09-01_3-01-01.mp4-bee_id_2565-70485-1.png",
+            "right": "val/videos/2017-09-01_3-01-01/2017-09-01_3-01-01.mp4-bee_id_2566-70830-1.png"
+          }
+        ],
+        "confirmed_near_duplicate_count": 0,
+        "perceptual_hash_candidate_count": 3
+      }
+    }
+  },
+  "official_annotation_rows": 13509,
+  "official_archives": {
+    "test": {
+      "archive": "<original dataset>\\test.zip",
+      "destination": "<audit prepared dataset>\\raw\\test"
+    },
+    "train": {
+      "archive": "<original dataset>\\train.zip",
+      "destination": "<audit prepared dataset>\\raw\\train"
+    },
+    "val": {
+      "archive": "<original dataset>\\val.zip",
+      "destination": "<audit prepared dataset>\\raw\\val"
+    }
+  },
+  "output": "<audit prepared dataset>",
+  "output_class_names": [
+    "healthy",
+    "varroa_positive"
+  ],
+  "preprocessing": {
+    "augmentation": "training split only; horizontal flip, small rotation, mild color jitter",
+    "input_size": [
+      224,
+      224
+    ],
+    "resize_and_normalization": "aspect-preserving bilinear fit to 224x224, padding filled with the pretrained weight mean, then exact ImageNet mean/std normalization from MobileNet_V2_Weights.IMAGENET1K_V1",
+    "seed": 2026,
+    "split_policy": "official train/val/test retained because no confirmed near-duplicate candidates or source-video groups cross splits",
+    "validation_test_augmentation": false
+  },
+  "source": "<original dataset>",
+  "source_video_groups_crossing_splits": {},
+  "split_manifests": {
+    "test": {
+      "class_counts": {
+        "healthy": 2466,
+        "varroa_positive": 942
+      },
+      "image_count": 3408,
+      "path": "<audit prepared dataset>\\manifests\\test.csv"
+    },
+    "train": {
+      "class_counts": {
+        "healthy": 5670,
+        "varroa_positive": 2553
+      },
+      "image_count": 8223,
+      "path": "<audit prepared dataset>\\manifests\\train.csv"
+    },
+    "val": {
+      "class_counts": {
+        "healthy": 1425,
+        "varroa_positive": 451
+      },
+      "image_count": 1876,
+      "path": "<audit prepared dataset>\\manifests\\val.csv"
+    }
+  },
+  "unique_annotation_paths": 13507
+}

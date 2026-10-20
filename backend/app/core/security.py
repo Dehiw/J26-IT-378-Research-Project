@@ -4,6 +4,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 import jwt
+from fastapi import Header, HTTPException, status
 
 # Secret key for JWT signing - in production, set via SECRET_KEY env variable
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "hive-sense-super-secret-key-change-in-production-2026")
@@ -59,3 +60,19 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except jwt.PyJWTError:
         return None
+
+
+def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
+    """Validate the existing bearer JWT convention without importing storage services."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization token required",
+        )
+    payload = decode_access_token(authorization.split(" ", 1)[1])
+    if not payload or "sub" not in payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+    return payload["sub"]
