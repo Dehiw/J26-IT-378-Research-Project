@@ -11,4 +11,4 @@ AI-Based Smart Beehive Mobile Platform for Colony Health Monitoring and Relocati
 
 ## Bee Acoustic Analysis (frontend)
 
-Code lives in `frontend/lib/{screens,services,models,widgets,utils}/acoustic/`, with tests in `frontend/test/{screens,services,models}/acoustic/`. The dev-only preview is `frontend/lib/acoustic/dev/`. See `frontend/docs/acoustic/INTEGRATION.md`.
+Code lives in `frontend/lib/{screens,services,models,widgets,utils}/IT23139930_*.dart`, with tests in `frontend/test/{screens,services,models,support}/IT23139930_*.dart`. See `frontend/docs/IT23139930_acoustic_integration.md`.

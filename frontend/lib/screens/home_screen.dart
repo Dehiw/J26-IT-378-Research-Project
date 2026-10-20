@@ -16,7 +16,7 @@ import 'it23136274_alerts_history_screen.dart';
 import 'IT23185302_relocation_assessment_screen.dart';
 import 'IT23185302_wild_bee_hive_report_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
-import 'acoustic/acoustic_entry.dart';
+import 'IT23139930_acoustic_entry.dart';
 import '../services/wild_bee_service.dart';
 
 class HomeScreen extends StatefulWidget {

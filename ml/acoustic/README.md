@@ -224,9 +224,93 @@ Measured on this machine (Windows 11, Python 3.13):
 | `export_onnx.py` (export and 100-clip check) | not timed separately (100 clips: 3.6 s of feature extraction) |
 | `predict.py` on an 8 s, 16 kHz file | about 15 s wall time, mostly library import and startup |
 
+## Running the model in the app
+
+The Flutter app sends a WAV file to the backend. The backend runs the ONNX
+model with the same `features.py` code and returns **Queen Present** (label
+`normal`) or **Queenless** (label `queenless`). These are the only two classes.
+Nothing is faked when `AcousticConfig.useRealModel` is true. If the backend or
+the model is missing, the app shows an error instead of a result.
+
+### Start the backend
+
+From the repo root (PowerShell):
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe -m uvicorn app.acoustic_main:app --reload
+```
+
+Open `http://127.0.0.1:8000/api/v1/acoustic/model-info`. It must show
+`"model_loaded": true`. `app.main:app` still works for the rest of the team,
+but it does not include the acoustic routes. Then run the app from `frontend/`
+(`flutter run -d windows`), log in, open the Acoustic tab, pick a hive and
+upload one of the test clips or record a sound.
+
+### Running on another laptop
+
+1. Copy `queen_baseline.onnx` into `ml/acoustic/models/` (it is not in git), or
+   set `ACOUSTIC_MODEL_PATH` to where the file is.
+2. Install the packages into the backend venv:
+
+   ```powershell
+   cd backend
+   .\venv\Scripts\python.exe -m pip install -r requirements.txt
+   .\venv\Scripts\python.exe -m pip install -r requirements-acoustic.txt
+   ```
+
+3. Put `firebase-service-account.json` in `backend/` (not in git).
+4. Start with `.\venv\Scripts\python.exe -m uvicorn app.acoustic_main:app --reload`.
+
+Without the model file the backend still starts, and `/analyze` returns 503
+"Acoustic model not available".
+
+### Test clips
+
+`test_clips/` holds 8 clips of 2 s each, with their true labels and the model's
+predictions in `test_clips/test_clips.csv`. Regenerate them with
+`make_test_clips.py`.
+
+| File | Hive | True label | Model prediction | Queen-present probability | Correct |
+|---|---|---|---|---:|---|
+| test_01.wav | SBCM-5 | queenless | queenless | 0.208 | yes |
+| test_02.wav | SBCM-3 | queenless | queenless | 0.257 | yes |
+| test_03.wav | SBCM-4 | queenless | queenless | 0.081 | yes |
+| test_04.wav | SBCM-4 | normal | queenless | 0.321 | NO |
+| test_05.wav | SBCM-4 | normal | normal | 0.625 | yes |
+| test_06.wav | SBCM-3 | normal | normal | 0.885 | yes |
+| test_07.wav | SBCM-3 | queenless | normal | 0.689 | NO |
+| test_08.wav | SBCM-5 | normal | normal | 0.895 | yes |
+
+How to read them:
+
+- The clips are **not** in the 30,000-clip training sample (`data/manifest.csv`),
+  so the model did not see these exact clips.
+- They **do** come from the same 12 hives as the training data, and clips from
+  one hive are very similar. On a sample of 180 such clips the model scored
+  94% accuracy, the same optimistic level as the random 80/20 split. This is
+  **not** what to expect on a new hive.
+- The fair estimate for an unseen hive is the leave-one-hive-out result: about
+  **51% accuracy**, ranging from 34% to 87% by hive.
+- `test_04.wav` and `test_07.wav` are predicted wrongly. They are kept on
+  purpose.
+- Phone recordings were never part of any evaluation, so accuracy on live
+  recordings is unknown. The app labels the result "Experimental AI model,
+  accuracy is limited on new hives".
+
+### Backend tests
+
+```powershell
+cd backend
+.\venv\Scripts\python.exe -m pytest tests -v -s
+```
+
+`test_acoustic_parity.py` checks that the backend's 168 features equal
+`features.py` and that its predictions equal `predict.py`.
+
 ## Limits and next steps
 
 - The model is a baseline. The random-split number should not be quoted as accuracy.
 - Hive-level accuracy varies widely (0.34 to 0.87). More hives, and hives with both labels, would make the estimate firmer.
 - Test on real recordings from the app's phone microphone before using the result in the app.
-- The pipeline is not yet connected to the app or the backend. It can be called from the backend through the ONNX model and `features.py`.
+- The model is connected to the app through the backend (see "Running the model in the app"). The app has not been tested with phone recordings.

@@ -12,6 +12,6 @@ __pycache__/
 # train_baseline.py and export_onnx.py.
 models/
 
-# Demo clips are small and are meant to be committed (see VIVA_DEMO.md).
-!demo_clips/
-!demo_clips/*
+# Test clips are small and are meant to be committed (see README.md).
+!test_clips/
+!test_clips/*

@@ -144,8 +144,8 @@ def _tone(seconds=3, sr=16000, amp=0.2, noise=0.02):
 
 
 @needs_model
-def test_demo_clips_are_not_poor():
-    clips = sorted((ML_DIR / "demo_clips").glob("demo_*.wav"))
+def test_clip_files_are_not_poor():
+    clips = sorted((ML_DIR / "test_clips").glob("test_*.wav"))
     assert len(clips) == 8
     for clip in clips:
         out = svc.analyze_bytes(clip.read_bytes())

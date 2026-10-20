@@ -1,9 +1,0 @@
-file,hive_id,true_label,model_prediction,queen_present_probability,correct,note
-demo_01.wav,SBCM-5,queenless,queenless,0.208,yes,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_02.wav,SBCM-3,queenless,queenless,0.257,yes,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_03.wav,SBCM-4,queenless,queenless,0.081,yes,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_04.wav,SBCM-4,normal,queenless,0.321,NO,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_05.wav,SBCM-4,normal,normal,0.625,yes,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_06.wav,SBCM-3,normal,normal,0.885,yes,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_07.wav,SBCM-3,queenless,normal,0.689,NO,"not in training set, but same 12 hives as training: optimistic vs a new hive"
-demo_08.wav,SBCM-5,normal,normal,0.895,yes,"not in training set, but same 12 hives as training: optimistic vs a new hive"
