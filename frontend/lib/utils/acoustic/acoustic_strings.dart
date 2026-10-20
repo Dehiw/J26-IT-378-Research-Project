@@ -103,8 +103,8 @@ class AcousticStrings {
 
   /// Short state name shown on chips and titles.
   static String labelTitle(AcousticLabel label) => switch (label) {
-    AcousticLabel.normal => 'Normal Activity',
-    AcousticLabel.queenless => 'Queenless Pattern',
+    AcousticLabel.normal => 'Queen Present',
+    AcousticLabel.queenless => 'Queenless',
     AcousticLabel.swarming => 'Swarming Pattern',
     AcousticLabel.stressAbnormal => 'Abnormal Activity',
     AcousticLabel.unclearRecording => 'Unclear Recording',
@@ -113,11 +113,12 @@ class AcousticStrings {
   /// Guidance text for the "What this means" card.
   static String labelMeaning(AcousticLabel label) => switch (label) {
     AcousticLabel.normal =>
-      'This sounds like a steady, active colony. '
+      'The colony sounds like it has a queen. '
           'Keep up your regular hive inspections.',
     AcousticLabel.queenless =>
       'This sound resembles patterns often heard in queenless colonies. '
-          'Consider inspecting the hive to check for the queen.',
+          'It is a possible sign, not a confirmed result. '
+          'Check the hive for the queen soon.',
     AcousticLabel.swarming =>
       'This sound resembles patterns often heard before swarming. '
           'Consider inspecting the hive for signs such as queen cells.',
@@ -161,6 +162,10 @@ class AcousticStrings {
 
   // Demo notice, shown while the mock service is in use
   static const String demoNotice = 'Demo analysis, not a real AI result';
+
+  // Notice shown while the real backend model is in use
+  static const String experimentalNotice =
+      'Experimental AI model, accuracy is limited on new hives';
 
   static String showingFilter(String label) => 'Showing: $label';
 

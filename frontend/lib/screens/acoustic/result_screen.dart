@@ -8,6 +8,7 @@ import 'package:frontend/utils/acoustic/acoustic_format.dart';
 import 'package:frontend/utils/acoustic/acoustic_strings.dart';
 import 'package:frontend/models/acoustic/acoustic_result.dart';
 import 'package:frontend/models/acoustic/hive_names.dart';
+import 'package:frontend/screens/acoustic/acoustic_flows.dart';
 import 'package:frontend/services/acoustic/acoustic_service.dart';
 import 'package:frontend/widgets/acoustic/acoustic_status_style.dart';
 import 'package:frontend/widgets/acoustic/confidence_indicator.dart';
@@ -60,7 +61,8 @@ class _ResultScreenState extends State<ResultScreen> {
     try {
       await widget.service.saveResult(widget.result, waveform: widget.waveform);
       if (!mounted) return;
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      AcousticFlows.resultSaved.value++;
+      AcousticFlows.backToMonitor(Navigator.of(context));
     } catch (error, stack) {
       developer.log(
         'Saving result failed',
@@ -104,10 +106,8 @@ class _ResultScreenState extends State<ResultScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 32),
-              if (widget.service.isDemo) ...[
-                const DemoNotice(),
-                const SizedBox(height: 16),
-              ],
+              DemoNotice(demo: widget.service.isDemo),
+              const SizedBox(height: 16),
               Center(
                 child: Container(
                   width: 88,

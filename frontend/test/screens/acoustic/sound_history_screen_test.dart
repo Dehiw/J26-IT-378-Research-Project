@@ -72,9 +72,9 @@ void main() {
       );
       await pumpHistory(tester, service: service);
 
-      final normal = tester.getTopLeft(find.text('Normal Activity')).dy;
+      final normal = tester.getTopLeft(find.text('Queen Present')).dy;
       final swarming = tester.getTopLeft(find.text('Swarming Pattern')).dy;
-      final queenless = tester.getTopLeft(find.text('Queenless Pattern')).dy;
+      final queenless = tester.getTopLeft(find.text('Queenless')).dy;
       expect(normal, lessThan(swarming));
       expect(swarming, lessThan(queenless));
     });
@@ -93,7 +93,7 @@ void main() {
       );
       await pumpHistory(tester, service: service);
 
-      expect(find.text('Normal Activity'), findsOneWidget);
+      expect(find.text('Queen Present'), findsOneWidget);
       expect(find.text('Swarming Pattern'), findsNothing);
     });
   });
@@ -106,17 +106,18 @@ void main() {
           saved('a', AcousticLabel.normal, const Duration(hours: 1)),
           saved('b', AcousticLabel.swarming, const Duration(hours: 2)),
         ],
+        isDemo: true,
       );
       await pumpHistory(tester, service: service);
 
       await chooseFilter(tester, 'Swarming Pattern');
-      expect(find.text('Normal Activity'), findsNothing);
+      expect(find.text('Queen Present'), findsNothing);
       expect(find.text('Swarming Pattern'), findsOneWidget);
       expect(find.text('Showing: Swarming Pattern'), findsOneWidget);
 
       await tester.tap(find.text(AcousticStrings.showAll));
       await tester.pumpAndSettle();
-      expect(find.text('Normal Activity'), findsOneWidget);
+      expect(find.text('Queen Present'), findsOneWidget);
       expect(find.text('Swarming Pattern'), findsOneWidget);
     });
 
@@ -126,7 +127,7 @@ void main() {
       );
       await pumpHistory(tester, service: service);
 
-      await chooseFilter(tester, 'Queenless Pattern');
+      await chooseFilter(tester, 'Queenless');
       expect(find.text(AcousticStrings.noMatchingAnalyses), findsOneWidget);
     });
 
@@ -135,6 +136,7 @@ void main() {
     ) async {
       final service = FakeAcousticService(
         history: [saved('a', AcousticLabel.normal, const Duration(hours: 1))],
+        isDemo: true,
       );
       await pumpHistory(tester, service: service);
       await tester.tap(find.byTooltip(AcousticStrings.filterTooltip));
@@ -192,14 +194,14 @@ void main() {
       await pumpHistory(tester, service: service);
 
       expect(find.text(AcousticStrings.historyLoadFailed), findsOneWidget);
-      expect(find.text('Normal Activity'), findsNothing);
+      expect(find.text('Queen Present'), findsNothing);
 
       await tester.tap(find.text(AcousticStrings.tryAgain));
       await tester.pumpAndSettle();
 
       expect(service.historyCalls, 2);
       expect(find.text(AcousticStrings.historyLoadFailed), findsNothing);
-      expect(find.text('Normal Activity'), findsOneWidget);
+      expect(find.text('Queen Present'), findsOneWidget);
     });
   });
 
@@ -214,7 +216,7 @@ void main() {
       );
       await pumpHistory(tester, service: service);
 
-      await tester.tap(find.text('Queenless Pattern'));
+      await tester.tap(find.text('Queenless'));
       await tester.pumpAndSettle();
 
       expect(find.text(AcousticStrings.analysisResultTitle), findsOneWidget);
@@ -247,7 +249,7 @@ void main() {
       await pumpHistory(tester, service: service);
 
       expect(find.text('Swarming Pattern'), findsOneWidget);
-      expect(find.text('Normal Activity'), findsNothing);
+      expect(find.text('Queen Present'), findsNothing);
     });
 
     testWidgets('the Monitor history icon opens Sound History', (tester) async {
@@ -341,7 +343,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       // The first row is visible; the last one is only reached by scrolling.
-      expect(find.text('Normal Activity'), findsWidgets);
+      expect(find.text('Queen Present'), findsWidgets);
       // The list is lazy, so the last rows only exist once it is scrolled.
       await tester.fling(find.byType(ListView), const Offset(0, -4000), 5000);
       await tester.pumpAndSettle();
@@ -349,11 +351,34 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('the real model offers only labels it can predict', (
+      tester,
+    ) async {
+      final service = FakeAcousticService(
+        history: [saved('a', AcousticLabel.normal, const Duration(hours: 1))],
+      );
+      await pumpHistory(tester, service: service);
+      await tester.tap(find.byTooltip(AcousticStrings.filterTooltip));
+      await tester.pumpAndSettle();
+
+      for (final title in [
+        'All',
+        'Queen Present',
+        'Queenless',
+        'Unclear Recording',
+      ]) {
+        expect(find.widgetWithText(ListTile, title), findsOneWidget);
+      }
+      expect(find.widgetWithText(ListTile, 'Swarming Pattern'), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Abnormal Activity'), findsNothing);
+    });
+
     testWidgets('the filter sheet and empty states fit at 360 px', (
       tester,
     ) async {
       final service = FakeAcousticService(
         history: [saved('a', AcousticLabel.normal, const Duration(hours: 1))],
+        isDemo: true,
       );
       await pumpHistory(tester, service: service, size: const Size(360, 640));
 

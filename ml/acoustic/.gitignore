@@ -11,3 +11,7 @@ __pycache__/
 # Trained models: large binaries (joblib ~54 MB, ONNX ~27 MB). Rebuild with
 # train_baseline.py and export_onnx.py.
 models/
+
+# Demo clips are small and are meant to be committed (see VIVA_DEMO.md).
+!demo_clips/
+!demo_clips/*

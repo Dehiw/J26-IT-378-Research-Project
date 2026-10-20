@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/utils/acoustic/acoustic_strings.dart';
 import 'package:frontend/models/acoustic/acoustic_result.dart';
+import 'package:frontend/screens/acoustic/acoustic_flows.dart';
+import 'package:frontend/screens/acoustic/hive_sound_monitor_screen.dart';
 import 'package:frontend/screens/acoustic/result_screen.dart';
 import 'package:frontend/widgets/acoustic/confidence_indicator.dart';
 import 'package:frontend/widgets/acoustic/waveform_view.dart';
@@ -50,6 +52,45 @@ Future<void> pumpResult(
 }
 
 void main() {
+  testWidgets('Save Result returns to the Monitor, which reloads', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final service = FakeAcousticService();
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        home: const Scaffold(body: Text('home')),
+      ),
+    );
+    navigatorKey.currentState!.push(
+      MaterialPageRoute<void>(
+        settings: const RouteSettings(name: AcousticFlows.monitorRouteName),
+        builder: (_) => HiveSoundMonitorScreen(service: service),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final callsBefore = service.historyCalls;
+
+    navigatorKey.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => ResultScreen(service: service, result: testResult()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AcousticStrings.saveResult));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HiveSoundMonitorScreen), findsOneWidget);
+    expect(find.text('home'), findsNothing, reason: 'not sent to Home');
+    expect(service.historyCalls, greaterThan(callsBefore));
+  });
+
   testWidgets('Save Result stores the result and returns to the first page', (
     tester,
   ) async {

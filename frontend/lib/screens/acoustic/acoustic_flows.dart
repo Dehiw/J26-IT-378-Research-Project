@@ -22,6 +22,19 @@ class AcousticFlows {
   /// (where it is pushed on top of Home).
   static const String monitorRouteName = '/acoustic/monitor';
 
+  /// Bumped after a result is saved. The Monitor listens and reloads, so the
+  /// saved result shows in Recent analyses even though the flow's own future
+  /// completes earlier (the screens replace each other).
+  static final ValueNotifier<int> resultSaved = ValueNotifier<int>(0);
+
+  /// Pops back to the Monitor, or to the first route when the Monitor is not
+  /// in the stack (the dev demo entry).
+  static void backToMonitor(NavigatorState navigator) {
+    navigator.popUntil(
+      (route) => route.settings.name == monitorRouteName || route.isFirst,
+    );
+  }
+
   /// Opens the Recording screen for [hiveId].
   static Future<void> startRecording({
     required NavigatorState navigator,
@@ -75,9 +88,7 @@ class AcousticFlows {
     required AcousticService service,
     required String hiveId,
   }) {
-    navigator.popUntil(
-      (route) => route.settings.name == monitorRouteName || route.isFirst,
-    );
+    backToMonitor(navigator);
     startRecording(navigator: navigator, service: service, hiveId: hiveId);
   }
 }

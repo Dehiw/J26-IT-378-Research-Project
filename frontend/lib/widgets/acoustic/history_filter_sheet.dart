@@ -16,7 +16,22 @@ class HistoryFilterChoice {
 /// Bottom sheet listing every status to filter Sound History by. Each option
 /// has an icon and its name, so status is never shown by colour alone.
 class HistoryFilterSheet extends StatelessWidget {
-  const HistoryFilterSheet({super.key, required this.selected});
+  const HistoryFilterSheet({
+    super.key,
+    required this.selected,
+    this.demo = true,
+  });
+
+  /// What the real model can predict. Swarming and Abnormal Activity are
+  /// left out because it has no such classes.
+  static const List<AcousticLabel> realModelFilterLabels = [
+    AcousticLabel.normal,
+    AcousticLabel.queenless,
+    AcousticLabel.unclearRecording,
+  ];
+
+  /// True for the mock service, which keeps every filter.
+  final bool demo;
 
   /// Statuses that can be saved, so they are the only ones to filter by.
   /// Unclear results have no Save Result button and are never in history.
@@ -34,6 +49,7 @@ class HistoryFilterSheet extends StatelessWidget {
   static Future<HistoryFilterChoice?> show(
     BuildContext context, {
     required AcousticLabel? selected,
+    bool demo = true,
   }) {
     // Scrollable, so the default 9/16-of-screen cap cannot cut off options
     // on a 360 x 640 phone.
@@ -41,7 +57,7 @@ class HistoryFilterSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.bgCard,
-      builder: (_) => HistoryFilterSheet(selected: selected),
+      builder: (_) => HistoryFilterSheet(selected: selected, demo: demo),
     );
   }
 
@@ -71,7 +87,7 @@ class HistoryFilterSheet extends StatelessWidget {
               icon: Icons.apps_outlined,
               iconColor: AppColors.textSecondary,
             ),
-            for (final label in filterLabels)
+            for (final label in demo ? filterLabels : realModelFilterLabels)
               _option(
                 context,
                 label: label,

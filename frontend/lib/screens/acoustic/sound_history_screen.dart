@@ -105,7 +105,11 @@ class _SoundHistoryScreenState extends State<SoundHistoryScreen> {
         ];
 
   Future<void> _pickFilter() async {
-    final choice = await HistoryFilterSheet.show(context, selected: _filter);
+    final choice = await HistoryFilterSheet.show(
+      context,
+      selected: _filter,
+      demo: widget.service.isDemo,
+    );
     if (choice == null || !mounted) return;
     setState(() => _filter = choice.label);
   }

@@ -42,6 +42,9 @@ class AnalyzeAudioScreen extends StatefulWidget {
 class _AnalyzeAudioScreenState extends State<AnalyzeAudioScreen> {
   bool _failed = false;
 
+  /// Reason from the service, shown under the failure text.
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +52,10 @@ class _AnalyzeAudioScreenState extends State<AnalyzeAudioScreen> {
   }
 
   void _retry() {
-    setState(() => _failed = false);
+    setState(() {
+      _failed = false;
+      _errorMessage = null;
+    });
     _analyze();
   }
 
@@ -84,7 +90,10 @@ class _AnalyzeAudioScreenState extends State<AnalyzeAudioScreen> {
         stackTrace: stack,
       );
       if (!mounted) return;
-      setState(() => _failed = true);
+      setState(() {
+        _failed = true;
+        _errorMessage = error is AcousticException ? error.message : null;
+      });
     }
   }
 
@@ -144,6 +153,17 @@ class _AnalyzeAudioScreenState extends State<AnalyzeAudioScreen> {
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(fontSize: 16, color: AppColors.textPrimary),
         ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _errorMessage!,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: _retry,

@@ -16,6 +16,7 @@ import 'package:frontend/widgets/acoustic/hive_picker_sheet.dart';
 import 'package:frontend/widgets/acoustic/hive_selector_card.dart';
 import 'package:frontend/widgets/acoustic/latest_status_card.dart';
 import 'package:frontend/widgets/acoustic/recent_analysis_tile.dart';
+import 'package:frontend/screens/acoustic/acoustic_flows.dart';
 import 'package:frontend/screens/acoustic/sound_history_screen.dart';
 
 /// Hive Sound Monitor: pick a hive, see its latest sound state, and start
@@ -82,7 +83,18 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
   void initState() {
     super.initState();
     _selectedHiveId = widget.initialHiveId;
+    AcousticFlows.resultSaved.addListener(_onResultSaved);
     _load();
+  }
+
+  @override
+  void dispose() {
+    AcousticFlows.resultSaved.removeListener(_onResultSaved);
+    super.dispose();
+  }
+
+  void _onResultSaved() {
+    if (mounted) _load();
   }
 
   Future<void> _load() async {
@@ -264,10 +276,8 @@ class _HiveSoundMonitorScreenState extends State<HiveSoundMonitorScreen> {
             onTap: _hives.isEmpty ? null : _pickHive,
           ),
           const SizedBox(height: 16),
-          if (_service.isDemo) ...[
-            const DemoNotice(compact: true),
-            const SizedBox(height: 16),
-          ],
+          DemoNotice(compact: true, demo: _service.isDemo),
+          const SizedBox(height: 16),
           LatestStatusCard(
             result: _latestForSelectedHive,
             waveform: _waveform,

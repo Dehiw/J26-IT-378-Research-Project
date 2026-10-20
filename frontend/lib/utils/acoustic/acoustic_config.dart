@@ -5,6 +5,10 @@
 class AcousticConfig {
   AcousticConfig._();
 
+  /// true: analyse through the backend (real model). false: use the mock.
+  /// With true, a missing backend or model shows an error, never a fake result.
+  static const bool useRealModel = true;
+
   /// Results below this confidence (0-1) are shown as "Unclear Recording".
   static const double confidenceThreshold = 0.60;
 

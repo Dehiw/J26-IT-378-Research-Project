@@ -5,20 +5,23 @@ import 'package:frontend/screens/acoustic/acoustic_flows.dart';
 import 'package:frontend/screens/acoustic/hive_sound_monitor_screen.dart';
 import 'package:frontend/services/acoustic/acoustic_service.dart';
 import 'package:frontend/services/acoustic/file_picker_audio_picker.dart';
+import 'package:frontend/services/acoustic/http_acoustic_service.dart';
 import 'package:frontend/services/acoustic/mock_acoustic_service.dart';
 import 'package:frontend/services/apiary_service.dart';
 import 'package:frontend/services/inference_service.dart';
+import 'package:frontend/utils/acoustic/acoustic_config.dart';
 import 'package:frontend/screens/IT23183186_environment_dashboard_screen.dart';
 import 'package:frontend/screens/IT23185302_relocation_assessment_screen.dart';
 import 'package:frontend/screens/health_screen.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/widgets/main_bottom_nav.dart';
 
-/// The service the app uses. This is the one line to change when the real
-/// backend service exists. Tests may replace it.
-AcousticService acousticService = MockAcousticService(
-  hivesProvider: apiaryHivesProvider,
-);
+/// The service the app uses: the backend model when
+/// [AcousticConfig.useRealModel] is true, otherwise the mock. Tests may
+/// replace it.
+AcousticService acousticService = AcousticConfig.useRealModel
+    ? HttpAcousticService(hivesProvider: apiaryHivesProvider)
+    : MockAcousticService(hivesProvider: apiaryHivesProvider);
 
 /// Opens Hive Sound Monitor. [hiveId] selects that hive; when null, the
 /// first hive is selected. [inferenceService] is handed on to the Health and

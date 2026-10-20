@@ -1,3 +1,5 @@
+import 'package:frontend/services/acoustic/http_acoustic_service.dart';
+import 'package:frontend/utils/acoustic/acoustic_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frontend/screens/acoustic/acoustic_entry.dart';
@@ -85,11 +87,16 @@ void main() {
       acousticService = original;
     });
 
-    testWidgets('the app service is the mock, a demo, by default', (
+    testWidgets('the app service follows AcousticConfig.useRealModel', (
       tester,
     ) async {
-      expect(original, isA<MockAcousticService>());
-      expect(original.isDemo, isTrue);
+      if (AcousticConfig.useRealModel) {
+        expect(original, isA<HttpAcousticService>());
+        expect(original.isDemo, isFalse);
+      } else {
+        expect(original, isA<MockAcousticService>());
+        expect(original.isDemo, isTrue);
+      }
     });
 
     testWidgets('opens the Monitor for the given hive', (tester) async {
