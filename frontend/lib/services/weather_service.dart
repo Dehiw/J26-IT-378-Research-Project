@@ -54,8 +54,108 @@ class CurrentWeather {
   }
 }
 
+class HistoricalWeatherDay {
+  final String date;
+  final double averageTemperatureC;
+  final double minimumTemperatureC;
+  final double maximumTemperatureC;
+  final double averageHumidityPercent;
+  final double precipitationMm;
+
+  const HistoricalWeatherDay({
+    required this.date,
+    required this.averageTemperatureC,
+    required this.minimumTemperatureC,
+    required this.maximumTemperatureC,
+    required this.averageHumidityPercent,
+    required this.precipitationMm,
+  });
+
+  factory HistoricalWeatherDay.fromJson(Map<String, dynamic> json) =>
+      HistoricalWeatherDay(
+        date: json['date'] as String,
+        averageTemperatureC: (json['average_temperature_c'] as num).toDouble(),
+        minimumTemperatureC: (json['min_temperature_c'] as num).toDouble(),
+        maximumTemperatureC: (json['max_temperature_c'] as num).toDouble(),
+        averageHumidityPercent: (json['average_humidity_percent'] as num)
+            .toDouble(),
+        precipitationMm: (json['precipitation_mm'] as num).toDouble(),
+      );
+}
+
+class EnvironmentalImpact {
+  final String season;
+  final String seasonPeriod;
+  final String regionalContext;
+  final String environmentalSummary;
+  final Map<String, dynamic> beeActivity;
+  final Map<String, dynamic> colonyGrowth;
+  final Map<String, dynamic> foodAvailability;
+  final List<String> recommendations;
+  final Map<String, dynamic> dataQuality;
+
+  const EnvironmentalImpact({
+    required this.season,
+    required this.seasonPeriod,
+    required this.regionalContext,
+    required this.environmentalSummary,
+    required this.beeActivity,
+    required this.colonyGrowth,
+    required this.foodAvailability,
+    required this.recommendations,
+    required this.dataQuality,
+  });
+
+  factory EnvironmentalImpact.fromJson(Map<String, dynamic> json) =>
+      EnvironmentalImpact(
+        season: json['season'] as String? ?? 'Season unavailable',
+        seasonPeriod: json['season_period'] as String? ?? '',
+        regionalContext: json['regional_context'] as String? ?? '',
+        environmentalSummary: json['environmental_summary'] as String? ?? '',
+        beeActivity: json['bee_activity'] as Map<String, dynamic>? ?? const {},
+        colonyGrowth:
+            json['colony_growth'] as Map<String, dynamic>? ?? const {},
+        foodAvailability:
+            json['food_availability'] as Map<String, dynamic>? ?? const {},
+        recommendations: (json['recommendations'] as List<dynamic>? ?? const [])
+            .map((item) => item.toString())
+            .toList(growable: false),
+        dataQuality: json['data_quality'] as Map<String, dynamic>? ?? const {},
+      );
+}
+
+class WeatherImpactResponse {
+  final CurrentWeather weather;
+  final EnvironmentalImpact analysis;
+
+  const WeatherImpactResponse({required this.weather, required this.analysis});
+
+  factory WeatherImpactResponse.fromJson(Map<String, dynamic> json) =>
+      WeatherImpactResponse(
+        weather: CurrentWeather.fromJson(
+          json['weather'] as Map<String, dynamic>,
+        ),
+        analysis: EnvironmentalImpact.fromJson(
+          json['analysis'] as Map<String, dynamic>,
+        ),
+      );
+}
+
 class WeatherService {
   const WeatherService();
+
+  Future<WeatherImpactResponse> fetchImpact(String location) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/environment/impact')
+        .replace(queryParameters: {'q': location});
+    final response = await http.get(uri).timeout(const Duration(seconds: 18));
+    final payload = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail =
+          payload['detail']?.toString() ?? 'Environmental analysis failed.';
+      throw WeatherException(detail);
+    }
+    return WeatherImpactResponse.fromJson(payload);
+  }
 
   Future<CurrentWeather> fetchCurrent(String location) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/environment/weather')
@@ -67,6 +167,28 @@ class WeatherService {
       throw WeatherException(detail);
     }
     return CurrentWeather.fromJson(payload);
+  }
+
+  Future<List<HistoricalWeatherDay>> fetchHistory(
+    String location, {
+    int days = 7,
+  }) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}/environment/weather/history')
+        .replace(queryParameters: {'q': location, 'days': '$days'});
+    final response = await http.get(uri).timeout(const Duration(seconds: 35));
+    final payload = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final detail =
+          payload['detail']?.toString() ?? 'Weather history lookup failed.';
+      throw WeatherException(detail);
+    }
+    final records = payload['days'] as List<dynamic>? ?? const [];
+    return records
+        .map(
+          (record) =>
+              HistoricalWeatherDay.fromJson(record as Map<String, dynamic>),
+        )
+        .toList(growable: false);
   }
 }
 

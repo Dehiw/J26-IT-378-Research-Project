@@ -1,0 +1,10 @@
+--index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.org/simple
+
+# Optional CPU inference dependencies for the research image models.
+# Install requirements.txt first, then this file. PyTorch 2.7 supports NumPy 2.2.
+numpy==2.2.6
+torch==2.7.1+cpu
+torchvision==0.22.1+cpu
+ultralytics>=8.3,<9
+PyYAML>=6,<7

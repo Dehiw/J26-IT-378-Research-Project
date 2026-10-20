@@ -1,27 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, status
-from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.schemas.auth import UserRegisterRequest, UserLoginRequest, AuthResponse, UserResponse
 from app.services.auth_service import auth_service
-from app.core.security import decode_access_token
+from app.core.security import get_current_user_id
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-
-
-def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authorization token required"
-        )
-    token = authorization.split(" ")[1]
-    payload = decode_access_token(token)
-    if not payload or "sub" not in payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token"
-        )
-    return payload["sub"]
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)

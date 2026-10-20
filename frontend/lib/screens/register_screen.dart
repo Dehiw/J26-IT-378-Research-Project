@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -67,8 +68,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final phone = _phoneController.text.trim();
     final password = _passwordController.text;
 
-    developer.log('Registering user with backend: $email',
-        name: 'RegisterScreen');
+    developer.log(
+      'Registering user with backend: $email',
+      name: 'RegisterScreen',
+    );
 
     try {
       await AuthService.instance.register(
@@ -161,9 +164,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onPressed: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (_) => LoginScreen(
-                  inferenceService: widget.inferenceService,
-                ),
+                builder: (_) =>
+                    LoginScreen(inferenceService: widget.inferenceService),
               ),
             );
           },
@@ -301,8 +303,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email';
                     }
-                    final emailRegex =
-                        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    final emailRegex = RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    );
                     if (!emailRegex.hasMatch(value.trim())) {
                       return 'Please enter a valid email address';
                     }
@@ -535,6 +538,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
+                    AuthService.instance.continueAsGuest();
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute<void>(
                         builder: (_) => HomeScreen(
@@ -611,8 +615,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Icon(
                     icon,
                     size: 20,
-                    color:
-                        isSelected ? AppColors.hiveLow : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.hiveLow
+                        : AppColors.textSecondary,
                   ),
                 ),
                 if (isSelected)

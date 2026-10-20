@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/apiary_model.dart';
@@ -11,6 +13,7 @@ import 'IT23183186_disease_check_screen.dart';
 import 'IT23183186_disease_risk_screen.dart';
 import 'IT23183186_forage_map_screen.dart';
 import 'IT23183186_hive_telemetry_screen.dart';
+import 'image_model_analysis_screen.dart';
 
 class EnvironmentDashboardScreen extends StatefulWidget {
   final InferenceService? inferenceService;
@@ -26,10 +29,18 @@ class _EnvironmentDashboardScreenState
     extends State<EnvironmentDashboardScreen> {
   final WeatherService _weatherService = const WeatherService();
   CurrentWeather? _weather;
+  EnvironmentalImpact? _impact;
+  List<HistoricalWeatherDay> _weatherHistory = const [];
   String? _weatherError;
+  String? _impactError;
+  String? _historyError;
+  String? _locationStatus;
   String _locationQuery = 'Colombo, Sri Lanka';
   String? _manualLocation;
   bool _loadingWeather = true;
+  bool _loadingImpact = true;
+  bool _loadingHistory = true;
+  bool _usingDeviceLocation = false;
 
   @override
   void initState() {
@@ -40,32 +51,106 @@ class _EnvironmentDashboardScreenState
   Future<void> _loadWeather({String? location}) async {
     final ApiaryModel? apiary = ApiaryService.instance.selectedApiary;
     final gps = apiary?.gpsLocation?.trim();
-    _locationQuery =
+    final resolvedLocation =
         location ??
         _manualLocation ??
-        (gps != null && gps.isNotEmpty
-            ? gps
-            : apiary == null
+        (gps != null && gps.isNotEmpty ? gps : await _deviceLocationQuery()) ??
+        (apiary == null
             ? 'Colombo, Sri Lanka'
             : '${apiary.locationName}, Sri Lanka');
+    if (!mounted) return;
+    if (location == null &&
+        _manualLocation == null &&
+        gps != null &&
+        gps.isNotEmpty) {
+      _locationStatus = 'Using saved apiary GPS coordinates';
+    }
+    _locationQuery = resolvedLocation;
     setState(() {
       _loadingWeather = true;
       _weatherError = null;
+      _loadingImpact = true;
+      _impactError = null;
+      _loadingHistory = true;
+      _historyError = null;
     });
     try {
-      final weather = await _weatherService.fetchCurrent(_locationQuery);
+      final result = await _weatherService.fetchImpact(resolvedLocation);
       if (!mounted) return;
       setState(() {
-        _weather = weather;
+        _weather = result.weather;
+        _impact = result.analysis;
         _loadingWeather = false;
+        _loadingImpact = false;
       });
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _weatherError = error.toString();
+        _impactError = error.toString();
         _loadingWeather = false;
+        _loadingImpact = false;
       });
     }
+    try {
+      final history = await _weatherService.fetchHistory(resolvedLocation);
+      if (!mounted) return;
+      setState(() {
+        _weatherHistory = history;
+        _loadingHistory = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _historyError = error.toString();
+        _loadingHistory = false;
+      });
+    }
+  }
+
+  Future<String?> _deviceLocationQuery() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _locationStatus =
+            'Location services are off; using the saved location.';
+        return null;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _locationStatus =
+            'Location permission unavailable; using the saved location.';
+        return null;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      _usingDeviceLocation = true;
+      _locationStatus = 'Weather location from device GPS';
+      return '${position.latitude},${position.longitude}';
+    } catch (_) {
+      _locationStatus =
+          'Could not read device location; using the saved location.';
+      return null;
+    }
+  }
+
+  Future<void> _useDeviceLocation() async {
+    _manualLocation = null;
+    _usingDeviceLocation = false;
+    final query = await _deviceLocationQuery();
+    if (!mounted) return;
+    if (query == null) {
+      setState(() {});
+      return;
+    }
+    await _loadWeather(location: query);
   }
 
   Future<void> _editLocation() async {
@@ -101,6 +186,8 @@ class _EnvironmentDashboardScreenState
     controller.dispose();
     if (location == null || location.isEmpty) return;
     _manualLocation = location;
+    _usingDeviceLocation = false;
+    _locationStatus = 'Weather location entered manually';
     await _loadWeather(location: location);
   }
 
@@ -129,6 +216,11 @@ class _EnvironmentDashboardScreenState
                   tooltip: 'Refresh weather',
                   onPressed: _loadWeather,
                   icon: const Icon(Icons.refresh_rounded),
+                ),
+                IconButton(
+                  tooltip: 'Use device GPS location',
+                  onPressed: _useDeviceLocation,
+                  icon: const Icon(Icons.my_location_rounded),
                 ),
               ],
             ),
@@ -161,12 +253,24 @@ class _EnvironmentDashboardScreenState
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(Icons.edit_location_alt_outlined, size: 18),
+                      Icon(
+                        _usingDeviceLocation
+                            ? Icons.my_location_rounded
+                            : Icons.edit_location_alt_outlined,
+                        size: 18,
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
+            if (_locationStatus != null) ...[
+              const SizedBox(height: 5),
+              Text(
+                _locationStatus!,
+                style: _style(11, FontWeight.w500, AppColors.textSecondary),
+              ),
+            ],
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -315,6 +419,12 @@ class _EnvironmentDashboardScreenState
               icon: const Icon(Icons.add_a_photo_outlined),
               label: const Text('Upload hive images'),
             ),
+            const SizedBox(height: 8),
+            FilledButton.tonalIcon(
+              onPressed: () => _open(context, const ImageModelAnalysisScreen()),
+              icon: const Icon(Icons.hub_outlined),
+              label: const Text('Analyze outside and inside images'),
+            ),
             const SizedBox(height: 14),
             Row(
               children: [
@@ -377,6 +487,18 @@ class _EnvironmentDashboardScreenState
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            _sectionTitle(
+              'Environmental Impact Analysis',
+              'Refresh',
+              _loadWeather,
+            ),
+            const SizedBox(height: 8),
+            _impactCard(),
+            const SizedBox(height: 18),
+            _sectionTitle('7-Day Weather History', 'Refresh', _loadWeather),
+            const SizedBox(height: 8),
+            _historyCard(),
             const SizedBox(height: 14),
             InkWell(
               borderRadius: BorderRadius.circular(18),
@@ -468,6 +590,313 @@ class _EnvironmentDashboardScreenState
             ),
           ],
         ),
+      ),
+    ),
+  );
+
+  Widget _historyCard() {
+    if (_loadingHistory) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: _cardDecoration(),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_weatherHistory.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: _cardDecoration(),
+        child: Text(
+          _historyError ?? 'No historical weather data is available.',
+          style: _style(12, FontWeight.w500, AppColors.textSecondary),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: _cardDecoration(),
+      child: Column(
+        children: [
+          _weatherTrend(
+            'Average temperature (°C)',
+            _weatherHistory.map((day) => day.averageTemperatureC).toList(),
+            AppColors.accent2,
+          ),
+          _weatherTrend(
+            'Average humidity (%)',
+            _weatherHistory.map((day) => day.averageHumidityPercent).toList(),
+            AppColors.blue,
+          ),
+          _weatherTrend(
+            'Rainfall (mm/day)',
+            _weatherHistory.map((day) => day.precipitationMm).toList(),
+            AppColors.accent3,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Date',
+                    style: _style(11, FontWeight.w700, AppColors.textSecondary),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Avg °C',
+                    textAlign: TextAlign.end,
+                    style: _style(11, FontWeight.w700, AppColors.textSecondary),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Humidity',
+                    textAlign: TextAlign.end,
+                    style: _style(11, FontWeight.w700, AppColors.textSecondary),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Rain mm',
+                    textAlign: TextAlign.end,
+                    style: _style(11, FontWeight.w700, AppColors.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          for (final day in _weatherHistory)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      day.date.substring(5),
+                      style: _style(12, FontWeight.w600, AppColors.textPrimary),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      day.averageTemperatureC.toStringAsFixed(1),
+                      textAlign: TextAlign.end,
+                      style: _style(12, FontWeight.w500, AppColors.textPrimary),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      '${day.averageHumidityPercent.toStringAsFixed(0)}%',
+                      textAlign: TextAlign.end,
+                      style: _style(12, FontWeight.w500, AppColors.textPrimary),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      day.precipitationMm.toStringAsFixed(1),
+                      textAlign: TextAlign.end,
+                      style: _style(12, FontWeight.w500, AppColors.textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const Divider(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _historyError == null
+                  ? 'Historical WeatherAPI data; not locally saved sensor readings.'
+                  : 'History unavailable: $_historyError',
+              style: _style(10, FontWeight.w500, AppColors.textSecondary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _weatherTrend(String label, List<double> values, Color color) {
+    final minimum = values.reduce((a, b) => a < b ? a : b);
+    final maximum = values.reduce((a, b) => a > b ? a : b);
+    final margin = ((maximum - minimum) * .15)
+        .clamp(.5, double.infinity)
+        .toDouble();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: _style(11, FontWeight.w700, AppColors.textPrimary),
+          ),
+          SizedBox(
+            height: 58,
+            child: LineChart(
+              LineChartData(
+                minY: minimum - margin,
+                maxY: maximum + margin,
+                minX: 0,
+                maxX: (values.length - 1).toDouble(),
+                titlesData: const FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: margin,
+                  getDrawingHorizontalLine: (_) => FlLine(
+                    color: AppColors.border.withValues(alpha: .6),
+                    strokeWidth: 1,
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: [
+                      for (var index = 0; index < values.length; index++)
+                        FlSpot(index.toDouble(), values[index]),
+                    ],
+                    isCurved: false,
+                    color: color,
+                    barWidth: 2.5,
+                    dotData: const FlDotData(show: true),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: color.withValues(alpha: .10),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _impactCard() {
+    final impact = _impact;
+    if (_loadingImpact) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: _cardDecoration(),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (impact == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: _cardDecoration(),
+        child: Text(
+          _impactError ?? 'Environmental analysis is unavailable.',
+          style: _style(12, FontWeight.w500, AppColors.textSecondary),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            impact.season,
+            style: _style(17, FontWeight.w800, AppColors.textPrimary),
+          ),
+          Text(
+            impact.seasonPeriod,
+            style: _style(12, FontWeight.w600, AppColors.accent3),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            impact.regionalContext,
+            style: _style(11, FontWeight.w500, AppColors.textSecondary),
+          ),
+          const Divider(height: 22),
+          Text(
+            'Outdoor conditions',
+            style: _style(14, FontWeight.w700, AppColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            impact.environmentalSummary,
+            style: _style(12, FontWeight.w400, AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          _impactItem('Bee activity', impact.beeActivity),
+          _impactItem('Colony growth', impact.colonyGrowth),
+          _impactItem('Food availability', impact.foodAvailability),
+          const SizedBox(height: 8),
+          Text(
+            'Recommended actions',
+            style: _style(13, FontWeight.w700, AppColors.textPrimary),
+          ),
+          const SizedBox(height: 4),
+          for (final recommendation in impact.recommendations)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.circle, size: 5, color: AppColors.accent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      recommendation,
+                      style: _style(
+                        11,
+                        FontWeight.w500,
+                        AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 10),
+          Text(
+            'Source: ${impact.dataQuality['weather'] ?? 'WeatherAPI'} · ${impact.dataQuality['weather_observed_at'] ?? _weather?.updatedAt ?? ''}',
+            style: _style(10, FontWeight.w600, AppColors.textSecondary),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Preliminary decision support. Regional context is approximate; this does not diagnose colony health.',
+            style: _style(10, FontWeight.w500, AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _impactItem(String title, Map<String, dynamic> data) => Padding(
+    padding: const EdgeInsets.only(bottom: 9),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: AppColors.bgElevated,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: _style(12, FontWeight.w700, AppColors.textPrimary),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            data['assessment']?.toString() ?? 'Unknown',
+            style: _style(12, FontWeight.w600, AppColors.accent3),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            data['reason']?.toString() ?? '',
+            style: _style(11, FontWeight.w400, AppColors.textSecondary),
+          ),
+        ],
       ),
     ),
   );
