@@ -238,12 +238,12 @@ From the repo root (PowerShell):
 
 ```powershell
 cd backend
-.\venv\Scripts\python.exe -m uvicorn app.acoustic_main:app --reload
+.\venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
 Open `http://127.0.0.1:8000/api/v1/acoustic/model-info`. It must show
-`"model_loaded": true`. `app.main:app` still works for the rest of the team,
-but it does not include the acoustic routes. Then run the app from `frontend/`
+`"model_loaded": true`. The model loads on the first acoustic request (this call
+includes it), so the first call takes a few seconds. Then run the app from `frontend/`
 (`flutter run -d windows`), log in, open the Acoustic tab, pick a hive and
 upload one of the test clips or record a sound.
 
@@ -260,7 +260,7 @@ upload one of the test clips or record a sound.
    ```
 
 3. Put `firebase-service-account.json` in `backend/` (not in git).
-4. Start with `.\venv\Scripts\python.exe -m uvicorn app.acoustic_main:app --reload`.
+4. Start with `.\venv\Scripts\python.exe -m uvicorn app.main:app --reload`.
 
 Without the model file the backend still starts, and `/analyze` returns 503
 "Acoustic model not available".

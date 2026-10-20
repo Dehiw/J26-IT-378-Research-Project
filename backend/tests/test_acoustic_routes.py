@@ -12,7 +12,7 @@ pytest.importorskip("librosa")
 import soundfile as sf  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from app.acoustic_main import app  # noqa: E402
+from app.main import app  # noqa: E402
 from app.routes import acoustic as route  # noqa: E402
 from app.routes.auth import get_current_user_id  # noqa: E402
 from app.services import acoustic_service as svc  # noqa: E402

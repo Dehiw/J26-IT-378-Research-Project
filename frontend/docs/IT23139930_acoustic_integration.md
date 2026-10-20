@@ -33,7 +33,7 @@ chooses the backend model (true) or the mock (false).
 - The hive list comes from `ApiaryService` through `apiaryHivesProvider`. A
   user with no apiary sees an empty list. With `useRealModel = true` results
   come from the backend model (`/api/v1/acoustic`, run with
-  `uvicorn app.acoustic_main:app --reload`); with false they are made up and
+  `uvicorn app.main:app --reload`); with false they are made up and
   history is in memory only.
 
 ## Shared changes made for the module

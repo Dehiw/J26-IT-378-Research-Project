@@ -1,4 +1,4 @@
-"""Acoustic (queen status) endpoints, mounted under /api/v1/acoustic by app/acoustic_main.py."""
+"""Acoustic (queen status) endpoints, mounted under /api/v1/acoustic by app/main.py."""
 
 import uuid
 from datetime import datetime, timezone

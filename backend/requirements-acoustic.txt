@@ -1,7 +1,7 @@
 # Extra packages for the acoustic module (queen status model).
 # Install on top of requirements.txt:  pip install -r requirements-acoustic.txt
+# (python-multipart, needed for the upload route, is in requirements.txt.)
 # Versions match ml/acoustic/requirements.txt.
-python-multipart==0.0.20
 soundfile==0.14.0
 librosa==1.0.0
 pytest==8.4.2
