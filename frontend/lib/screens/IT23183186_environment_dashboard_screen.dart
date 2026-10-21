@@ -7,9 +7,14 @@ import '../models/apiary_model.dart';
 import '../services/apiary_service.dart';
 import '../services/inference_service.dart';
 import '../services/weather_service.dart';
+import '../services/IT23183186_colony_assessment_api.dart';
+import '../widgets/IT23183186_assessment_card.dart';
+import '../widgets/main_bottom_nav.dart';
+import 'home_screen.dart';
+import 'health_screen.dart';
+import 'IT23185302_relocation_assessment_screen.dart';
+import 'IT23139930_acoustic_entry.dart';
 import '../utils/theme.dart';
-import 'IT23183186_disease_assessment_screen.dart';
-import 'IT23183186_disease_check_screen.dart';
 import 'IT23183186_disease_risk_screen.dart';
 import 'IT23183186_forage_map_screen.dart';
 import 'IT23183186_hive_telemetry_screen.dart';
@@ -30,7 +35,10 @@ class _EnvironmentDashboardScreenState
   final WeatherService _weatherService = const WeatherService();
   CurrentWeather? _weather;
   EnvironmentalImpact? _impact;
+  Map<String, dynamic>? _assessment;
+  String? _assessmentError;
   List<HistoricalWeatherDay> _weatherHistory = const [];
+  Map<String, dynamic> _historyAnalysis = const {};
   String? _weatherError;
   String? _impactError;
   String? _historyError;
@@ -69,6 +77,12 @@ class _EnvironmentDashboardScreenState
     setState(() {
       _loadingWeather = true;
       _weatherError = null;
+      _assessment = null;
+      _assessmentError = null;
+      _weather = null;
+      _impact = null;
+      _weatherHistory = const [];
+      _historyAnalysis = const {};
       _loadingImpact = true;
       _impactError = null;
       _loadingHistory = true;
@@ -93,10 +107,32 @@ class _EnvironmentDashboardScreenState
       });
     }
     try {
-      final history = await _weatherService.fetchHistory(resolvedLocation);
+      final snapshot = await const ColonyAssessmentApi().fetch(
+        location: resolvedLocation,
+      );
+      if (mounted) {
+        setState(
+          () => _assessment = Map<String, dynamic>.from(
+            snapshot['assessment'] as Map,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _assessmentError =
+              'Monitoring alerts unavailable. Open risk overview to retry.',
+        );
+      }
+    }
+    try {
+      final history = await _weatherService.fetchHistoryAnalysis(
+        resolvedLocation,
+      );
       if (!mounted) return;
       setState(() {
-        _weatherHistory = history;
+        _weatherHistory = history.days;
+        _historyAnalysis = history.analysis;
         _loadingHistory = false;
       });
     } catch (error) {
@@ -191,408 +227,483 @@ class _EnvironmentDashboardScreenState
     await _loadWeather(location: location);
   }
 
+  void _onNavTapped(int index) {
+    if (index == 4) return;
+    final navigator = Navigator.of(context);
+    switch (index) {
+      case 0:
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                HomeScreen(inferenceService: widget.inferenceService),
+          ),
+          (_) => false,
+        );
+      case 1:
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                HealthScreen(inferenceService: widget.inferenceService),
+          ),
+        );
+      case 2:
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const RelocationAssessmentScreenIT23185302(),
+          ),
+        );
+      case 3:
+        openSoundMonitor(context, inferenceService: widget.inferenceService);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
+    bottomNavigationBar: MainBottomNav(currentIndex: 4, onTap: _onNavTapped),
     backgroundColor: AppColors.bgPrimary,
     body: SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => Navigator.maybePop(context),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
-                Expanded(
-                  child: Text(
-                    'Good morning ðŸ',
-                    style: _style(20, FontWeight.w800, AppColors.textPrimary),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Refresh weather',
-                  onPressed: _loadWeather,
-                  icon: const Icon(Icons.refresh_rounded),
-                ),
-                IconButton(
-                  tooltip: 'Use device GPS location',
-                  onPressed: _useDeviceLocation,
-                  icon: const Icon(Icons.my_location_rounded),
-                ),
-              ],
-            ),
-            Center(
-              child: InkWell(
-                onTap: _editLocation,
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  margin: const EdgeInsets.only(top: 8, bottom: 18),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 11,
-                  ),
-                  decoration: _cardDecoration(),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+      child: RefreshIndicator(
+        onRefresh: () => _loadWeather(location: _locationQuery),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      const Icon(
-                        Icons.circle,
-                        size: 10,
-                        color: AppColors.accent3,
-                      ),
-                      const SizedBox(width: 9),
-                      Text(
-                        _weather?.locationName ?? _locationQuery,
-                        style: _style(
-                          13,
-                          FontWeight.w600,
-                          AppColors.textPrimary,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.badgeLeafBg,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.eco_outlined,
+                          color: AppColors.accent3,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Icon(
-                        _usingDeviceLocation
-                            ? Icons.my_location_rounded
-                            : Icons.edit_location_alt_outlined,
-                        size: 18,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            if (_locationStatus != null) ...[
-              const SizedBox(height: 5),
-              Text(
-                _locationStatus!,
-                style: _style(11, FontWeight.w500, AppColors.textSecondary),
-              ),
-            ],
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.accent3,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accent3.withValues(alpha: .18),
-                    blurRadius: 16,
-                    offset: const Offset(0, 7),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Current outdoor conditions',
-                          style: _style(
-                            14,
-                            FontWeight.w500,
-                            AppColors.bgPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          _weather?.condition ??
-                              (_loadingWeather
-                                  ? 'Loading weather…'
-                                  : 'Weather unavailable'),
-                          style: _style(
-                            17,
-                            FontWeight.w700,
-                            AppColors.bgPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 7),
-                        Text(
-                          _weather == null
-                              ? (_weatherError ??
-                                    'WeatherAPI data for this location')
-                              : 'Updated ${_weather!.updatedAt}',
-                          style: _style(
-                            12,
-                            FontWeight.w500,
-                            AppColors.bgPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    width: 92,
-                    height: 92,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.accent, width: 5),
-                    ),
-                    child: Center(
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          style: _style(
-                            28,
-                            FontWeight.w800,
-                            AppColors.bgPrimary,
-                          ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextSpan(
-                              text: _weather == null
-                                  ? '--\n'
-                                  : '${_weather!.humidityPercent}\n',
+                            Text(
+                              'Environment',
+                              style: _style(
+                                26,
+                                FontWeight.w800,
+                                AppColors.textPrimary,
+                              ),
                             ),
-                            TextSpan(
-                              text: '% RH',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                            Text(
+                              'Your apiary, in context',
+                              style: _style(
+                                13,
+                                FontWeight.w500,
+                                AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      IconButton(
+                        tooltip: 'Refresh observations',
+                        onPressed: _loadingWeather
+                            ? null
+                            : () => _loadWeather(location: _locationQuery),
+                        icon: const Icon(Icons.refresh_rounded),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
                     ),
+                    decoration: _cardDecoration(),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: AppColors.accent3,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _weather?.locationName ??
+                                    ApiaryService
+                                        .instance
+                                        .selectedApiary
+                                        ?.locationName ??
+                                    (_usingDeviceLocation
+                                        ? 'Current GPS location'
+                                        : _locationQuery),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: _style(
+                                  14,
+                                  FontWeight.w700,
+                                  AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                _locationStatus ??
+                                    'Choose your apiary location',
+                                maxLines: 2,
+                                style: _style(
+                                  11,
+                                  FontWeight.w400,
+                                  AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Edit weather location',
+                          onPressed: _editLocation,
+                          icon: const Icon(Icons.edit_location_alt_outlined),
+                        ),
+                        IconButton(
+                          tooltip: 'Use device GPS',
+                          onPressed: _useDeviceLocation,
+                          icon: const Icon(Icons.my_location_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _weatherHero(),
+                  const SizedBox(height: 20),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final wide = constraints.maxWidth >= 820;
+                      final width = wide
+                          ? (constraints.maxWidth - 20) / 2
+                          : constraints.maxWidth;
+                      return Wrap(
+                        spacing: 20,
+                        runSpacing: 20,
+                        children: [
+                          SizedBox(
+                            width: width,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _sectionTitle(
+                                  'Colony monitoring',
+                                  'Open',
+                                  () => _open(
+                                    context,
+                                    DiseaseRiskScreen(
+                                      location: _locationQuery,
+                                      inferenceService: widget.inferenceService,
+                                    ),
+                                  ),
+                                ),
+                                if (_assessment != null)
+                                  ColonyAssessmentCard(
+                                    assessment: _assessment!,
+                                    compact: true,
+                                  )
+                                else
+                                  _statusPanel(
+                                    Icons.shield_outlined,
+                                    'Evidence status',
+                                    _assessmentError ??
+                                        'Checking available observations...',
+                                  ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: width,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _sectionTitle(
+                                  'Image insights',
+                                  'Upload',
+                                  () => _open(
+                                    context,
+                                    ImageModelAnalysisScreen(
+                                      location: _locationQuery,
+                                    ),
+                                  ),
+                                ),
+                                _statusPanel(
+                                  Icons.add_photo_alternate_outlined,
+                                  'See what your photos can tell you',
+                                  'Upload an individual bee photo or a hive-frame image. Each uses its own model; supported findings remain separate.',
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: FilledButton.icon(
+                                    onPressed: () => _open(
+                                      context,
+                                      ImageModelAnalysisScreen(
+                                        location: _locationQuery,
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.add_a_photo_outlined,
+                                    ),
+                                    label: const Text(
+                                      'Analyze bee or frame images',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  _sectionTitle(
+                    'Weather observations',
+                    'Hive readings',
+                    () => _open(context, const HiveTelemetryScreen()),
+                  ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width =
+                          (constraints.maxWidth -
+                              (constraints.maxWidth < 580 ? 12 : 36)) /
+                          (constraints.maxWidth < 580 ? 2 : 4);
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: width,
+                            child: _MetricCard(
+                              icon: Icons.thermostat_outlined,
+                              label: 'Temperature',
+                              value: _weather == null
+                                  ? '--'
+                                  : '${_weather!.temperatureC.toStringAsFixed(1)} C',
+                              note: 'Outdoor air',
+                              color: AppColors.accent2,
+                              onTap: () =>
+                                  _open(context, const HiveTelemetryScreen()),
+                            ),
+                          ),
+                          SizedBox(
+                            width: width,
+                            child: _MetricCard(
+                              icon: Icons.water_drop_outlined,
+                              label: 'Humidity',
+                              value: _weather == null
+                                  ? '--'
+                                  : '${_weather!.humidityPercent}%',
+                              note: 'Outdoor relative humidity',
+                              color: AppColors.blue,
+                            ),
+                          ),
+                          SizedBox(
+                            width: width,
+                            child: _MetricCard(
+                              icon: Icons.grain_rounded,
+                              label: 'Precipitation',
+                              value: _weather == null
+                                  ? '--'
+                                  : '${_weather!.precipitationMm.toStringAsFixed(1)} mm',
+                              note: 'Current observation',
+                              color: AppColors.accent3,
+                            ),
+                          ),
+                          SizedBox(
+                            width: width,
+                            child: _MetricCard(
+                              icon: Icons.air_rounded,
+                              label: 'Wind',
+                              value: _weather == null
+                                  ? '--'
+                                  : '${_weather!.windKph.toStringAsFixed(1)} km/h',
+                              note: _weather?.windDirection ?? 'Outdoor wind',
+                              color: AppColors.info,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth >= 820
+                          ? (constraints.maxWidth - 20) / 2
+                          : constraints.maxWidth;
+                      return Wrap(
+                        spacing: 20,
+                        runSpacing: 20,
+                        children: [
+                          SizedBox(
+                            width: width,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Season & colony activity',
+                                  style: _style(
+                                    18,
+                                    FontWeight.w800,
+                                    AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                _impactCard(),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: width,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Last 7 days',
+                                  style: _style(
+                                    18,
+                                    FontWeight.w800,
+                                    AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                _historyCard(),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  OutlinedButton.icon(
+                    onPressed: () => _open(context, const ForageMapScreen()),
+                    icon: const Icon(Icons.map_outlined),
+                    label: const Text('Explore forage map (illustrative)'),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Outdoor observations via WeatherAPI. Hive readings require a selected hive. Image findings and monitoring alerts are preliminary decision support.',
+                    style: _style(11, FontWeight.w400, AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            _sectionTitle(
-              'Hive Health',
-              'Disease check',
-              () => _open(
-                context,
-                DiseaseCheckScreen(inferenceService: widget.inferenceService),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _MetricCard(
-                    icon: Icons.health_and_safety_outlined,
-                    label: 'Disease check',
-                    value: 'Open',
-                    note: 'View available evidence',
-                    color: AppColors.warning,
-                    onTap: () => _open(
-                      context,
-                      DiseaseCheckScreen(
-                        inferenceService: widget.inferenceService,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MetricCard(
-                    icon: Icons.assessment_outlined,
-                    label: 'Risk overview',
-                    value: 'Open',
-                    note: 'See baseline assessment',
-                    color: AppColors.accent3,
-                    onTap: () => _open(
-                      context,
-                      DiseaseRiskScreen(
-                        inferenceService: widget.inferenceService,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () => _open(
-                context,
-                DiseaseAssessmentScreen(
-                  inferenceService: widget.inferenceService,
-                ),
-              ),
-              icon: const Icon(Icons.add_a_photo_outlined),
-              label: const Text('Upload hive images'),
-            ),
-            const SizedBox(height: 8),
-            FilledButton.tonalIcon(
-              onPressed: () => _open(context, const ImageModelAnalysisScreen()),
-              icon: const Icon(Icons.hub_outlined),
-              label: const Text('Analyze outside and inside images'),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _MetricCard(
-                    icon: Icons.thermostat_rounded,
-                    label: 'Temperature',
-                    value: _weather == null
-                        ? (_loadingWeather ? 'Loading…' : 'Unavailable')
-                        : '${_weather!.temperatureC.toStringAsFixed(1)}°C',
-                    note: _weather == null
-                        ? 'WeatherAPI'
-                        : 'Feels like ${_weather!.feelsLikeC.toStringAsFixed(1)}°C',
-                    color: AppColors.accent3,
-                    onTap: () => _open(context, const HiveTelemetryScreen()),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _MetricCard(
-                    icon: Icons.water_drop_outlined,
-                    label: 'Humidity',
-                    value: _weather == null
-                        ? (_loadingWeather ? 'Loading…' : 'Unavailable')
-                        : '${_weather!.humidityPercent}%',
-                    note: _weather == null
-                        ? 'WeatherAPI'
-                        : 'Current outdoor humidity',
-                    color: AppColors.blue,
-                    onTap: () => _open(context, const HiveTelemetryScreen()),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _MetricCard(
-                    icon: Icons.cloud_outlined,
-                    label: 'Rainfall',
-                    value: _weather == null
-                        ? (_loadingWeather ? 'Loading…' : 'Unavailable')
-                        : '${_weather!.precipitationMm.toStringAsFixed(1)} mm',
-                    note: _weather == null
-                        ? 'WeatherAPI'
-                        : 'Current precipitation',
-                    color: AppColors.accent3,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: _MetricCard(
-                    icon: Icons.eco_outlined,
-                    label: 'Forage Diversity',
-                    value: 'Moderate',
-                    note: '6 species in 2 km',
-                    color: AppColors.accent,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _sectionTitle(
-              'Environmental Impact Analysis',
-              'Refresh',
-              _loadWeather,
-            ),
-            const SizedBox(height: 8),
-            _impactCard(),
-            const SizedBox(height: 18),
-            _sectionTitle('7-Day Weather History', 'Refresh', _loadWeather),
-            const SizedBox(height: 8),
-            _historyCard(),
-            const SizedBox(height: 14),
-            InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: () => _open(context, const ForageMapScreen()),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.accent2.withValues(alpha: .09),
-                  border: Border.all(
-                    color: AppColors.accent2.withValues(alpha: .2),
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: AppColors.accent2,
-                      size: 26,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Quick Insight',
-                            style: _style(
-                              12,
-                              FontWeight.w700,
-                              AppColors.accent2,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            'Weather conditions are from WeatherAPI. Other risk insights require local sensor data.',
-                            style: _style(
-                              13,
-                              FontWeight.w500,
-                              AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: AppColors.accent2,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            _sectionTitle(
-              'Forage & Risk Map',
-              'Open map',
-              () => _open(context, const ForageMapScreen()),
-            ),
-            const SizedBox(height: 10),
-            InkWell(
-              onTap: () => _open(context, const ForageMapScreen()),
-              borderRadius: BorderRadius.circular(20),
-              child: _MapPreview(),
-            ),
-            const SizedBox(height: 20),
-            _sectionTitle(
-              'Predictive Alerts',
-              'See all',
-              () => _open(context, const HiveTelemetryScreen()),
-            ),
-            const SizedBox(height: 10),
-            _AlertRow(
-              icon: Icons.thermostat_rounded,
-              title: _weather == null
-                  ? 'Weather data status'
-                  : 'Wind ${_weather!.windKph.toStringAsFixed(0)} km/h · UV ${_weather!.uvIndex.toStringAsFixed(1)}',
-              subtitle: _weather == null
-                  ? (_weatherError ?? 'Loading current conditions')
-                  : '${_weather!.windDirection} · ${_weather!.locationName} · ${_weather!.updatedAt}',
-              color: AppColors.accent3,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _weatherError == null
-                  ? 'Temperature, humidity and weather data via WeatherAPI. Forage and telemetry cards are illustrative.'
-                  : _weatherError!,
-              style: _style(11, FontWeight.w500, AppColors.textSecondary),
-            ),
-          ],
+          ),
         ),
       ),
     ),
   );
+
+  Widget _statusPanel(IconData icon, String title, String message) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(20),
+    decoration: _cardDecoration(),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.accent3, size: 28),
+        const SizedBox(height: 12),
+        Text(title, style: _style(15, FontWeight.w700, AppColors.textPrimary)),
+        const SizedBox(height: 8),
+        Text(
+          message,
+          style: _style(12, FontWeight.w400, AppColors.textSecondary),
+        ),
+      ],
+    ),
+  );
+
+  Widget _weatherHero() {
+    final unavailable = !_loadingWeather && _weather == null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: unavailable ? AppColors.bgElevated : AppColors.accent3,
+        borderRadius: BorderRadius.circular(24),
+        border: unavailable ? Border.all(color: AppColors.border) : null,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  unavailable
+                      ? 'WEATHER CONNECTION'
+                      : 'CURRENT OUTDOOR CONDITIONS',
+                  style: _style(
+                    11,
+                    FontWeight.w700,
+                    unavailable ? AppColors.textSecondary : AppColors.bgPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _loadingWeather
+                      ? 'Loading observations...'
+                      : unavailable
+                      ? 'Weather is temporarily unavailable'
+                      : '${_weather!.temperatureC.toStringAsFixed(1)} C',
+                  style: _style(
+                    unavailable ? 22 : 32,
+                    FontWeight.w800,
+                    unavailable ? AppColors.textPrimary : AppColors.bgPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _loadingWeather
+                      ? 'Looking up your selected location.'
+                      : unavailable
+                      ? (_weatherError ??
+                            'Check the backend connection and try again.')
+                      : '${_weather!.condition} | Updated ${_weather!.updatedAt}',
+                  style: _style(
+                    13,
+                    FontWeight.w500,
+                    unavailable ? AppColors.textSecondary : AppColors.bgPrimary,
+                  ),
+                ),
+                if (unavailable)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: OutlinedButton.icon(
+                      onPressed: () => _loadWeather(location: _locationQuery),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try again'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(
+            unavailable ? Icons.cloud_off_outlined : Icons.cloud_outlined,
+            size: 40,
+            color: unavailable ? AppColors.warning : AppColors.bgPrimary,
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _historyCard() {
     if (_loadingHistory) {
@@ -617,6 +728,16 @@ class _EnvironmentDashboardScreenState
       decoration: _cardDecoration(),
       child: Column(
         children: [
+          if (_historyAnalysis.isNotEmpty) ...[
+            Text(
+              'Observed rainfall: ${_historyAnalysis['total_precipitation_mm'] ?? 'unavailable'} mm across ${_historyAnalysis['rainfall_days_available'] ?? 0} days',
+            ),
+            Text('${_historyAnalysis['interpretation'] ?? ''}'),
+            Text(
+              '${_historyAnalysis['limitation'] ?? ''}',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
           _weatherTrend(
             'Average temperature (°C)',
             _weatherHistory.map((day) => day.averageTemperatureC).toList(),
@@ -828,6 +949,8 @@ class _EnvironmentDashboardScreenState
           _impactItem('Bee activity', impact.beeActivity),
           _impactItem('Colony growth', impact.colonyGrowth),
           _impactItem('Food availability', impact.foodAvailability),
+          _impactItem('Population', impact.population),
+          _impactItem('Development conditions', impact.developmentSuitability),
           const SizedBox(height: 8),
           Text(
             'Recommended actions',
@@ -979,141 +1102,6 @@ class _MetricCard extends StatelessWidget {
           ),
         ],
       ),
-    ),
-  );
-}
-
-class _MapPreview extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Container(
-    height: 156,
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      color: AppColors.bgElevated,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Stack(
-      children: [
-        Positioned.fill(child: CustomPaint(painter: _MapPainter())),
-        const Positioned(
-          left: 20,
-          bottom: 12,
-          child: _MapTag(text: '3 km foraging radius'),
-        ),
-        const Center(
-          child: Icon(Icons.hexagon_rounded, size: 34, color: AppColors.accent),
-        ),
-        const Positioned(
-          right: 14,
-          top: 12,
-          child: Icon(
-            Icons.warning_rounded,
-            size: 23,
-            color: AppColors.accent2,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _MapTag extends StatelessWidget {
-  final String text;
-  const _MapTag({required this.text});
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: AppColors.bgSecondary,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(
-      text,
-      style: _style(10, FontWeight.w700, AppColors.textPrimary),
-    ),
-  );
-}
-
-class _MapPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()
-      ..strokeWidth = 13
-      ..strokeCap = StrokeCap.round;
-    p.color = AppColors.badgeLeafBg;
-    canvas.drawLine(
-      Offset(-10, size.height * .72),
-      Offset(size.width * .35, size.height * .5),
-      p,
-    );
-    canvas.drawLine(
-      Offset(size.width * .35, size.height * .5),
-      Offset(size.width + 12, size.height * .35),
-      p,
-    );
-    p
-      ..color = AppColors.bgPrimary
-      ..strokeWidth = 4;
-    canvas.drawLine(
-      Offset(0, size.height * .3),
-      Offset(size.width, size.height * .75),
-      p,
-    );
-    p
-      ..color = AppColors.accent3.withValues(alpha: .45)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawCircle(
-      Offset(size.width * .5, size.height * .5),
-      size.height * .38,
-      p,
-    );
-    p
-      ..style = PaintingStyle.fill
-      ..color = AppColors.accent2;
-    canvas.drawCircle(Offset(size.width * .68, size.height * .26), 6, p);
-    canvas.drawCircle(Offset(size.width * .32, size.height * .72), 6, p);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _AlertRow extends StatelessWidget {
-  final IconData icon;
-  final String title, subtitle;
-  final Color color;
-  const _AlertRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: _cardDecoration(),
-    child: Row(
-      children: [
-        Icon(icon, color: color),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: _style(13, FontWeight.w700, AppColors.textPrimary),
-              ),
-              Text(
-                subtitle,
-                style: _style(11, FontWeight.w500, AppColors.textSecondary),
-              ),
-            ],
-          ),
-        ),
-        const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
-      ],
     ),
   );
 }

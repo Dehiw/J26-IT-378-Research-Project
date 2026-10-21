@@ -91,6 +91,8 @@ class EnvironmentalImpact {
   final Map<String, dynamic> beeActivity;
   final Map<String, dynamic> colonyGrowth;
   final Map<String, dynamic> foodAvailability;
+  final Map<String, dynamic> population;
+  final Map<String, dynamic> developmentSuitability;
   final List<String> recommendations;
   final Map<String, dynamic> dataQuality;
 
@@ -102,26 +104,31 @@ class EnvironmentalImpact {
     required this.beeActivity,
     required this.colonyGrowth,
     required this.foodAvailability,
+    this.population = const {},
+    this.developmentSuitability = const {},
     required this.recommendations,
     required this.dataQuality,
   });
 
-  factory EnvironmentalImpact.fromJson(Map<String, dynamic> json) =>
-      EnvironmentalImpact(
-        season: json['season'] as String? ?? 'Season unavailable',
-        seasonPeriod: json['season_period'] as String? ?? '',
-        regionalContext: json['regional_context'] as String? ?? '',
-        environmentalSummary: json['environmental_summary'] as String? ?? '',
-        beeActivity: json['bee_activity'] as Map<String, dynamic>? ?? const {},
-        colonyGrowth:
-            json['colony_growth'] as Map<String, dynamic>? ?? const {},
-        foodAvailability:
-            json['food_availability'] as Map<String, dynamic>? ?? const {},
-        recommendations: (json['recommendations'] as List<dynamic>? ?? const [])
-            .map((item) => item.toString())
-            .toList(growable: false),
-        dataQuality: json['data_quality'] as Map<String, dynamic>? ?? const {},
-      );
+  factory EnvironmentalImpact.fromJson(
+    Map<String, dynamic> json,
+  ) => EnvironmentalImpact(
+    season: json['season'] as String? ?? 'Season unavailable',
+    seasonPeriod: json['season_period'] as String? ?? '',
+    regionalContext: json['regional_context'] as String? ?? '',
+    environmentalSummary: json['environmental_summary'] as String? ?? '',
+    beeActivity: json['bee_activity'] as Map<String, dynamic>? ?? const {},
+    colonyGrowth: json['colony_growth'] as Map<String, dynamic>? ?? const {},
+    foodAvailability:
+        json['food_availability'] as Map<String, dynamic>? ?? const {},
+    population: json['population'] as Map<String, dynamic>? ?? const {},
+    developmentSuitability:
+        json['development_suitability'] as Map<String, dynamic>? ?? const {},
+    recommendations: (json['recommendations'] as List<dynamic>? ?? const [])
+        .map((item) => item.toString())
+        .toList(growable: false),
+    dataQuality: json['data_quality'] as Map<String, dynamic>? ?? const {},
+  );
 }
 
 class WeatherImpactResponse {
@@ -139,6 +146,12 @@ class WeatherImpactResponse {
           json['analysis'] as Map<String, dynamic>,
         ),
       );
+}
+
+class WeatherHistoryResponse {
+  final List<HistoricalWeatherDay> days;
+  final Map<String, dynamic> analysis;
+  const WeatherHistoryResponse({required this.days, required this.analysis});
 }
 
 class WeatherService {
@@ -172,6 +185,11 @@ class WeatherService {
   Future<List<HistoricalWeatherDay>> fetchHistory(
     String location, {
     int days = 7,
+  }) async => (await fetchHistoryAnalysis(location, days: days)).days;
+
+  Future<WeatherHistoryResponse> fetchHistoryAnalysis(
+    String location, {
+    int days = 7,
   }) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/environment/weather/history')
         .replace(queryParameters: {'q': location, 'days': '$days'});
@@ -183,12 +201,16 @@ class WeatherService {
       throw WeatherException(detail);
     }
     final records = payload['days'] as List<dynamic>? ?? const [];
-    return records
+    final recordsList = records
         .map(
           (record) =>
               HistoricalWeatherDay.fromJson(record as Map<String, dynamic>),
         )
         .toList(growable: false);
+    return WeatherHistoryResponse(
+      days: recordsList,
+      analysis: payload['analysis'] as Map<String, dynamic>? ?? const {},
+    );
   }
 }
 

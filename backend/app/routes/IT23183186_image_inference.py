@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from app.routes.IT23183186_environment import build_assessment
 from starlette.concurrency import run_in_threadpool
 
 from app.core.security import get_current_user_id
@@ -74,6 +75,8 @@ async def analyze_images(
     request: Request,
     outside_image: UploadFile | None = File(default=None),
     inside_image: UploadFile | None = File(default=None),
+    q: str | None = Form(default=None, min_length=2, max_length=160),
+    hive_id: str | None = Form(default=None, min_length=1, max_length=128),
     _user_id: str = Depends(get_current_user_id),
 ):
     if outside_image is None and inside_image is None:
@@ -98,4 +101,9 @@ async def analyze_images(
                 response["model_b"] = {"status": "error", "message": "Model B inference failed."}
         else:
             response["model_b"] = _unavailable(service, "model_b")
+    if q or hive_id:
+        response.update(await build_assessment(q, hive_id, _user_id, response["model_a"], response["model_b"]))
+    else:
+        from app.services.IT23183186_colony_assessment import assess_colony
+        response["assessment"] = assess_colony(model_a=response["model_a"], model_b=response["model_b"])
     return response

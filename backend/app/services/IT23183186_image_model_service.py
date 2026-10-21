@@ -15,8 +15,8 @@ from PIL import Image, UnidentifiedImageError
 
 
 ROOT = Path(__file__).resolve().parents[3]
-MODEL_A_DIR = ROOT / "backend" / "ml" / "model_a_varroa_classifier"
-MODEL_B_DIR = ROOT / "backend" / "ml" / "model_b_hive_frame_detector"
+MODEL_A_DIR = ROOT / "backend" / "models" / "IT23183186_model_a_varroa_classifier"
+MODEL_B_DIR = ROOT / "backend" / "models" / "IT23183186_model_b_hive_frame_detector"
 MODEL_A_CLASSES = ["healthy", "varroa_positive"]
 MODEL_B_CLASSES = [
     "CappedHoneyCell",

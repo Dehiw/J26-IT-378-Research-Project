@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../services/image_inference_api.dart';
+import '../services/apiary_service.dart';
+import '../widgets/IT23183186_assessment_card.dart';
 import '../utils/theme.dart';
 import '../widgets/image_source_sheet.dart';
 
 class ImageModelAnalysisScreen extends StatefulWidget {
-  const ImageModelAnalysisScreen({super.key});
+  final String? location;
+  final String? hiveId;
+  const ImageModelAnalysisScreen({super.key, this.location, this.hiveId});
 
   @override
   State<ImageModelAnalysisScreen> createState() =>
@@ -61,6 +65,11 @@ class _ImageModelAnalysisScreenState extends State<ImageModelAnalysisScreen> {
       final result = await _api.analyze(
         outsideImage: _outside,
         insideImage: _inside,
+        location:
+            widget.location ??
+            ApiaryService.instance.selectedApiary?.gpsLocation ??
+            ApiaryService.instance.selectedApiary?.locationName,
+        hiveId: widget.hiveId,
       );
       if (mounted) setState(() => _result = result);
     } on ImageInferenceException catch (error) {
@@ -87,7 +96,10 @@ class _ImageModelAnalysisScreenState extends State<ImageModelAnalysisScreen> {
             subtitle: 'Model A · healthy or Varroa-positive bee crop',
             image: _outside,
             onPick: () => _choose(true),
-            onRemove: () => setState(() => _outside = null),
+            onRemove: () => setState(() {
+              _outside = null;
+              _result = null;
+            }),
           ),
           const SizedBox(height: 12),
           _photoCard(
@@ -95,7 +107,10 @@ class _ImageModelAnalysisScreenState extends State<ImageModelAnalysisScreen> {
             subtitle: 'Model B · comb and frame structures',
             image: _inside,
             onPick: () => _choose(false),
-            onRemove: () => setState(() => _inside = null),
+            onRemove: () => setState(() {
+              _inside = null;
+              _result = null;
+            }),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -121,6 +136,12 @@ class _ImageModelAnalysisScreenState extends State<ImageModelAnalysisScreen> {
             _message(_error!, isError: true),
           ],
           if (_result != null) ...[
+            if (_result!['assessment'] != null)
+              ColonyAssessmentCard(
+                assessment: Map<String, dynamic>.from(
+                  _result!['assessment'] as Map,
+                ),
+              ),
             const SizedBox(height: 18),
             _resultCard('Outside-hive · Model A', _result!['model_a']),
             const SizedBox(height: 10),
@@ -176,14 +197,17 @@ class _ImageModelAnalysisScreenState extends State<ImageModelAnalysisScreen> {
                 ),
                 Text(subtitle, style: const TextStyle(fontSize: 12)),
                 TextButton(
-                  onPressed: onPick,
+                  onPressed: _loading ? null : onPick,
                   child: Text(image == null ? 'Choose photo' : 'Replace photo'),
                 ),
               ],
             ),
           ),
           if (image != null)
-            IconButton(onPressed: onRemove, icon: const Icon(Icons.close)),
+            IconButton(
+              onPressed: _loading ? null : onRemove,
+              icon: const Icon(Icons.close),
+            ),
         ],
       ),
     ),

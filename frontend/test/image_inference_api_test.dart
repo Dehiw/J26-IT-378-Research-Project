@@ -101,6 +101,8 @@ void main() {
         tokenOverride: 'test-token',
       );
       final result = await api.analyze(
+        location: '6.9,79.8',
+        hiveId: 'owned-hive',
         outsideImage: XFile.fromData(
           Uint8List.fromList(pngBytes),
           name: 'bee.png',
@@ -116,6 +118,10 @@ void main() {
       final body = latin1.decode((captured as http.Request).bodyBytes);
       expect(body, contains('name="outside_image"'));
       expect(body, contains('name="inside_image"'));
+      expect(body, contains('name="q"'));
+      expect(body, contains('6.9,79.8'));
+      expect(body, contains('name="hive_id"'));
+      expect(body, contains('owned-hive'));
     },
   );
 

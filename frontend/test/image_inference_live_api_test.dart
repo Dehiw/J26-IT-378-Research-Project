@@ -22,6 +22,8 @@ void main() {
 
       expect(result['model_a']['status'], 'unavailable');
       expect(result['model_b']['status'], 'unavailable');
+      expect(result['assessment']['disease_risk'], 'inconclusive');
+      expect(result['assessment']['alerts'], isEmpty);
     },
     skip: _liveToken.isEmpty
         ? 'Set HIVE_SENSE_TEST_TOKEN to run against a live local FastAPI server.'

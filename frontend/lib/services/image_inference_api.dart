@@ -15,6 +15,8 @@ class ImageInferenceApi {
   Future<Map<String, dynamic>> analyze({
     XFile? outsideImage,
     XFile? insideImage,
+    String? location,
+    String? hiveId,
   }) async {
     if (outsideImage == null && insideImage == null) {
       throw const ImageInferenceException('Choose at least one image.');
@@ -28,6 +30,10 @@ class ImageInferenceApi {
       'POST',
       Uri.parse('${ApiConfig.baseUrl}/inference/analyze'),
     )..headers['authorization'] = 'Bearer $token';
+    if (location != null && location.trim().isNotEmpty) {
+      request.fields['q'] = location.trim();
+    }
+    if (hiveId != null) request.fields['hive_id'] = hiveId;
     if (outsideImage != null) {
       request.files.add(await _imagePart('outside_image', outsideImage));
     }
