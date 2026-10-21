@@ -49,7 +49,7 @@ class IT23136274SensorTrendsScreen extends StatefulWidget {
 
 typedef SensorTrendsScreen = IT23136274SensorTrendsScreen;
 
-enum SensorType { temperature, humidity, weight, activity }
+enum SensorType { temperature, humidity, weight }
 
 enum TimeRange { h24, d7, d30 }
 
@@ -114,8 +114,6 @@ class _IT23136274SensorTrendsScreenState
         return SensorType.humidity;
       case 'weight':
         return SensorType.weight;
-      case 'activity':
-        return SensorType.activity;
       case 'temperature':
       default:
         return SensorType.temperature;
@@ -130,8 +128,6 @@ class _IT23136274SensorTrendsScreenState
         return 'Humidity';
       case SensorType.weight:
         return 'Weight';
-      case SensorType.activity:
-        return 'Activity';
     }
   }
 
@@ -202,8 +198,6 @@ class _IT23136274SensorTrendsScreenState
           valueDecimals: 3,
           minAxisSpan: 0.1,
         );
-      case SensorType.activity:
-        return _getActivityData(_selectedTimeRange);
     }
   }
 
@@ -364,117 +358,6 @@ class _IT23136274SensorTrendsScreenState
     return (min: min, max: max, step: step, decimals: decimals);
   }
 
-  // DEMO DATA: Firestore has no bee activity field yet, so the Activity tab
-  // keeps its sample values until an activity sensor is connected.
-  _SensorTrendData _getActivityData(TimeRange range) {
-    switch (range) {
-      case TimeRange.h24:
-        return const _SensorTrendData(
-          unit: 'cpm',
-          current: '320 cpm',
-          average: '279 cpm',
-          min: '25 cpm',
-          max: '680 cpm',
-          insight:
-              'Peak worker flight traffic observed between 10:00 AM and 3:30 PM with zero abnormal exit surges.',
-          minX: 0,
-          maxX: 24,
-          minY: 0,
-          maxY: 800,
-          leftInterval: 200,
-          bottomInterval: 6,
-          horizontalGridInterval: 200,
-          verticalGridInterval: 6,
-          spots: [
-            FlSpot(0, 40),
-            FlSpot(4, 25),
-            FlSpot(7, 180),
-            FlSpot(10, 520),
-            FlSpot(13, 680),
-            FlSpot(16, 610),
-            FlSpot(19, 320),
-            FlSpot(22, 90),
-            FlSpot(24, 45),
-          ],
-          bottomTitles: {
-            0: '12AM',
-            6: '6AM',
-            12: '12PM',
-            18: '6PM',
-            24: '12AM',
-          },
-        );
-      case TimeRange.d7:
-        return const _SensorTrendData(
-          unit: 'cpm',
-          current: '320 cpm',
-          average: '410 cpm',
-          min: '40 cpm',
-          max: '750 cpm',
-          insight:
-              'Daily foraging cycles show robust colony vigor with consistent morning departures and evening returns.',
-          minX: 0,
-          maxX: 6,
-          minY: 0,
-          maxY: 800,
-          leftInterval: 200,
-          bottomInterval: 1,
-          horizontalGridInterval: 200,
-          verticalGridInterval: 1,
-          spots: [
-            FlSpot(0, 390),
-            FlSpot(1, 450),
-            FlSpot(2, 420),
-            FlSpot(3, 310),
-            FlSpot(4, 580),
-            FlSpot(5, 750),
-            FlSpot(6, 320),
-          ],
-          bottomTitles: {
-            0: 'Mon',
-            1: 'Tue',
-            2: 'Wed',
-            3: 'Thu',
-            4: 'Fri',
-            5: 'Sat',
-            6: 'Sun',
-          },
-        );
-      case TimeRange.d30:
-        return const _SensorTrendData(
-          unit: 'cpm',
-          current: '320 cpm',
-          average: '395 cpm',
-          min: '30 cpm',
-          max: '820 cpm',
-          insight:
-              'Overall monthly bee activity demonstrates high brood rearing vitality and active field foraging.',
-          minX: 0,
-          maxX: 4,
-          minY: 0,
-          maxY: 800,
-          leftInterval: 200,
-          bottomInterval: 1,
-          horizontalGridInterval: 200,
-          verticalGridInterval: 1,
-          spots: [
-            FlSpot(0, 340),
-            FlSpot(1, 410),
-            FlSpot(2, 480),
-            FlSpot(3, 440),
-            FlSpot(4, 320),
-          ],
-          bottomTitles: {
-            0: 'W1',
-            1: 'W2',
-            2: 'W3',
-            3: 'W4',
-            4: 'W5',
-          },
-        );
-    }
-  }
-
   // ── Build Method ──────────────────────────────────────────────────────
 
   @override
@@ -562,8 +445,6 @@ class _IT23136274SensorTrendsScreenState
           _buildSensorPill(SensorType.humidity, 'Humidity'),
           const SizedBox(width: 8),
           _buildSensorPill(SensorType.weight, 'Weight'),
-          const SizedBox(width: 8),
-          _buildSensorPill(SensorType.activity, 'Activity'),
         ],
       ),
     );

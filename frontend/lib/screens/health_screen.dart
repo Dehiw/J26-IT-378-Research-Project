@@ -374,7 +374,6 @@ class _HealthScreenState extends State<HealthScreen> {
           hiveId: item.id,
           hiveName: item.name,
           apiaryName: _selectedApiary?.locationName ?? 'Yakkala Apiary',
-          status: item.status,
           boxNumber: item.boxNumber,
           numFrames: item.numFrames,
           inferenceService: widget.inferenceService,

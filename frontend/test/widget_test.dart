@@ -48,18 +48,20 @@ void main() {
     expect(find.text('Min'), findsOneWidget);
     expect(find.text('Max'), findsOneWidget);
     expect(find.text('Insights'), findsOneWidget);
+
+    // Dispose the screen so the sensor streams cancel their connections.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets(
-    'IT23136274 AI Health Assessment screen renders status, indicators & summary',
+    'IT23136274 AI Health Assessment screen shows the sensor anomaly card without fake status or confidence',
     (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: IT23136274AiHealthAssessmentScreen(
             hiveName: 'Hive 01',
             apiaryName: 'Yakkala Apiary',
-            initialStatus: 'Early Stress',
-            confidence: 0.87,
           ),
         ),
       );
@@ -69,42 +71,29 @@ void main() {
       expect(find.text('AI Health Assessment'), findsOneWidget);
       expect(find.text('Hive 01 • Yakkala Apiary'), findsOneWidget);
 
-      // Verify colony status card
-      expect(find.text('Colony Health Status'), findsOneWidget);
-      expect(find.text('Early Stress'), findsOneWidget);
-      expect(find.text('Confidence: 87%'), findsOneWidget);
+      // Sensor anomaly card replaces the hardcoded status and confidence
+      expect(find.text('Sensor Anomaly Status'), findsOneWidget);
+      expect(find.textContaining('does not confirm colony health'), findsOneWidget);
+      expect(find.textContaining('Confidence'), findsNothing);
+      expect(find.text('Early Stress'), findsNothing);
+      expect(find.text('Healthy Colony'), findsNothing);
 
-      // Verify detected indicators
+      // Remaining sections still render
       expect(find.text('Detected Indicators'), findsOneWidget);
-      expect(find.text('Hive weight is decreasing'), findsOneWidget);
-      expect(find.text('Bee activity lower than normal'), findsOneWidget);
-      expect(find.text('Humidity higher than usual'), findsOneWidget);
-
-      // Verify recommendation
       expect(find.text('Recommendation'), findsOneWidget);
-      expect(
-        find.text(
-          'Inspect the colony and continue monitoring for the next 24 hours.',
-        ),
-        findsOneWidget,
-      );
-      // Verify sensor summary
       expect(find.text('Sensor Summary'), findsOneWidget);
       expect(find.text('Temperature'), findsOneWidget);
-      expect(find.text('31.2 °C'), findsOneWidget);
-      expect(find.text('Normal'), findsOneWidget);
       expect(find.text('Humidity'), findsOneWidget);
-      expect(find.text('75 %'), findsOneWidget);
-      expect(find.text('High'), findsOneWidget);
       expect(find.text('Hive Weight'), findsOneWidget);
-      expect(find.text('12.4 kg'), findsOneWidget);
-      expect(find.text('Decreasing'), findsOneWidget);
-      expect(find.text('Bee Activity'), findsOneWidget);
-      expect(find.text('18/min'), findsOneWidget);
-      expect(find.text('Low'), findsOneWidget);
 
-      // Verify trends action button
-      expect(find.text('View Detailed Sensor Trends'), findsOneWidget);
+      // Bee activity has no sensor yet, so no demo value is shown
+      expect(find.text('Bee Activity'), findsOneWidget);
+      expect(find.text('Not connected'), findsOneWidget);
+      expect(find.text('18/min'), findsNothing);
+
+      // Dispose the screen so the sensor streams cancel their connections.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
     },
   );
 
@@ -148,6 +137,10 @@ void main() {
 
       expect(find.text('Recent Event Logs'), findsOneWidget);
       expect(find.text('Microclimate Stabilization'), findsOneWidget);
+
+      // Dispose the screen so the sensor streams cancel their connections.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
     },
   );
 }
