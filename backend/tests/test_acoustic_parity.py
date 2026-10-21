@@ -1,4 +1,4 @@
-"""Parity of the backend acoustic code with ml/acoustic.
+"""Parity of the backend acoustic code with models/IT23139930_Model/acoustic.
 
 Run from backend/:  venv\\Scripts\\python.exe -m pytest tests -v -s
 Tests that need the ONNX model or the dataset skip when those are missing.
@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 BACKEND = Path(__file__).resolve().parents[1]
-ML_DIR = BACKEND.parent / "ml" / "acoustic"
+ML_DIR = BACKEND / "models" / "IT23139930_Model" / "acoustic"
 sys.path.insert(0, str(BACKEND))
 
 pytest.importorskip("librosa")
@@ -28,7 +28,7 @@ needs_model = pytest.mark.skipif(not MODEL.is_file(), reason="ONNX model not pre
 
 @pytest.fixture(scope="module")
 def ml():
-    """ml/acoustic modules (features, predict, config), imported from the ml folder."""
+    """Model-folder modules (features, predict, config), imported from ML_DIR."""
     sys.path.insert(0, str(ML_DIR))
     try:
         import config, features, predict  # noqa: E401

@@ -1,8 +1,8 @@
 """Acoustic queen-status analysis: WAV bytes -> label, confidence, per-clip probabilities.
 
 The feature code (`_features_from_signal`) is a copy of
-ml/acoustic/features.py (features_from_signal) with the constants from
-ml/acoustic/config.py inlined. It must not change behaviour: the model was
+backend/models/IT23139930_Model/acoustic/features.py (features_from_signal)
+with the constants from its config.py inlined. It must not change behaviour: the model was
 trained on those exact 168 numbers. backend/tests/test_acoustic_parity.py
 checks the copy against the original.
 
@@ -20,7 +20,7 @@ import numpy as np
 
 logger = logging.getLogger("acoustic")
 
-# ---- Settings (same values as ml/acoustic/config.py) -----------------------
+# ---- Settings (same values as IT23139930_Model/acoustic/config.py) -----------------------
 SAMPLE_RATE = 8_000
 N_FFT = 512
 HOP_LENGTH = 128
@@ -36,8 +36,11 @@ CAVEAT = (
     "(about 51% in leave-one-hive-out tests) and phone recordings are untested."
 )
 
-# Repo root = backend/app/services/acoustic_service.py -> parents[3]
-_DEFAULT_MODEL = Path(__file__).resolve().parents[3] / "ml" / "acoustic" / "models" / "queen_baseline.onnx"
+# backend/app/services/acoustic_service.py -> parents[2] is backend/
+_DEFAULT_MODEL = (
+    Path(__file__).resolve().parents[2]
+    / "models" / "IT23139930_Model" / "acoustic" / "models" / "queen_baseline.onnx"
+)
 
 # Audio quality thresholds. Silence and quiet use the app's dBFS numbers.
 # Clipping differs from the app's -1 dBFS rule: the dataset clips are float
@@ -106,7 +109,7 @@ def model_info() -> dict:
     }
 
 
-# ---- Features: copy of ml/acoustic/features.py ------------------------------
+# ---- Features: copy of IT23139930_Model/acoustic/features.py ------------------------------
 def _features_from_signal(samples: np.ndarray, sr: int) -> np.ndarray:
     import librosa
 
@@ -130,7 +133,7 @@ def _features_from_signal(samples: np.ndarray, sr: int) -> np.ndarray:
 
 
 def _split_windows(samples: np.ndarray, sr: int) -> list[np.ndarray]:
-    """Same rule as ml/acoustic/predict.py: 2 s windows, a last partial
+    """Same rule as IT23139930_Model/acoustic/predict.py: 2 s windows, a last partial
     window only if it is at least half a window."""
     size = int(round(CLIP_SECONDS * sr))
     if len(samples) <= size:
