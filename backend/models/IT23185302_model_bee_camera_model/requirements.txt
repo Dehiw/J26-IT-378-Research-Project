@@ -1,0 +1,12 @@
+
+# IT23185302 - Bee Detection Model
+# Python 3.13
+
+ultralytics==8.4.183
+torch==2.14.1
+torchvision==0.29.1
+opencv-python==5.0.0.93
+PyYAML
+numpy
+matplotlib
+Pillow
