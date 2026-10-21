@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from app.routes.IT23183186_environment import build_assessment
 from starlette.concurrency import run_in_threadpool
@@ -36,6 +39,15 @@ def _unavailable(service: ImageModelService, key: str) -> dict:
 def model_status(request: Request, _user_id: str = Depends(get_current_user_id)):
     service = _service(request)
     return {"model_a": service.status["model_a"], "model_b": service.status["model_b"]}
+
+
+@router.get("/reports/{model_key}")
+def reports(model_key: str, request: Request, _user_id: str = Depends(get_current_user_id)):
+    if model_key not in ("model_a", "model_b"):
+        raise HTTPException(404, "Unknown model.")
+    from app.services.IT23183186_model_reports import model_report
+    loaded = getattr(_service(request), "models", {}).get(model_key, {})
+    return model_report(model_key, loaded.get("checkpoint"))
 
 
 @router.post("/outside-hive")
@@ -76,11 +88,18 @@ async def analyze_images(
     outside_image: UploadFile | None = File(default=None),
     inside_image: UploadFile | None = File(default=None),
     q: str | None = Form(default=None, min_length=2, max_length=160),
-    hive_id: str | None = Form(default=None, min_length=1, max_length=128),
+    hive_id: str | None = Form(default=None, min_length=1, max_length=128, pattern=r"^[^/]+$"),
+    save_result: bool = Form(default=False),
     _user_id: str = Depends(get_current_user_id),
 ):
+    if save_result and not hive_id:
+        raise HTTPException(422, "Select a hive before saving image findings.")
     if outside_image is None and inside_image is None:
         raise HTTPException(status_code=422, detail="Upload an outside-hive image, an inside-hive image, or both.")
+    if hive_id:
+        from app.services import IT23183186_environment_history as history
+        saved_location = await run_in_threadpool(history.hive_location, hive_id, _user_id)
+        q = q or saved_location
     service = _service(request)
     outside = await _read_image(outside_image)
     inside = await _read_image(inside_image)
@@ -101,9 +120,25 @@ async def analyze_images(
                 response["model_b"] = {"status": "error", "message": "Model B inference failed."}
         else:
             response["model_b"] = _unavailable(service, "model_b")
+    for key, decoded in (("model_a", outside), ("model_b", inside)):
+        if decoded is not None and response[key] is not None:
+            response[key]["image_identifier"] = str(uuid4())
+            response[key]["image_dimensions"] = list(decoded.size)
+            if response[key].get("status") == "complete":
+                response[key]["inference_timestamp"] = datetime.now(timezone.utc).isoformat()
     if q or hive_id:
         response.update(await build_assessment(q, hive_id, _user_id, response["model_a"], response["model_b"]))
     else:
         from app.services.IT23183186_colony_assessment import assess_colony
         response["assessment"] = assess_colony(model_a=response["model_a"], model_b=response["model_b"])
+    if save_result:
+        try:
+            from app.services import IT23183186_environment_history as history
+            snapshot = {**response, "record_type": "image_assessment",
+                "image_inputs": {"individual_bee": outside is not None, "hive_frame": inside is not None},
+                "image_storage": "Analysis only; original photos are not retained."}
+            saved = await run_in_threadpool(history.save_snapshot, hive_id, _user_id, q, snapshot, "image_assessment_location")
+            response["saved_record_id"] = saved["id"]
+        except Exception:
+            response["save_error"] = "Analysis completed, but its history record could not be saved."
     return response

@@ -70,7 +70,7 @@ class ImageModelService:
         path = Path(os.getenv("HIVESENSE_MODEL_A_CHECKPOINT", str(MODEL_A_DIR / "artifacts" / "IT23183186_ModelA_MobileNetV2.pt")))
         metadata_paths = [path.parent / name for name in ("training_config.json", "preprocessing.json", "class_map.json")]
         if not path.is_file() or not all(item.is_file() for item in metadata_paths):
-            self.status["model_a"] = {"available": False, "message": "Model A training is incomplete; a checkpoint with its training metadata is required."}
+            self.status["model_a"] = {"available": False, "message": "Model A checkpoint or metadata was not found at the configured location. Set HIVESENSE_MODEL_A_CHECKPOINT to the trained checkpoint and restart the backend."}
             return
         try:
             import json
@@ -98,6 +98,7 @@ class ImageModelService:
                 "std": tuple(preset.std),
                 "threshold": float(checkpoint["best_validation"]["threshold"]),
                 "version": "IT23183186_ModelA_MobileNetV2",
+                "checkpoint": str(path.resolve()),
             }
             self.status["model_a"] = {"available": True, "message": "Model A is ready."}
         except Exception:
@@ -116,7 +117,7 @@ class ImageModelService:
             ordered = [names[i] if isinstance(names, dict) else names[i] for i in range(len(MODEL_B_CLASSES))]
             if ordered != MODEL_B_CLASSES:
                 raise ValueError("Model B checkpoint classes do not match the verified FAIRHiveFrames classes.")
-            self.models["model_b"] = {"model": model, "version": "IT23183186_ModelB_YOLO11n"}
+            self.models["model_b"] = {"model": model, "version": "IT23183186_ModelB_YOLO11n", "checkpoint": str(path.resolve())}
             self.status["model_b"] = {"available": True, "message": "Model B is ready."}
         except Exception:
             self.status["model_b"] = {"available": False, "message": "Model B could not be loaded. Check its checkpoint and inference dependencies."}
