@@ -26,7 +26,7 @@ The dataset is read-only and is never copied into the repo. Audio is read from
 
 ## Setup
 
-Requires Python 3.13 on Windows. The code lives in `J26-IT-378-Research-Project/ml/acoustic`.
+Requires Python 3.13 on Windows. The code lives in `J26-IT-378-Research-Project/backend/models/IT23139930_Model/acoustic`.
 Run everything from that folder:
 
 ```powershell
@@ -249,7 +249,7 @@ upload one of the test clips or record a sound.
 
 ### Running on another laptop
 
-1. Copy `queen_baseline.onnx` into `ml/acoustic/models/` (it is not in git), or
+1. Copy `queen_baseline.onnx` into `backend/models/IT23139930_Model/acoustic/models/` (it is not in git), or
    set `ACOUSTIC_MODEL_PATH` to where the file is.
 2. Install the packages into the backend venv:
 
