@@ -27,6 +27,7 @@ httpcore==1.0.9
 httpx==0.28.1
 hyperframe==6.1.0
 idna==3.20
+joblib==1.6.0
 msgpack==1.2.3
 numpy==2.5.3
 Pillow==11.3.0
@@ -44,7 +45,11 @@ PyJWT==2.15.1
 python-dotenv==1.2.4
 python-multipart==0.0.20
 requests==2.34.2
+# IT23136274 colony sensor anomaly model was saved with scikit-learn 1.9.1; keep this exact version.
+scikit-learn==1.9.1
+scipy==1.18.1
 starlette==1.7.0
+threadpoolctl==3.7.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 urllib3==2.8.0

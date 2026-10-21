@@ -5,3 +5,5 @@ venv/
 .env
 firebase-service-account.json
 *.log
+
+/backend/models/IT23136274_colony_health_ml/

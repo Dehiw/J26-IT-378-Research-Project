@@ -5,24 +5,25 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/sensor_reading_model.dart';
 import '../services/inference_service.dart';
+import '../services/it23136274_colony_health_service.dart';
 import '../services/sensor_reading_service.dart';
 import '../utils/sensor_analytics.dart';
 import '../utils/theme.dart';
 import 'it23136274_ai_health_assessment_screen.dart';
 import 'it23136274_alerts_history_screen.dart';
 import 'it23136274_sensor_trends_screen.dart';
+import '../widgets/it23136274_sensor_anomaly_card.dart';
 import 'scanner_screen.dart';
 import 'IT23185302_relocation_assessment_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
 
 /// Hive Health Dashboard Screen (Live Monitoring)
-/// Displays overall colony health banner, live ESP32 sensor telemetry
-/// (Temperature, Humidity, Hive Weight), and detailed trends.
+/// Displays the experimental sensor anomaly check (Isolation Forest V2),
+/// live ESP32 sensor telemetry (Temperature, Humidity, Hive Weight), and detailed trends.
 class HiveHealthDashboardScreen extends StatefulWidget {
   final String hiveId;
   final String hiveName;
   final String apiaryName;
-  final String status;
   final int boxNumber;
   final int numFrames;
   final InferenceService? inferenceService;
@@ -32,7 +33,6 @@ class HiveHealthDashboardScreen extends StatefulWidget {
     this.hiveId = 'hive-01',
     this.hiveName = 'Hive 01',
     this.apiaryName = 'Yakkala Apiary',
-    this.status = 'Healthy',
     this.boxNumber = 1,
     this.numFrames = 10,
     this.inferenceService,
@@ -45,20 +45,19 @@ class HiveHealthDashboardScreen extends StatefulWidget {
 class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
   static const int _tabIndex = 1; // Health tab
 
-  bool get _isHealthy => widget.status.toLowerCase() == 'healthy';
-
   SensorReading? _reading;
   bool _sensorLoading = true;
   String? _sensorError;
   StreamSubscription<SensorReading?>? _readingSub;
+  late final SensorAnomalyController _anomaly;
 
   @override
   void initState() {
     super.initState();
+    final sensorHiveId = SensorReadingService.resolveSensorHiveId(widget.hiveId);
+    _anomaly = SensorAnomalyController(sensorHiveId);
     // Live Firestore updates pushed through the backend; no polling needed.
-    _readingSub = SensorReadingService.instance
-        .streamLatestReading(SensorReadingService.resolveSensorHiveId(widget.hiveId))
-        .listen(
+    _readingSub = SensorReadingService.instance.streamLatestReading(sensorHiveId).listen(
       (reading) {
         if (!mounted) return;
         setState(() {
@@ -66,6 +65,8 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
           _sensorError = null;
           _sensorLoading = false;
         });
+        // Re-runs the anomaly model only when a new reading arrives.
+        _anomaly.onReading(reading);
       },
       onError: (Object e) {
         if (!mounted) return;
@@ -80,6 +81,7 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
   @override
   void dispose() {
     _readingSub?.cancel();
+    _anomaly.dispose();
     super.dispose();
   }
 
@@ -258,8 +260,6 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
           hiveId: widget.hiveId,
           hiveName: widget.hiveName,
           apiaryName: widget.apiaryName,
-          initialStatus: widget.status == 'Healthy' ? 'Healthy Colony' : 'Early Stress',
-          confidence: widget.status == 'Healthy' ? 0.94 : 0.87,
           inferenceService: widget.inferenceService,
         ),
       ),
@@ -336,8 +336,8 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 12),
-              // 1. Overall Colony Health Card
-              _buildOverallHealthCard()
+              // 1. Sensor Anomaly Check Card (experimental Isolation Forest V2)
+              _buildSensorAnomalyCard()
                   .animate()
                   .fadeIn(duration: 400.ms)
                   .slideY(begin: 0.05, end: 0),
@@ -373,151 +373,14 @@ class _HiveHealthDashboardScreenState extends State<HiveHealthDashboardScreen> {
     );
   }
 
-  // ── Overall Colony Health Card ────────────────────────────────────
-  Widget _buildOverallHealthCard() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _showAiHealthAssessment,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-          decoration: BoxDecoration(
-            color: AppColors.lightGreenCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border, width: 1.0),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.textPrimary.withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Overall Colony Health',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'AI Assessment',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.accent2,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: AppColors.accent2,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Health Status Pill Badge
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(6, 6, 18, 6),
-                    decoration: BoxDecoration(
-                      color: _isHealthy ? AppColors.success : AppColors.warning,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: (_isHealthy ? AppColors.success : AppColors.warning)
-                              .withValues(alpha: 0.25),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Circular check / arrow icon inside pill
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.bgSecondary.withValues(alpha: 0.25),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_downward_rounded,
-                            color: AppColors.bgSecondary,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          widget.status,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.bgSecondary,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Leaf Badge inside circular disc
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.bgSecondary.withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.textPrimary.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.spa_rounded,
-                        color: AppColors.success,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Text(
-                _isHealthy
-                    ? 'Conditions are within normal range. Tap to view AI assessment.'
-                    : 'Attention needed: tap to view detected indicators & advice.',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
+  // ── Sensor Anomaly Check Card ─────────────────────────────────────
+  Widget _buildSensorAnomalyCard() {
+    return ListenableBuilder(
+      listenable: _anomaly,
+      builder: (context, _) => IT23136274SensorAnomalyCard(
+        controller: _anomaly,
+        title: 'Sensor Anomaly Check',
+        onOpenDetails: _showAiHealthAssessment,
       ),
     );
   }
