@@ -1,0 +1,9 @@
+# These are test suites grouped under screens at the project owner's request.
+include: ../../../../../analysis_options.yaml
+analyzer:
+  errors:
+    invalid_use_of_visible_for_testing_member: ignore
+linter:
+  rules:
+    depend_on_referenced_packages: false
+    file_names: false

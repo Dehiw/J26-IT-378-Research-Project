@@ -1,0 +1,58 @@
+{
+  "accuracy": 0.7749413145539906,
+  "checkpoint": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\artifacts\\IT23183186_ModelA_20261021_203515\\IT23183186_ModelA_MobileNetV2.pt",
+  "confusion_matrix": [
+    [
+      2349,
+      117
+    ],
+    [
+      650,
+      292
+    ]
+  ],
+  "confusion_matrix_labels_order": [
+    "healthy",
+    "varroa_positive"
+  ],
+  "dataset": "official VarroaDataset test split",
+  "device": "cpu",
+  "evaluation_date": "2026-10-21T20:03:46.077262+00:00",
+  "interpretation_limit": "Evaluation is on controlled individual-bee crops from VarroaDataset; it does not establish performance on whole-hive photographs or Sri Lankan field images.",
+  "per_class": {
+    "accuracy": 0.7749413145539906,
+    "healthy": {
+      "f1-score": 0.8596523330283623,
+      "precision": 0.7832610870290097,
+      "recall": 0.9525547445255474,
+      "support": 2466.0
+    },
+    "macro avg": {
+      "f1-score": 0.6459623619249879,
+      "precision": 0.7485987586734291,
+      "recall": 0.6312667565515211,
+      "support": 3408.0
+    },
+    "varroa_positive": {
+      "f1-score": 0.4322723908216136,
+      "precision": 0.7139364303178484,
+      "recall": 0.3099787685774947,
+      "support": 942.0
+    },
+    "weighted avg": {
+      "f1-score": 0.7415209053409335,
+      "precision": 0.7640991660718752,
+      "recall": 0.7749413145539906,
+      "support": 3408.0
+    }
+  },
+  "roc_auc": 0.8040897608752925,
+  "split": "test",
+  "test_count": 3408,
+  "test_manifest": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\DATAESET\\VarroaDataset_prepared\\IT23183186_ModelA_20261020_170719\\manifests\\test.csv",
+  "test_set_used_for_model_selection": false,
+  "threshold_selected_on_validation": 0.605,
+  "torch_version": "2.7.1+cpu",
+  "torchvision_version": "0.22.1+cpu",
+  "varroa_positive_recall": 0.3099787685774947
+}

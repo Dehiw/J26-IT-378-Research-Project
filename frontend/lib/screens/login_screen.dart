@@ -96,7 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
     AuthService.instance.continueAsGuest();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => HomeScreen(inferenceService: widget.inferenceService),
+        builder: (_) =>
+            NormalUserHomeScreen(inferenceService: widget.inferenceService),
       ),
     );
   }

@@ -1,0 +1,29 @@
+{
+  "pid": 27980,
+  "run_id": "IT23183186_ModelA_20261021_203515",
+  "log": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\reports\\IT23183186_ModelA_20261021_203515\\train.log",
+  "output": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\artifacts\\IT23183186_ModelA_20261021_203515",
+  "arguments": [
+    "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\.venv\\Scripts\\python.exe",
+    "-u",
+    "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\train.py",
+    "--prepared-dir",
+    "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\DATAESET\\VarroaDataset_prepared\\IT23183186_ModelA_20261020_170719",
+    "--output-dir",
+    "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\artifacts\\IT23183186_ModelA_20261021_203515",
+    "--seed",
+    "2026",
+    "--batch-size",
+    "32",
+    "--head-epochs",
+    "5",
+    "--finetune-epochs",
+    "8",
+    "--patience",
+    "3",
+    "--workers",
+    "0",
+    "--cpu-threads",
+    "8"
+  ]
+}

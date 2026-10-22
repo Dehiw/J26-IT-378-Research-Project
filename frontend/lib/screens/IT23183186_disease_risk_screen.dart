@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../services/environment_catalog.dart';
+import '../services/environment_fallback.dart';
+import '../widgets/environment_source.dart';
+
 import '../models/apiary_model.dart';
 import '../services/apiary_service.dart';
 import '../services/inference_service.dart';
@@ -12,11 +16,15 @@ class DiseaseRiskScreen extends StatefulWidget {
   final PredictionResult? predictionResult;
   final InferenceService? inferenceService;
   final String? location;
+  final String? hiveId;
+  final ColonyAssessmentApi assessmentApi;
   const DiseaseRiskScreen({
     super.key,
     this.predictionResult,
     this.inferenceService,
     this.location,
+    this.hiveId,
+    this.assessmentApi = const ColonyAssessmentApi(),
   });
   @override
   State<DiseaseRiskScreen> createState() => _DiseaseRiskScreenState();
@@ -39,15 +47,20 @@ class _DiseaseRiskScreenState extends State<DiseaseRiskScreen> {
       text:
           widget.location ?? apiary?.gpsLocation ?? apiary?.locationName ?? '',
     );
+    _hiveId = widget.hiveId;
     _loadHives();
     _refresh();
   }
 
   Future<void> _loadHives() async {
     final apiary = ApiaryService.instance.selectedApiary;
-    if (apiary == null) return;
+    final apiaryId = isDemoId(widget.hiveId) ? 'demo-apiary-kandy' : apiary?.id;
+    if (apiaryId == null) return;
     try {
-      final hives = await ApiaryService.instance.fetchHives(apiary.id);
+      final hives = await EnvironmentCatalog.hives(
+        ApiaryService.instance,
+        apiaryId,
+      );
       if (mounted) setState(() => _hives = hives);
     } catch (_) {
       if (mounted) {
@@ -66,7 +79,7 @@ class _DiseaseRiskScreenState extends State<DiseaseRiskScreen> {
       _snapshot = null;
     });
     try {
-      final snapshot = await const ColonyAssessmentApi().fetch(
+      final snapshot = await widget.assessmentApi.fetch(
         location: _location.text,
         hiveId: _hiveId,
       );
@@ -85,7 +98,17 @@ class _DiseaseRiskScreenState extends State<DiseaseRiskScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => EnvironmentRecovery(
+    needed: () =>
+        _snapshot != null &&
+        (dataSource(_snapshot) != 'live' ||
+            dataSource(_snapshot!['sensor'] as Map?) != 'live' ||
+            dataSource(_snapshot!['weather'] as Map?) != 'live'),
+    onRetry: _refresh,
+    child: _buildPage(context),
+  );
+
+  Widget _buildPage(BuildContext context) {
     final environment = _snapshot?['environment'] as Map?;
     final sensor = _snapshot?['sensor'] as Map?;
     return Scaffold(
@@ -109,7 +132,10 @@ class _DiseaseRiskScreenState extends State<DiseaseRiskScreen> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            initialValue: _hiveId,
+            key: ValueKey('$_hiveId:${_hives.length}'),
+            initialValue: _hives.any((hive) => hive.id == _hiveId)
+                ? _hiveId
+                : null,
             decoration: const InputDecoration(
               labelText: 'Hive for sensor readings (optional)',
             ),
@@ -154,6 +180,7 @@ class _DiseaseRiskScreenState extends State<DiseaseRiskScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      SourceDot(source: dataSource(environment)),
                       Text(
                         '${environment['season']} ? ${environment['season_period']}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -176,6 +203,9 @@ class _DiseaseRiskScreenState extends State<DiseaseRiskScreen> {
                   ),
                 ),
               ),
+            SourceDot(
+              source: sensor == null ? 'unavailable' : dataSource(sensor),
+            ),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),

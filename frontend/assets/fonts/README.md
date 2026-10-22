@@ -1,0 +1,1 @@
+Inter fonts from https://github.com/google/fonts/tree/main/ofl/inter, under the bundled SIL Open Font License. Static weights generated from the official variable font with fontTools for offline GoogleFonts.inter rendering.

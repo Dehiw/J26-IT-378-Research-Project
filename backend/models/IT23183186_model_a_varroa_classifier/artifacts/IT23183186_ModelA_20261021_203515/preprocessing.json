@@ -1,0 +1,36 @@
+{
+  "architecture": "torchvision.models.mobilenet_v2",
+  "classes": [
+    "healthy",
+    "varroa_positive"
+  ],
+  "evaluation_transform": "RGB; aspect-preserving bilinear fit to 224x224; padding filled with weight mean; ToTensor; exact ImageNet mean/std from MobileNet_V2_Weights.IMAGENET1K_V1",
+  "imagenet_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "imagenet_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "input_shape": [
+    3,
+    224,
+    224
+  ],
+  "letterbox_padding_rgb": [
+    124,
+    116,
+    104
+  ],
+  "pretrained_weight_interpolation": "InterpolationMode.BILINEAR",
+  "pretrained_weights": "MobileNet_V2_Weights.IMAGENET1K_V1",
+  "threshold_selected_using_validation_only": 0.605,
+  "training_only_augmentation": [
+    "RandomHorizontalFlip(p=0.5)",
+    "RandomRotation(5 degrees)",
+    "ColorJitter(brightness=0.10, contrast=0.10, saturation=0.05, hue=0.02)"
+  ]
+}

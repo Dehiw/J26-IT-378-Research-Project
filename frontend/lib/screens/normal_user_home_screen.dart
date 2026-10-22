@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -39,7 +40,7 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
   @override
   void initState() {
     super.initState();
-    if (!AuthService.instance.isLoggedIn) {
+    if (!AuthService.instance.isLoggedIn && !AuthService.instance.isGuest) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
@@ -73,6 +74,10 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
   }
 
   Future<void> _loadStats() async {
+    if (AuthService.instance.isGuest) {
+      setState(() => _loadingStats = false);
+      return;
+    }
     setState(() => _loadingStats = true);
     try {
       final reports = await WildBeeService.instance.fetchMyReports();
@@ -94,8 +99,10 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
         });
       }
     } catch (e) {
-      developer.log('Normal user stats load error: $e',
-          name: 'NormalUserHomeScreen');
+      developer.log(
+        'Normal user stats load error: $e',
+        name: 'NormalUserHomeScreen',
+      );
       if (mounted) setState(() => _loadingStats = false);
     }
   }
@@ -114,9 +121,7 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
 
     if (index == 2) {
       Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const MyRequestsScreenIT23185302(),
-        ),
+        MaterialPageRoute(builder: (_) => const MyRequestsScreenIT23185302()),
       );
       return;
     }
@@ -185,8 +190,11 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
                       color: AppColors.warning.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.shield_outlined,
-                        color: AppColors.warning, size: 22),
+                    child: const Icon(
+                      Icons.shield_outlined,
+                      color: AppColors.warning,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -204,32 +212,28 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
                 icon: Icons.pan_tool_outlined,
                 color: AppColors.warning,
                 title: 'Do not disturb or throw objects',
-                subtitle:
-                    'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance and avoid sudden movements.',
+                subtitle: 'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance and avoid sudden movements.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.do_not_touch_outlined,
                 color: AppColors.error,
                 title: 'Never use toxic insecticide sprays',
-                subtitle:
-                    'Chemical sprays contaminate the environment, kill crucial pollinators, and make ethical hive relocation impossible.',
+                subtitle: 'Chemical sprays contaminate the environment, kill crucial pollinators, and make ethical hive relocation impossible.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.pets_outlined,
                 color: AppColors.info,
                 title: 'Keep pets and young children indoors',
-                subtitle:
-                    'Pets and children can unwittingly stumble into the colony flight line. Keep them safe inside until a beekeeper arrives.',
+                subtitle: 'Pets and children can unwittingly stumble into the colony flight line. Keep them safe inside until a beekeeper arrives.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.support_agent_rounded,
                 color: AppColors.success,
                 title: 'Request ethical relocation early',
-                subtitle:
-                    'Promptly report the colony so our verified beekeepers can inspect, plan, and relocate the bees safely without harm.',
+                subtitle: 'Promptly report the colony so our verified beekeepers can inspect, plan, and relocate the bees safely without harm.',
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -453,9 +457,11 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
     final greeting = hour < 12
         ? 'Good Morning'
         : hour < 17
-            ? 'Good Afternoon'
-            : 'Good Evening';
-    final name = user?.name.split(' ').first ?? 'User';
+        ? 'Good Afternoon'
+        : 'Good Evening';
+    final name =
+        user?.name.split(' ').first ??
+        (AuthService.instance.isGuest ? 'Guest' : 'User');
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -487,10 +493,7 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
           decoration: BoxDecoration(
             color: AppColors.badgeLeafBg,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppColors.badgeLeafFg,
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.badgeLeafFg, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -625,7 +628,9 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
           child: _StatCard(
             icon: Icons.assignment_outlined,
             label: 'My Reports',
-            value: _loadingStats ? '...' : '$_myReportCount',
+            value: AuthService.instance.isGuest
+                ? '--'
+                : (_loadingStats ? '...' : '$_myReportCount'),
             color: AppColors.hiveLow,
             bg: AppColors.badgeBeeBg,
             onTap: () {
@@ -642,14 +647,15 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
           child: _StatCard(
             icon: Icons.verified_user_outlined,
             label: 'Beekeepers',
-            value: _loadingStats ? '...' : '$_activeBeekeeperCount',
+            value: AuthService.instance.isGuest
+                ? '--'
+                : (_loadingStats ? '...' : '$_activeBeekeeperCount'),
             color: AppColors.success,
             bg: AppColors.badgeLeafBg,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) =>
-                      const BeekeepersDirectoryScreenIT23185302(),
+                  builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
                 ),
               );
             },
@@ -660,7 +666,9 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
           child: _StatCard(
             icon: Icons.eco_outlined,
             label: 'Relocated',
-            value: _loadingStats ? '...' : '$_completedCount',
+            value: AuthService.instance.isGuest
+                ? '--'
+                : (_loadingStats ? '...' : '$_completedCount'),
             color: AppColors.accent3,
             bg: AppColors.badgeLeafBg,
             onTap: () {
@@ -681,7 +689,8 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
 
     final latest = _myReports.first;
     final status = (latest['status'] ?? 'Submitted').toString();
-    final location = (latest['location_address'] ?? 'Reported Location').toString();
+    final location = (latest['location_address'] ?? 'Reported Location')
+        .toString();
     final beekeeperName = (latest['beekeeper_name'] ?? '').toString();
 
     return Container(
@@ -835,8 +844,7 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) =>
-                      const BeekeepersDirectoryScreenIT23185302(),
+                  builder: (_) => const BeekeepersDirectoryScreenIT23185302(),
                 ),
               );
             },
@@ -896,24 +904,21 @@ class _NormalUserHomeScreenState extends State<NormalUserHomeScreen>
                 icon: Icons.pan_tool_outlined,
                 color: AppColors.warning,
                 title: 'Do not disturb or throw objects',
-                subtitle:
-                    'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance.',
+                subtitle: 'Wild bees are naturally defensive of their nest. Maintain at least 5 meters distance.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.do_not_touch_outlined,
                 color: AppColors.error,
                 title: 'Avoid chemical insect sprays',
-                subtitle:
-                    'Pesticides contaminate the ecosystem and make ethical relocation impossible.',
+                subtitle: 'Pesticides contaminate the ecosystem and make ethical relocation impossible.',
               ),
               const Divider(height: 20, color: AppColors.border),
               _buildSafetyTip(
                 icon: Icons.pets_outlined,
                 color: AppColors.info,
                 title: 'Secure pets and children indoors',
-                subtitle:
-                    'Ensure animals stay clear of flight paths until the colony is assessed.',
+                subtitle: 'Ensure animals stay clear of flight paths until the colony is assessed.',
               ),
             ],
           ),
@@ -1315,49 +1320,49 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.bgSecondary,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 17, color: color),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 17, color: color),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-      );
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _QuickAction extends StatelessWidget {
@@ -1373,28 +1378,28 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.bgSecondary,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.bgSecondary,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 22, color: AppColors.hiveLow),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
-          child: Column(
-            children: [
-              Icon(icon, size: 22, color: AppColors.hiveLow),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
