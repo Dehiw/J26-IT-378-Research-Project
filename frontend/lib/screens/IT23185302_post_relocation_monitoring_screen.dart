@@ -15,6 +15,7 @@ import '../services/relocation_monitoring_service.dart';
 import '../utils/theme.dart';
 import '../widgets/main_bottom_nav.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
+import 'IT23185302_bee_detection_screen.dart';
 
 /// Research Component IT23185302:
 /// Post-Relocation Monitoring — observe bee entrance activity of a relocated
@@ -444,6 +445,8 @@ class _PostRelocationMonitoringScreenIT23185302State
                 _buildCameraHeader(),
                 const SizedBox(height: 10),
                 _buildCameraPreview(),
+                const SizedBox(height: 8),
+                _buildUploadDetectionLink(),
 
                 // ── 3. Bee Entrance Activity ─────────────────────────
                 const SizedBox(height: 28),
@@ -842,6 +845,33 @@ class _PostRelocationMonitoringScreenIT23185302State
         child: Container(
           color: AppColors.panelBlack,
           child: content,
+        ),
+      ),
+    );
+  }
+
+  /// Upload-based detection with the trained model (works without a camera).
+  Widget _buildUploadDetectionLink() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => BeeDetectionScreenIT23185302(
+              hiveId: _selectedHive?.id,
+              hiveName: _selectedHive?.name,
+            ),
+          ),
+        ),
+        icon: const Icon(Icons.center_focus_strong_outlined,
+            size: 18, color: AppColors.hiveLow),
+        label: Text(
+          'Detect bees in an uploaded photo',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: AppColors.hiveLow,
+          ),
         ),
       ),
     );

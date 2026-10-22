@@ -77,6 +77,70 @@ class RelocationMonitoringService {
     return MonitoringStatus.fromJson(res);
   }
 
+  /// Runs the trained bee detection model on one image.
+  ///
+  /// POST /bee-detection/detect (multipart field `image`). [source] is
+  /// 'upload' for user-selected images; ESP32-CAM frames will use
+  /// 'esp32cam' on the same endpoint once the camera is integrated.
+  Future<BeeDetectionResult> detectBees(
+    Uint8List imageBytes, {
+    String filename = 'bees.jpg',
+    String source = 'upload',
+    String? hiveId,
+  }) async {
+    if (imageBytes.isEmpty) {
+      throw const BeeDetectionException('The selected image is empty.');
+    }
+    if (imageBytes.length > 10 * 1024 * 1024) {
+      throw const BeeDetectionException('The image must be 10 MB or smaller.');
+    }
+    final token = AuthService.instance.token;
+    if (token == null || token.isEmpty) {
+      throw const BeeDetectionException('Sign in to run bee detection.');
+    }
+
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiConfig.baseUrl}/bee-detection/detect'),
+    )
+      ..headers['authorization'] = 'Bearer $token'
+      ..headers['accept'] = 'application/json'
+      ..fields['source'] = source
+      ..files.add(http.MultipartFile.fromBytes('image', imageBytes,
+          filename: filename));
+    if (hiveId != null) request.fields['hive_id'] = hiveId;
+
+    final http.Response response;
+    try {
+      final streamed =
+          await request.send().timeout(const Duration(seconds: 60));
+      response = await http.Response.fromStream(streamed);
+    } catch (e) {
+      developer.log('Bee detection request failed: $e',
+          name: 'RelocationMonitoring');
+      throw const BeeDetectionException(
+          'Cannot reach the backend. Check that the FastAPI server is running '
+          'and the app is pointed at its address.');
+    }
+
+    Map<String, dynamic>? json;
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) json = decoded;
+    } catch (_) {}
+
+    if (response.statusCode >= 200 && response.statusCode < 300 && json != null) {
+      return BeeDetectionResult.fromJson(json);
+    }
+    final detail = json?['detail'];
+    throw BeeDetectionException(switch (response.statusCode) {
+      401 => 'Your session has expired. Please sign in again.',
+      404 => 'Bee detection is not available on this server version.',
+      _ when detail is String => detail,
+      _ => 'Bee detection failed (HTTP ${response.statusCode}).',
+    });
+  }
+
   // ── Internal ───────────────────────────────────────────────────
 
   Future<Map<String, dynamic>> _getJson(String url) async {
@@ -232,6 +296,107 @@ class ActivitySnapshot {
           (readings.isNotEmpty ? readings.last.timestamp : null),
       observationSummary:
           (summary == null || summary.isEmpty) ? null : summary,
+    );
+  }
+}
+
+// ── Bee detection (trained YOLOv8n model on the backend) ──────────────
+
+class BeeDetectionException implements Exception {
+  final String message;
+  const BeeDetectionException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+class BeeDetection {
+  final double confidence;
+
+  /// [x1, y1, x2, y2] as fractions (0–1) of the analysed image size.
+  final List<double> bboxNormalized;
+
+  const BeeDetection(this.confidence, this.bboxNormalized);
+
+  static BeeDetection? tryParse(dynamic e) {
+    if (e is! Map) return null;
+    final c = e['confidence'];
+    final box = e['bbox_normalized'];
+    if (c is! num || box is! List || box.length != 4) return null;
+    if (box.any((v) => v is! num)) return null;
+    return BeeDetection(
+        c.toDouble(), box.map((v) => (v as num).toDouble()).toList());
+  }
+}
+
+class BeeDetectionResult {
+  final int beeCount;
+  final List<BeeDetection> detections;
+  final double? maxConfidence;
+  final double? meanConfidence;
+  final int imageWidth;
+  final int imageHeight;
+
+  /// JPEG of the exact (orientation-corrected) image the model analysed.
+  final Uint8List? processedImage;
+  final double confidenceThreshold;
+  final String modelName;
+  final double? inferenceMs;
+  final DateTime? analyzedAt;
+  final List<String> limitations;
+
+  const BeeDetectionResult({
+    required this.beeCount,
+    required this.detections,
+    required this.maxConfidence,
+    required this.meanConfidence,
+    required this.imageWidth,
+    required this.imageHeight,
+    required this.processedImage,
+    required this.confidenceThreshold,
+    required this.modelName,
+    required this.inferenceMs,
+    required this.analyzedAt,
+    required this.limitations,
+  });
+
+  bool get hasBees => beeCount > 0;
+
+  factory BeeDetectionResult.fromJson(Map<String, dynamic> json) {
+    final detections = (json['detections'] as List<dynamic>? ?? [])
+        .map(BeeDetection.tryParse)
+        .whereType<BeeDetection>()
+        .toList();
+    final summary = json['confidence_summary'];
+    final image = json['image'];
+    final model = json['model'];
+
+    Uint8List? processed;
+    final dataUrl = json['processed_image'];
+    if (dataUrl is String && dataUrl.contains(',')) {
+      try {
+        processed = base64Decode(dataUrl.split(',').last);
+      } catch (_) {}
+    }
+
+    double? num2d(dynamic v) => v is num ? v.toDouble() : null;
+
+    return BeeDetectionResult(
+      beeCount: (json['bee_count'] as num?)?.toInt() ?? detections.length,
+      detections: detections,
+      maxConfidence: summary is Map ? num2d(summary['max']) : null,
+      meanConfidence: summary is Map ? num2d(summary['mean']) : null,
+      imageWidth: image is Map ? (image['width'] as num?)?.toInt() ?? 0 : 0,
+      imageHeight: image is Map ? (image['height'] as num?)?.toInt() ?? 0 : 0,
+      processedImage: processed,
+      confidenceThreshold:
+          model is Map ? num2d(model['confidence_threshold']) ?? 0 : 0,
+      modelName: model is Map ? model['name']?.toString() ?? '' : '',
+      inferenceMs: num2d(json['inference_ms']),
+      analyzedAt: _parseDate(json['analyzed_at']),
+      limitations: (json['limitations'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
     );
   }
 }
