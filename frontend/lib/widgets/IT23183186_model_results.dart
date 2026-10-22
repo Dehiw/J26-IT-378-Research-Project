@@ -385,7 +385,118 @@ class _ModelAnalysisResultsState extends State<ModelAnalysisResults> {
       ],
     ),
   );
-  Widget _performance(Map<String, dynamic> report) {
+  Widget _explanation(String heading, String body) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          heading,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkGreen,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(body),
+      ],
+    ),
+  );
+
+  Widget _simplePerformance(Map<String, dynamic> report) {
+    final evaluation = report['evaluation'] as Map?;
+    final classes = evaluation?['per_class'] as Map?;
+    final accuracy = evaluation?['accuracy'];
+    final count = evaluation?['test_count'];
+    final healthy = (classes?['healthy'] as Map?)?['recall'];
+    final varroa = (classes?['varroa_positive'] as Map?)?['recall'];
+    String example(dynamic value, String photos) =>
+        value is num && value.isFinite
+        ? 'Out of 100 $photos, approximately ${(value * 100).round()} were correctly identified.'
+        : 'Testing results are not available.';
+    return _panel([
+      _title('How Reliable Are the Results?', Icons.bar_chart_outlined),
+      if (dataSource(widget.result) == 'demo')
+        const Text(
+          'These testing results describe the screening system, not the demo photo.',
+        ),
+      Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          _metric('Overall Screening Accuracy', _percent(accuracy)),
+          _metric(
+            'Bee Photos Checked',
+            count is num
+                ? NumberFormat.decimalPattern().format(count)
+                : 'Not available',
+          ),
+          _metric('Healthy Bee Recognition', _percent(healthy)),
+          _metric('Varroa Recognition', _percent(varroa)),
+        ],
+      ),
+      _explanation(
+        'What does the overall result mean?',
+        example(accuracy, 'bee photos tested'),
+      ),
+      if (count is num)
+        Text(
+          'The screening system was tested using ${NumberFormat.decimalPattern().format(count)} bee photos.',
+        ),
+      _explanation(
+        'Recognising healthy bees',
+        example(healthy, 'photos known to show healthy bees'),
+      ),
+      _explanation(
+        'Recognising Varroa indicators',
+        example(varroa, 'photos known to show Varroa-positive bees'),
+      ),
+      _explanation(
+        'Keep inspecting your hive',
+        'Some signs of Varroa may be missed. A healthy screening result does not guarantee that a colony is free from Varroa.',
+      ),
+      ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        title: const Text('Technical Details'),
+        children: [
+          const Text(
+            'Precision means how often a result was correct when that label was given. Recall means how many photos with a known indicator were correctly identified. These testing figures are separate from the confidence score for an individual photo.',
+          ),
+          _performance(report, technical: true),
+        ],
+      ),
+    ]);
+  }
+
+  Widget _simpleSummary(Map<String, dynamic> report) => _panel([
+    _title('Important Information for Beekeepers', Icons.assignment_outlined),
+    _explanation(
+      'What Can Be Checked?',
+      'Healthy and Varroa-positive indicators in close-up photos of individual bees. Whole-hive and brood-frame photos have not been checked for this purpose.',
+    ),
+    _explanation(
+      'How Reliable Is It?',
+      report['evaluation'] == null
+          ? 'Testing results are not available. A photo confidence score does not tell you how reliable the screening is overall.'
+          : 'See the photo testing results under ?How Reliable Are the Results??. Healthy bees and Varroa indicators are recognised at different rates.',
+    ),
+    _explanation(
+      'What Can Be Missed?',
+      'Varroa indicators can be missed, even when a photo is marked healthy. Results for local field photos have not been established. A photo cannot confirm that the colony is free from Varroa.',
+    ),
+    _explanation(
+      'What Should I Do Next?',
+      'Continue regular hive inspections. If a photo flags a possible Varroa indicator, inspect the colony carefully and seek guidance from a qualified beekeeping adviser. If the photo is unclear, take another clear, close-up photo.',
+    ),
+    ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: const Text('Technical Details'),
+      children: [_summary(report, technical: true)],
+    ),
+  ]);
+
+  Widget _performance(Map<String, dynamic> report, {bool technical = false}) {
+    if (_bee && !technical) return _simplePerformance(report);
     final evaluation = report['evaluation'] as Map?;
     final perClass = evaluation?['per_class'] as Map?;
     final detectorMetrics = evaluation?['metrics'] as Map?;
@@ -474,7 +585,14 @@ class _ModelAnalysisResultsState extends State<ModelAnalysisResults> {
   Widget _history(Map<String, dynamic> report) {
     final rows = (report['history'] as List? ?? []).whereType<Map>().toList();
     return _panel([
-      _title('Training history', Icons.show_chart),
+      _title(
+        _bee ? 'How the Screening System Was Developed' : 'Training history',
+        Icons.show_chart,
+      ),
+      if (_bee)
+        const Text(
+          'The screening system was developed using labelled bee photos and checked using separate images. The graphs show the recorded development checks; they are separate from the final photo testing results.',
+        ),
       if (rows.isEmpty)
         _empty(
           'Training history unavailable. ${report['history_help'] ?? 'Save training_history.csv (Model A) or results.csv (Model B) alongside the training run.'}',
@@ -668,11 +786,18 @@ class _ModelAnalysisResultsState extends State<ModelAnalysisResults> {
               r.every((v) => v is num && v.isFinite && v >= 0),
         );
     return _panel([
-      _title('Confusion matrix', Icons.grid_on_outlined),
+      _title(
+        _bee ? 'How Often Are Screening Results Correct?' : 'Confusion matrix',
+        Icons.grid_on_outlined,
+      ),
       if (!valid)
         _empty('No verified test confusion matrix available.')
       else ...[
-        const Text('Rows: actual class. Columns: predicted class.'),
+        Text(
+          _bee
+              ? 'Each row shows what the bee photo was known to show. Each column shows the result given by the screening.'
+              : 'Rows: actual class. Columns: predicted class.',
+        ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Normalize each actual-class row'),
@@ -684,13 +809,21 @@ class _ModelAnalysisResultsState extends State<ModelAnalysisResults> {
           child: DataTable(
             columns: [
               const DataColumn(label: Text('Actual / predicted')),
-              ...labels.map((l) => DataColumn(label: Text(l.toString()))),
+              ...labels.map(
+                (l) => DataColumn(
+                  label: Text(_bee ? _classLabel(l) : l.toString()),
+                ),
+              ),
             ],
             rows: [
               for (var i = 0; i < matrix.length; i++)
                 DataRow(
                   cells: [
-                    DataCell(Text(labels[i].toString())),
+                    DataCell(
+                      Text(
+                        _bee ? _classLabel(labels[i]) : labels[i].toString(),
+                      ),
+                    ),
                     ...List.generate(labels.length, (j) {
                       final row = (matrix[i] as List).cast<num>();
                       final total = row.fold<num>(0, (a, b) => a + b);
@@ -729,7 +862,8 @@ class _ModelAnalysisResultsState extends State<ModelAnalysisResults> {
     ]);
   }
 
-  Widget _summary(Map<String, dynamic> report) {
+  Widget _summary(Map<String, dynamic> report, {bool technical = false}) {
+    if (_bee && !technical) return _simpleSummary(report);
     final summary = report['summary'] as Map? ?? {};
     final evaluation = report['evaluation'] as Map?;
     final limitations = widget.result['limitations'] as List? ?? [];
