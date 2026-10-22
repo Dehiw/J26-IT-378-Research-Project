@@ -19,6 +19,8 @@ class WildBeeService {
     required String height,
     required String insideStructure,
     required String safeAccess,
+    // 'device_gps', 'manual_pin', 'ip_approximate', 'default_placeholder' or 'unknown'
+    String locationSource = 'unknown',
     bool hasPhoto = false,
     String? photoUrl,
     String? notes,
@@ -30,6 +32,7 @@ class WildBeeService {
     final payload = {
       'address': address.trim(),
       'gps_coordinates': gpsCoordinates.trim(),
+      'location_source': locationSource,
       'colony_location': colonyLocation,
       'height': height,
       'inside_structure': insideStructure,

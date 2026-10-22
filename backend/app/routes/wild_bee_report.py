@@ -4,10 +4,57 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Header, status
 
 from app.firebase.firebase_config import db
-from app.core.security import decode_access_token
-from app.schemas.wild_bee_report import WildBeeReportCreate, WildBeeReportResponse
+from app.core.security import decode_access_token, get_current_user_id
+from app.schemas.wild_bee_report import (
+    WildBeeAssessmentRequest,
+    WildBeeAssessmentResponse,
+    WildBeeReportCreate,
+    WildBeeReportResponse,
+)
+from app.services.IT23185302_relocation_risk_service import (
+    assess_relocation_risk,
+    prepare_photo,
+    HOMEOWNER_SAFETY_NOTE,
+    rule_based_assessment,
+    RULE_BASED_MODEL_NAME,
+    SOURCE_RULE_BASED,
+)
 
 router = APIRouter(prefix="/wild-bee-reports", tags=["Wild Bee Hive Reports"])
+
+ASSESSMENT_KEYS = (
+    "assessment_level",
+    "main_concerns",
+    "recommended_action",
+    "assessment_source",
+    "model_name",
+    "fallback_reason",
+    "requires_beekeeper_review",
+    "homeowner_guidance",
+    "photo_analyzed",
+    "assessed_at",
+)
+
+
+def _run_assessment(answers: dict, location: dict, photo_data_url: Optional[str]):
+    """Prepare the photo and run the IT23185302 assessment; never raises."""
+    photo = None
+    try:
+        photo = prepare_photo(photo_data_url)
+        assessment = assess_relocation_risk(answers, location, photo)
+    except Exception as exc:
+        assessment = {
+            **rule_based_assessment(answers),
+            "assessment_source": SOURCE_RULE_BASED,
+            "model_name": RULE_BASED_MODEL_NAME,
+            "fallback_reason": f"Assessment error ({type(exc).__name__})",
+            "requires_beekeeper_review": True,
+            "homeowner_guidance": HOMEOWNER_SAFETY_NOTE,
+            "photo_analyzed": False,
+            "location_source": location.get("location_source") or "unknown",
+            "assessed_at": datetime.now(timezone.utc).isoformat(),
+        }
+    return photo, assessment
 
 
 def get_optional_user_id(authorization: Optional[str] = Header(None)) -> Optional[str]:
@@ -45,6 +92,29 @@ def submit_wild_bee_report(
         except Exception:
             pass
 
+    answers = {
+        "colony_location": request.colony_location,
+        "height": request.height,
+        "inside_structure": request.inside_structure,
+        "safe_access": request.safe_access,
+        "notes": request.notes,
+    }
+    location = {
+        "address": request.address.strip(),
+        "gps_coordinates": request.gps_coordinates,
+        "location_source": request.location_source,
+    }
+    photo, assessment = _run_assessment(answers, location, request.photo_url)
+
+    # Store only the compressed photo so the document stays under Firestore's 1 MiB cap.
+    stored_photo_url = photo.data_url if photo else None
+    photo_storage_note = None
+    if request.photo_url and not stored_photo_url:
+        photo_storage_note = (
+            photo.storage_note if photo and photo.storage_note
+            else "Photo could not be processed and was not stored."
+        )
+
     report_data = {
         "id": report_id,
         "user_id": user_id or "anonymous",
@@ -52,13 +122,16 @@ def submit_wild_bee_report(
         "user_email": user_email,
         "address": request.address.strip(),
         "gps_coordinates": request.gps_coordinates,
+        "location_source": request.location_source,
         "colony_location": request.colony_location,
         "height": request.height,
         "inside_structure": request.inside_structure,
         "safe_access": request.safe_access,
         "has_photo": request.has_photo,
-        "photo_url": request.photo_url,
+        "photo_url": stored_photo_url,
+        "photo_storage_note": photo_storage_note,
         "notes": request.notes,
+        **{k: assessment.get(k) for k in ASSESSMENT_KEYS},
         "status": "Accepted" if request.assigned_beekeeper else "Submitted",
         "assigned_beekeeper": request.assigned_beekeeper,
         "assigned_phone": request.assigned_phone,
@@ -83,7 +156,40 @@ def submit_wild_bee_report(
         safe_access=request.safe_access,
         assigned_beekeeper=request.assigned_beekeeper,
         assigned_phone=request.assigned_phone,
+        assessment_level=assessment.get("assessment_level"),
+        main_concerns=assessment.get("main_concerns"),
+        recommended_action=assessment.get("recommended_action"),
+        assessment_source=assessment.get("assessment_source"),
+        model_name=assessment.get("model_name"),
+        requires_beekeeper_review=assessment.get("requires_beekeeper_review"),
+        homeowner_guidance=assessment.get("homeowner_guidance"),
     )
+
+
+@router.post("/assess", response_model=WildBeeAssessmentResponse)
+def preview_relocation_assessment(
+    request: WildBeeAssessmentRequest,
+    _user_id: str = Depends(get_current_user_id),
+):
+    """
+    IT23185302 test endpoint: runs the preliminary relocation assessment
+    without saving anything to Firestore. Requires a bearer token because it
+    can call a paid hosted model.
+    """
+    answers = {
+        "colony_location": request.colony_location,
+        "height": request.height,
+        "inside_structure": request.inside_structure,
+        "safe_access": request.safe_access,
+        "notes": request.notes,
+    }
+    location = {
+        "address": request.address,
+        "gps_coordinates": request.gps_coordinates,
+        "location_source": request.location_source,
+    }
+    _photo, assessment = _run_assessment(answers, location, request.photo_url)
+    return WildBeeAssessmentResponse(**assessment)
 
 
 @router.get("/my")

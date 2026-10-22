@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -20,7 +21,8 @@ class MyRequestsScreenIT23185302 extends StatefulWidget {
       _MyRequestsScreenIT23185302State();
 }
 
-class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302> {
+class _MyRequestsScreenIT23185302State
+    extends State<MyRequestsScreenIT23185302> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _reports = [];
   String _selectedFilter = 'All'; // 'All', 'Active', 'Completed', 'Cancelled'
@@ -181,8 +183,18 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
     try {
       final dt = DateTime.parse(isoString).toLocal();
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
     } catch (_) {
@@ -245,8 +257,9 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
   // ── Select Beekeeper According to Location Sheet ────────────
   void _openSelectBeekeeperSheet(Map<String, dynamic> report) {
     final reportId = report['id']?.toString() ?? '';
-    final reportAddress =
-        (report['address'] ?? 'Sri Lanka').toString().toLowerCase();
+    final reportAddress = (report['address'] ?? 'Sri Lanka')
+        .toString()
+        .toLowerCase();
 
     showModalBottomSheet(
       context: context,
@@ -299,24 +312,31 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                     onPressed: () => Navigator.pop(ctx),
                   ),
                 ],
               ),
               const Divider(height: 18, color: AppColors.border),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.hiveLow.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.location_on_rounded,
-                        size: 16, color: AppColors.accent2),
+                    const Icon(
+                      Icons.location_on_rounded,
+                      size: 16,
+                      color: AppColors.accent2,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -351,8 +371,11 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.groups_outlined,
-                                size: 36, color: AppColors.textSecondary),
+                            const Icon(
+                              Icons.groups_outlined,
+                              size: 36,
+                              color: AppColors.textSecondary,
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               'No registered beekeepers in database yet.',
@@ -369,13 +392,17 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                     // Sort matching location first
                     final sorted = List<Map<String, dynamic>>.from(list);
                     sorted.sort((a, b) {
-                      final aArea =
-                          (a['area_address'] ?? '').toString().toLowerCase();
-                      final bArea =
-                          (b['area_address'] ?? '').toString().toLowerCase();
-                      final aMatch = reportAddress.isNotEmpty &&
+                      final aArea = (a['area_address'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      final bArea = (b['area_address'] ?? '')
+                          .toString()
+                          .toLowerCase();
+                      final aMatch =
+                          reportAddress.isNotEmpty &&
                           reportAddress.contains(aArea);
-                      final bMatch = reportAddress.isNotEmpty &&
+                      final bMatch =
+                          reportAddress.isNotEmpty &&
                           reportAddress.contains(bArea);
                       if (aMatch && !bMatch) return -1;
                       if (!aMatch && bMatch) return 1;
@@ -391,11 +418,12 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                         final apiary =
                             (bk['apiary_name'] ?? 'Registered Apiary')
                                 .toString();
-                        final area =
-                            (bk['area_address'] ?? 'Sri Lanka').toString();
+                        final area = (bk['area_address'] ?? 'Sri Lanka')
+                            .toString();
                         final phone = (bk['phone'] ?? '').toString();
                         final aArea = area.toLowerCase();
-                        final isMatch = reportAddress.isNotEmpty &&
+                        final isMatch =
+                            reportAddress.isNotEmpty &&
                             (reportAddress.contains(aArea) ||
                                 aArea.contains(reportAddress) ||
                                 (aArea.contains('gampaha') &&
@@ -421,8 +449,9 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                             children: [
                               CircleAvatar(
                                 radius: 20,
-                                backgroundColor:
-                                    AppColors.hiveLow.withValues(alpha: 0.15),
+                                backgroundColor: AppColors.hiveLow.withValues(
+                                  alpha: 0.15,
+                                ),
                                 child: Text(
                                   name.isNotEmpty ? name[0].toUpperCase() : 'B',
                                   style: GoogleFonts.inter(
@@ -454,7 +483,9 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                                           const SizedBox(width: 6),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 5, vertical: 1.5),
+                                              horizontal: 5,
+                                              vertical: 1.5,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: AppColors.success
                                                   .withValues(alpha: 0.12),
@@ -503,20 +534,24 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
                                 onPressed: () async {
                                   Navigator.pop(ctx);
-                                  final messenger = ScaffoldMessenger.of(context);
+                                  final messenger = ScaffoldMessenger.of(
+                                    context,
+                                  );
                                   try {
                                     await WildBeeService.instance
                                         .assignBeekeeper(
-                                      reportId: reportId,
-                                      beekeeperName: name,
-                                      beekeeperPhone: phone,
-                                      beekeeperId:
-                                          (bk['id'] ?? '').toString(),
-                                    );
+                                          reportId: reportId,
+                                          beekeeperName: name,
+                                          beekeeperPhone: phone,
+                                          beekeeperId: (bk['id'] ?? '')
+                                              .toString(),
+                                        );
                                     _loadReports();
                                     if (mounted) {
                                       messenger.showSnackBar(
@@ -537,8 +572,7 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                                     if (mounted) {
                                       messenger.showSnackBar(
                                         SnackBar(
-                                          content:
-                                              Text('Failed to assign: $e'),
+                                          content: Text('Failed to assign: $e'),
                                           backgroundColor: AppColors.error,
                                           behavior: SnackBarBehavior.floating,
                                         ),
@@ -628,19 +662,18 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                         ),
                       )
                     : _filteredReports.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            itemCount: _filteredReports.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 14),
-                            itemBuilder: (context, i) {
-                              return _buildRequestCard(_filteredReports[i]);
-                            },
-                          ),
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        itemCount: _filteredReports.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 14),
+                        itemBuilder: (context, i) {
+                          return _buildRequestCard(_filteredReports[i]);
+                        },
+                      ),
               ),
             ],
           ),
@@ -711,13 +744,15 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
   // ── Single Request Card ─────────────────────────────────────
   Widget _buildRequestCard(Map<String, dynamic> report) {
     final rawId = report['id']?.toString() ?? 'REL-2026';
-    final displayId = report['display_id']?.toString() ??
+    final displayId =
+        report['display_id']?.toString() ??
         (rawId.length >= 8 ? '#${rawId.substring(rawId.length - 4)}' : rawId);
     final location = report['address']?.toString() ?? 'Sri Lanka';
     final status = report['status']?.toString() ?? 'Submitted';
     final dateDisplay = _formatDate(report['created_at']?.toString());
     final beekeeper = report['assigned_beekeeper']?.toString();
-    final hasPhoto = report['has_photo'] == true ||
+    final hasPhoto =
+        report['has_photo'] == true ||
         (report['photo_url'] != null &&
             report['photo_url'].toString().isNotEmpty);
     final photoUrl = report['photo_url']?.toString();
@@ -846,7 +881,9 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.12),
+                                color: AppColors.success.withValues(
+                                  alpha: 0.12,
+                                ),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
@@ -869,7 +906,8 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                                 ],
                               ),
                             )
-                          else if (status != 'Cancelled' && status != 'Completed')
+                          else if (status != 'Cancelled' &&
+                              status != 'Completed')
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -945,7 +983,8 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
                   onTap: () => _openDetailsModal(report),
                   borderRadius: BorderRadius.only(
                     bottomRight: const Radius.circular(15),
-                    bottomLeft: (beekeeper != null && beekeeper.isNotEmpty) ||
+                    bottomLeft:
+                        (beekeeper != null && beekeeper.isNotEmpty) ||
                             status == 'Cancelled' ||
                             status == 'Completed'
                         ? const Radius.circular(15)
@@ -1105,8 +1144,7 @@ class _MyRequestsScreenIT23185302State extends State<MyRequestsScreenIT23185302>
               onPressed: () {
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
-                    builder: (_) =>
-                        const WildBeeHiveReportScreenIT23185302(),
+                    builder: (_) => const WildBeeHiveReportScreenIT23185302(),
                   ),
                 );
               },
@@ -1256,10 +1294,7 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
       if (!mounted) return;
       setState(() => _isCancelling = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.error,
-        ),
+        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
       );
     }
   }
@@ -1325,8 +1360,11 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.phone_rounded,
-                      color: AppColors.hiveLow, size: 20),
+                  const Icon(
+                    Icons.phone_rounded,
+                    color: AppColors.hiveLow,
+                    size: 20,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     phone,
@@ -1410,82 +1448,139 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
   }
 
   void _showAssessmentResultDialog() {
-    final spot = widget.report['colony_location'] ?? 'Roof';
-    final height = widget.report['height'] ?? '2–5 m';
-    final inside = widget.report['inside_structure'] ?? 'Yes';
-    final safe = widget.report['safe_access'] ?? 'Yes';
+    final report = widget.report;
+
+    final source = (report['assessment_source'] ?? '').toString();
+
+    final isAi = source == 'vlm';
+
+    final hasAssessment =
+        report['assessment_level'] != null &&
+        report['assessment_level'].toString().trim().isNotEmpty;
+
+    final level = hasAssessment
+        ? report['assessment_level'].toString()
+        : 'Not assessed';
+
+    final modelName = (report['model_name'] ?? '').toString();
+
+    final action = (report['recommended_action'] ?? '').toString();
+
+    final rawConcerns = report['main_concerns'];
+    final concerns = rawConcerns is List
+        ? rawConcerns.map((e) => e.toString()).toList()
+        : <String>[];
+
+    final photoAnalyzed = report['photo_analyzed'] == true;
+
+    final sourceLabel = isAi
+        ? 'AI Assessment'
+        : source == 'rule_based'
+        ? 'Rule-Based Assessment (Not AI)'
+        : 'Assessment Not Available';
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.bgSecondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: AppColors.hiveLow.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.analytics_outlined,
-                color: AppColors.hiveLow,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Assessment Result',
-                style: GoogleFonts.inter(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ],
+        title: Text(
+          'Preliminary Assessment Result',
+          style: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
         ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildAssessmentRow('Target Species', 'Apis cerana indica (Asian Honeybee)'),
-              _buildAssessmentRow('Feasibility Score', 'High (94% Safe Recovery)'),
-              _buildAssessmentRow('Colony Location', '$spot (Height: $height)'),
-              _buildAssessmentRow('Enclosed in Cavity', inside),
-              _buildAssessmentRow('Direct Access Safe', safe),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.bgElevated,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
+              _buildAssessmentRow('Assessment Source', sourceLabel),
+
+              if (isAi && modelName.isNotEmpty)
+                _buildAssessmentRow('AI Model', modelName),
+
+              _buildAssessmentRow('Assessment Level', level),
+
+              _buildAssessmentRow(
+                'Photo Analyzed',
+                photoAnalyzed ? 'Yes' : 'No',
+              ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                'Main Concerns',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recommended Equipment:',
+              ),
+
+              const SizedBox(height: 8),
+
+              if (concerns.isEmpty)
+                Text(
+                  'No assessment concerns available.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                )
+              else
+                ...concerns.map(
+                  (concern) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '• $concern',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '• Soft-vacuum swarm catcher\n• Herbal lemongrass lure & nuc transport box\n• Full protective veil & sting-proof gloves\n• Ladder extension (if above 2m)',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
                         color: AppColors.textSecondary,
                         height: 1.4,
                       ),
                     ),
-                  ],
+                  ),
+                ),
+
+              const SizedBox(height: 12),
+
+              Text(
+                'Recommended Next Action',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                action.isNotEmpty
+                    ? action
+                    : 'A registered beekeeper must review '
+                          'the report before relocation.',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Text(
+                'This is a preliminary assessment. '
+                'Do not approach or disturb the colony. '
+                'A registered beekeeper must verify '
+                'the conditions before any action.',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.textMuted,
+                  height: 1.4,
                 ),
               ),
             ],
@@ -1493,19 +1588,11 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
         ),
         actions: [
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.hiveLow,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.hiveLow),
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Done',
-              style: GoogleFonts.inter(
-                color: AppColors.bgSecondary,
-                fontWeight: FontWeight.w700,
-              ),
+              style: GoogleFonts.inter(color: AppColors.bgSecondary),
             ),
           ),
         ],
@@ -1592,8 +1679,10 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: AppColors.textSecondary),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
@@ -1623,8 +1712,7 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 u['title'] as String,
@@ -1668,21 +1756,26 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
   @override
   Widget build(BuildContext context) {
     final rawId = widget.report['id']?.toString() ?? 'REL-2026';
-    final displayId = widget.report['display_id']?.toString() ??
+    final displayId =
+        widget.report['display_id']?.toString() ??
         (rawId.length >= 8 ? '#${rawId.substring(rawId.length - 4)}' : rawId);
     final address = widget.report['address']?.toString() ?? 'Sri Lanka';
-    final gps = widget.report['gps_coordinates']?.toString() ?? '6.9271° N, 79.8612° E';
+    final gps =
+        widget.report['gps_coordinates']?.toString() ?? '6.9271° N, 79.8612° E';
     final spot = widget.report['colony_location']?.toString() ?? 'Roof';
     final height = widget.report['height']?.toString() ?? '2–5 m';
     final beekeeperName = widget.report['assigned_beekeeper']?.toString();
-    final beekeeperPhone = widget.report['assigned_phone']?.toString() ?? '+94 77 123 4567';
+    final beekeeperPhone =
+        widget.report['assigned_phone']?.toString() ?? '+94 77 123 4567';
 
-    final canCancel = _status == 'Submitted' ||
+    final canCancel =
+        _status == 'Submitted' ||
         _status == 'Under Review' ||
         _status == 'Waiting for Beekeeper' ||
         _status == 'Accepted';
 
-    final isAccepted = _status == 'Accepted' ||
+    final isAccepted =
+        _status == 'Accepted' ||
         _status == 'Relocation Scheduled' ||
         _status == 'In Progress' ||
         _status == 'Completed';
@@ -1736,8 +1829,10 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                   ],
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: AppColors.textSecondary),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -1766,7 +1861,9 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                   const SizedBox(height: 24),
 
                   // ── ASSIGNED BEEKEEPER CARD (if accepted) ─────────
-                  if (isAccepted && beekeeperName != null && beekeeperName.isNotEmpty) ...[
+                  if (isAccepted &&
+                      beekeeperName != null &&
+                      beekeeperName.isNotEmpty) ...[
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -1781,8 +1878,9 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                             children: [
                               CircleAvatar(
                                 radius: 22,
-                                backgroundColor: AppColors.hiveLow
-                                    .withValues(alpha: 0.15),
+                                backgroundColor: AppColors.hiveLow.withValues(
+                                  alpha: 0.15,
+                                ),
                                 child: const Icon(
                                   Icons.person_rounded,
                                   color: AppColors.hiveLow,
@@ -1825,8 +1923,9 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 11),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 11,
+                                ),
                               ),
                               icon: const Icon(Icons.call_rounded, size: 16),
                               label: Text(
@@ -1865,8 +1964,9 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                             children: [
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor:
-                                    AppColors.hiveLow.withValues(alpha: 0.15),
+                                backgroundColor: AppColors.hiveLow.withValues(
+                                  alpha: 0.15,
+                                ),
                                 child: const Icon(
                                   Icons.person_pin_circle_rounded,
                                   color: AppColors.hiveLow,
@@ -1909,11 +2009,14 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 11),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 11,
+                                ),
                               ),
-                              icon: const Icon(Icons.person_pin_circle_rounded,
-                                  size: 16),
+                              icon: const Icon(
+                                Icons.person_pin_circle_rounded,
+                                size: 16,
+                              ),
                               label: Text(
                                 'Select Beekeeper by Location',
                                 style: GoogleFonts.inter(
@@ -1946,8 +2049,11 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          icon: const Icon(Icons.analytics_outlined,
-                              size: 16, color: AppColors.hiveLow),
+                          icon: const Icon(
+                            Icons.analytics_outlined,
+                            size: 16,
+                            color: AppColors.hiveLow,
+                          ),
                           label: Text(
                             'View Assessment',
                             style: GoogleFonts.inter(
@@ -1969,8 +2075,11 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
-                          icon: const Icon(Icons.feed_outlined,
-                              size: 16, color: AppColors.hiveLow),
+                          icon: const Icon(
+                            Icons.feed_outlined,
+                            size: 16,
+                            color: AppColors.hiveLow,
+                          ),
                           label: Text(
                             'Relocation Updates',
                             style: GoogleFonts.inter(
@@ -2010,7 +2119,10 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                         const Divider(height: 16, color: AppColors.border),
                         _buildSpecRow('GPS Coordinates', gps),
                         const Divider(height: 16, color: AppColors.border),
-                        _buildSpecRow('Safe Accessibility', 'Yes, Ground Level'),
+                        _buildSpecRow(
+                          'Safe Accessibility',
+                          'Yes, Ground Level',
+                        ),
                       ],
                     ),
                   ),
@@ -2053,8 +2165,7 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                             color: AppColors.error,
                           ),
                         ),
-                        onPressed:
-                            _isCancelling ? null : _handleCancelRequest,
+                        onPressed: _isCancelling ? null : _handleCancelRequest,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -2108,11 +2219,26 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
   Widget _buildTimelineStepper(int currentStep) {
     final steps = [
       {'title': 'Report Submitted', 'desc': 'Logged with GPS & photo details'},
-      {'title': 'Assessment Completed', 'desc': 'Species verified as native honeybee'},
-      {'title': 'Beekeeper Requested', 'desc': 'Dispatched to nearby certified apiarists'},
-      {'title': 'Beekeeper Accepted', 'desc': 'Local rescuer claimed the hive task'},
-      {'title': 'Relocation', 'desc': 'Safe removal & gentle transfer in progress'},
-      {'title': 'Completed', 'desc': 'Colony ethically rehoused in sanctuary apiary'},
+      {
+        'title': 'Assessment Completed',
+        'desc': 'Species verified as native honeybee',
+      },
+      {
+        'title': 'Beekeeper Requested',
+        'desc': 'Dispatched to nearby certified apiarists',
+      },
+      {
+        'title': 'Beekeeper Accepted',
+        'desc': 'Local rescuer claimed the hive task',
+      },
+      {
+        'title': 'Relocation',
+        'desc': 'Safe removal & gentle transfer in progress',
+      },
+      {
+        'title': 'Completed',
+        'desc': 'Colony ethically rehoused in sanctuary apiary',
+      },
     ];
 
     if (currentStep == -1) {
@@ -2174,9 +2300,7 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                   Container(
                     width: 2,
                     height: 34,
-                    color: isCompleted
-                        ? AppColors.success
-                        : AppColors.border,
+                    color: isCompleted ? AppColors.success : AppColors.border,
                   ),
               ],
             ),
@@ -2199,8 +2323,8 @@ class _RequestDetailsSheetState extends State<_RequestDetailsSheet> {
                         color: isActive
                             ? AppColors.hiveLow
                             : (isCompleted
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary),
+                                  ? AppColors.textPrimary
+                                  : AppColors.textSecondary),
                       ),
                     ),
                     const SizedBox(height: 2),
