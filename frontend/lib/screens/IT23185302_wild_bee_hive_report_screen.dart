@@ -36,6 +36,15 @@ class _WildBeeHiveReportScreenIT23185302State
   String _gpsCoordinates = '6.9271° N, 79.8612° E';
   String? _detectedArea;
   bool _isFetchingGps = false;
+  // Where _gpsCoordinates came from. IP lookup is approximate, never device GPS.
+  String _locationSource = 'default_placeholder';
+
+  String get _locationSourceLabel => switch (_locationSource) {
+        'device_gps' => 'Device GPS',
+        'manual_pin' => 'Entered manually',
+        'ip_approximate' => 'Approximate (network-based, not GPS)',
+        _ => 'Default location – please adjust pin',
+      };
 
 
   // 4. Colony questions state
@@ -59,6 +68,7 @@ class _WildBeeHiveReportScreenIT23185302State
     if (loc != null && mounted) {
       setState(() {
         _gpsCoordinates = loc['coordinates'] ?? _gpsCoordinates;
+        _locationSource = 'ip_approximate';
         _detectedArea = loc['city'] != null
             ? '${loc['city']}, ${loc['country'] ?? 'Sri Lanka'}'
             : null;
@@ -118,6 +128,7 @@ class _WildBeeHiveReportScreenIT23185302State
       _isFetchingGps = false;
       if (loc != null) {
         _gpsCoordinates = loc['coordinates'] ?? _gpsCoordinates;
+        _locationSource = 'ip_approximate';
         _addressController.text = loc['address'] ?? _addressController.text;
       }
     });
@@ -128,7 +139,7 @@ class _WildBeeHiveReportScreenIT23185302State
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         content: Text(
           loc != null
-              ? 'Real location detected: $_gpsCoordinates (${loc['city']})'
+              ? 'Approximate location (network-based, not GPS): $_gpsCoordinates (${loc['city']}). Adjust the pin if needed.'
               : 'Location pin updated.',
           style: GoogleFonts.inter(
             color: AppColors.bgSecondary,
@@ -319,6 +330,9 @@ class _WildBeeHiveReportScreenIT23185302State
               onPressed: () {
                 setState(() {
                   if (latLngCtrl.text.trim().isNotEmpty) {
+                    if (latLngCtrl.text.trim() != _gpsCoordinates) {
+                      _locationSource = 'manual_pin';
+                    }
                     _gpsCoordinates = latLngCtrl.text.trim();
                   }
                   if (addressCtrl.text.trim().isNotEmpty) {
@@ -405,6 +419,7 @@ class _WildBeeHiveReportScreenIT23185302State
         height: _selectedHeight!,
         insideStructure: _selectedInsideStructure!,
         safeAccess: _selectedSafeAccess!,
+        locationSource: _locationSource,
         hasPhoto: _pickedImage != null,
         photoUrl: photoUrl,
       );
@@ -1052,7 +1067,8 @@ class _WildBeeHiveReportScreenIT23185302State
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          _gpsCoordinates,
+                          '$_gpsCoordinates\n$_locationSourceLabel',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,

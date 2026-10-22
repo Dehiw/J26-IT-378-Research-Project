@@ -452,6 +452,22 @@ class _BeekeeperRequestsScreenIT23185302State
 // Request Card Widget (Matching Prompt Layout Exactly)
 // ═══════════════════════════════════════════════════════════════════════════
 
+/// Questionnaire-only rules, mirrored by the backend rule-based fallback.
+/// Used for reports saved before the backend stored an assessment.
+String _ruleBasedAssessmentLevel(Map<String, dynamic> r) {
+  final loc = (r['colony_location'] ?? '').toString().toLowerCase();
+  final height = (r['height'] ?? '').toString().toLowerCase();
+  final inside = (r['inside_structure'] ?? '').toString().toLowerCase();
+
+  if (loc.contains('roof') || height.contains('above 5') || inside == 'yes') {
+    return 'Expert Assistance Required';
+  }
+  if (loc.contains('tree') && height.contains('below 2')) {
+    return 'Low Risk Relocation';
+  }
+  return 'Routine Professional Relocation';
+}
+
 class _WildBeeRequestCard extends StatelessWidget {
   final Map<String, dynamic> request;
   final VoidCallback onTap;
@@ -492,17 +508,7 @@ class _WildBeeRequestCard extends StatelessWidget {
     if (r['assessment_level'] != null) {
       return r['assessment_level'].toString();
     }
-    final loc = (r['colony_location'] ?? '').toString().toLowerCase();
-    final height = (r['height'] ?? '').toString().toLowerCase();
-    final inside = (r['inside_structure'] ?? '').toString().toLowerCase();
-
-    if (loc.contains('roof') || height.contains('above 5') || inside == 'yes') {
-      return 'Expert Assistance Required';
-    }
-    if (loc.contains('tree') && height.contains('below 2')) {
-      return 'Low Risk Relocation';
-    }
-    return 'Routine Professional Relocation';
+    return _ruleBasedAssessmentLevel(r);
   }
 
   Color _statusColor(String status) {
@@ -1191,11 +1197,15 @@ class _BeekeeperRequestDetailsScreenIT23185302State
                 _buildColonyInformationCard(),
                 const SizedBox(height: 22),
 
-                // ── 2. AI Assessment Result ─────────────────────────
+                // ── 2. Preliminary Assessment ───────────────────────
                 _buildSectionTitle(
-                  title: '2. AI Assessment Result',
-                  subtitle: 'Automated triage and hazard evaluation',
-                  icon: Icons.psychology_rounded,
+                  title: _isAiAssessment
+                      ? '2. AI Assessment'
+                      : '2. Rule-Based Preliminary Assessment',
+                  subtitle: 'Preliminary triage – requires beekeeper review',
+                  icon: _isAiAssessment
+                      ? Icons.psychology_rounded
+                      : Icons.rule_rounded,
                 ),
                 const SizedBox(height: 10),
                 _buildAiAssessmentCard(),
@@ -1496,19 +1506,26 @@ class _BeekeeperRequestDetailsScreenIT23185302State
     );
   }
 
-  // ── Section 2: AI Assessment Result Card ──────────────────────────
+  // ── Section 2: Preliminary Assessment Card ────────────────────────
+
+  /// "AI" only when the backend stored a genuine vision-model result.
+  bool get _isAiAssessment => _data['assessment_source'] == 'vlm';
 
   Widget _buildAiAssessmentCard() {
-    final level = _data['assessment_level']?.toString() ??
-        'Expert Assistance Required';
-    final confidence = _data['confidence']?.toString() ?? '94%';
-    final concerns = _data['main_concerns'] as List<dynamic>? ?? [
-      'Elevated roof cavity (>3m)',
-      'Potential enclosed rafter nesting',
-      'Risk of stinging nearby occupants',
-    ];
+    final hasStoredAssessment = _data['assessment_level'] != null;
+    final level = hasStoredAssessment
+        ? _data['assessment_level'].toString()
+        : _ruleBasedAssessmentLevel(_data);
+    final concerns = (_data['main_concerns'] as List<dynamic>?) ??
+        const ['No stored assessment for this report (submitted earlier). '
+            'Level derived from the questionnaire only.'];
     final action = _data['recommended_action']?.toString() ??
-        'Specialized bee-vacuum extraction with safety ladder and thermal comb imaging. Isolate attic entrance before opening soffit.';
+        'Review the photo and answers, then confirm on site before planning relocation.';
+    final modelName = _data['model_name']?.toString();
+    final fallbackReason = _data['fallback_reason']?.toString();
+    final sourceLabel = _isAiAssessment
+        ? 'AI Assessment'
+        : 'Rule-Based Preliminary Assessment';
 
     final isExpert = level.contains('Expert');
 
@@ -1526,7 +1543,7 @@ class _BeekeeperRequestDetailsScreenIT23185302State
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Level + Confidence Badge
+          // Level + Source Badge
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1561,23 +1578,27 @@ class _BeekeeperRequestDetailsScreenIT23185302State
                   color: AppColors.panelBlack,
                   borderRadius: BorderRadius.circular(10),
                 ),
+                constraints: const BoxConstraints(maxWidth: 130),
                 child: Column(
                   children: [
                     Text(
-                      confidence,
+                      sourceLabel,
+                      textAlign: TextAlign.center,
                       style: GoogleFonts.inter(
-                        fontSize: 13,
+                        fontSize: 11,
                         fontWeight: FontWeight.w800,
                         color: AppColors.hiveTop,
                       ),
                     ),
-                    Text(
-                      'AI Confidence',
-                      style: GoogleFonts.inter(
-                        fontSize: 9,
-                        color: AppColors.textMuted,
+                    if (_isAiAssessment && modelName != null)
+                      Text(
+                        modelName,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          color: AppColors.textMuted,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -1652,10 +1673,33 @@ class _BeekeeperRequestDetailsScreenIT23185302State
               ),
             ),
           ),
+          const SizedBox(height: 10),
+          Text(
+            _isAiAssessment
+                ? 'Preliminary AI output from the reporter\'s photo and answers. '
+                    'Confirm on site before planning relocation.'
+                : 'Preliminary rule-based result from the questionnaire only '
+                    '(not AI). Confirm on site before planning relocation.'
+                    '${fallbackReason != null ? '\nReason: $fallbackReason' : ''}',
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              color: AppColors.textMuted,
+              height: 1.35,
+            ),
+          ),
         ],
       ),
     );
   }
+
+  String get _locationSourceLabel =>
+      switch (_data['location_source']?.toString()) {
+        'device_gps' => 'Device GPS',
+        'manual_pin' => 'Entered manually (unverified)',
+        'ip_approximate' => 'Approximate – network-based, not GPS',
+        'default_placeholder' => 'Default placeholder – not verified',
+        _ => 'Location source unknown',
+      };
 
   // ── Section 3: Location Card & Canvas Map ─────────────────────────
 
@@ -1719,7 +1763,8 @@ class _BeekeeperRequestDetailsScreenIT23185302State
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          gps,
+                          '$gps\n$_locationSourceLabel',
+                          textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
