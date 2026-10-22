@@ -9,6 +9,7 @@ import '../services/wild_bee_service.dart';
 import '../utils/theme.dart';
 import 'home_screen.dart';
 import 'IT23183186_environment_dashboard_screen.dart';
+import 'IT23185302_bee_detection_screen.dart';
 import 'IT23185302_beekeeper_requests_screen.dart';
 import 'IT23185302_hive_repositioning_screen.dart';
 import 'IT23185302_post_relocation_monitoring_screen.dart';
@@ -388,6 +389,14 @@ class _RelocationAssessmentScreenIT23185302State
               ),
             );
           },
+          secondaryActionLabel: 'Detect Bees',
+          onSecondaryTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const BeeDetectionScreenIT23185302(),
+              ),
+            );
+          },
         ),
       ],
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.06, end: 0);
@@ -608,6 +617,8 @@ class _ServiceCard extends StatelessWidget {
   final String description;
   final String actionLabel;
   final VoidCallback onTap;
+  final String? secondaryActionLabel;
+  final VoidCallback? onSecondaryTap;
 
   const _ServiceCard({
     required this.icon,
@@ -617,7 +628,31 @@ class _ServiceCard extends StatelessWidget {
     required this.description,
     required this.actionLabel,
     required this.onTap,
+    this.secondaryActionLabel,
+    this.onSecondaryTap,
   });
+
+  Widget _actionLink(String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: AppColors.hiveLow,
+          ),
+        ),
+        const SizedBox(width: 4),
+        const Icon(
+          Icons.arrow_forward_rounded,
+          size: 14,
+          color: AppColors.hiveLow,
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -674,20 +709,16 @@ class _ServiceCard extends StatelessWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      Text(
-                        actionLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.hiveLow,
+                      _actionLink(actionLabel),
+                      if (secondaryActionLabel != null &&
+                          onSecondaryTap != null) ...[
+                        const SizedBox(width: 20),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onSecondaryTap,
+                          child: _actionLink(secondaryActionLabel!),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 14,
-                        color: AppColors.hiveLow,
-                      ),
+                      ],
                     ],
                   ),
                 ],

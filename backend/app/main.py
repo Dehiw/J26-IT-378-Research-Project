@@ -12,6 +12,8 @@ from app.routes.IT23183186_image_inference import router as image_inference_rout
 from app.services.IT23183186_image_model_service import ImageModelService
 from app.routes.IT23136274_colony_health import router as colony_health_router
 from app.services.IT23136274_colony_health_service import ColonyHealthModelService
+from app.routes.IT23185302_bee_detection import router as bee_detection_router
+from app.services.IT23185302_bee_detection_service import BeeDetectionService
 
 
 @asynccontextmanager
@@ -22,6 +24,9 @@ async def lifespan(application: FastAPI):
     colony_health_model = ColonyHealthModelService()
     colony_health_model.load_once()
     application.state.colony_health_model_service = colony_health_model
+    bee_detection = BeeDetectionService()
+    bee_detection.load_once()
+    application.state.bee_detection_service = bee_detection
     yield
 from app.routes.sensor_data import router as sensor_data_router
 from app.routes.acoustic import router as acoustic_router
@@ -50,6 +55,7 @@ app.include_router(image_inference_router, prefix="/api/v1")
 app.include_router(sensor_data_router, prefix="/api/v1")
 app.include_router(acoustic_router, prefix="/api/v1")
 app.include_router(colony_health_router, prefix="/api/v1")
+app.include_router(bee_detection_router, prefix="/api/v1")
 
 @app.get("/")
 def home():
