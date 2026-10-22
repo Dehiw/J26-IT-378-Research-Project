@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import csv
 import json
 from pathlib import Path
@@ -94,6 +95,8 @@ def main() -> None:
     matrix = confusion_matrix(y_true, y_pred, labels=[0, 1]).tolist()
     result = {
         "dataset": "official VarroaDataset test split",
+        "evaluation_date": datetime.now(timezone.utc).isoformat(),
+        "split": "test",
         "test_manifest": str(args.prepared_dir / "manifests" / "test.csv"),
         "test_set_used_for_model_selection": False,
         "checkpoint": str(checkpoint_path),

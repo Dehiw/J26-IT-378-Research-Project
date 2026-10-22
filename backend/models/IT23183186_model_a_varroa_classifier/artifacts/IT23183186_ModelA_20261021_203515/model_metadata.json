@@ -1,0 +1,11 @@
+{
+  "checkpoint_format": "PyTorch state_dict package",
+  "dataset": "VarroaDataset",
+  "output_class_order": [
+    "healthy",
+    "varroa_positive"
+  ],
+  "task": "binary image classification of individual bee crops",
+  "test_set_used_during_training": false,
+  "validation_selected_threshold": 0.605
+}

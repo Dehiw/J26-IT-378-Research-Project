@@ -1,0 +1,22 @@
+{
+  "dataset_yaml": "None",
+  "classes": [
+    "CappedHoneyCell",
+    "CappedWorkerBroodCell",
+    "EmptyCombCell",
+    "PollenCell",
+    "UncappedNectarCell",
+    "UncappedWorkerLarvaCell",
+    "BeeHiveFrame"
+  ],
+  "splits": {},
+  "errors": [
+    {
+      "error": "Dataset YAML not found: C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\None"
+    }
+  ],
+  "duplicate_image_bytes": [],
+  "near_duplicate_candidates_dhash_le_4": [],
+  "group_overlap": [],
+  "passed": false
+}

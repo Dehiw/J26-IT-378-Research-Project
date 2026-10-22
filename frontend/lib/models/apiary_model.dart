@@ -1,6 +1,7 @@
-/// Data models for Apiaries, Hive Boxes, and Frames.
+// Data models for Apiaries, Hive Boxes, and Frames.
 
 class ApiaryModel {
+  final String source;
   final String id;
   final String userId;
   final String locationName;
@@ -12,6 +13,7 @@ class ApiaryModel {
   final String createdAt;
 
   const ApiaryModel({
+    this.source = 'live',
     required this.id,
     required this.userId,
     required this.locationName,
@@ -25,6 +27,7 @@ class ApiaryModel {
 
   factory ApiaryModel.fromJson(Map<String, dynamic> json) {
     return ApiaryModel(
+      source: json['_data_source'] as String? ?? 'live',
       id: json['id'] as String? ?? '',
       userId: json['user_id'] as String? ?? '',
       locationName: json['location_name'] as String? ?? '',
@@ -38,19 +41,21 @@ class ApiaryModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'location_name': locationName,
-        'area_address': areaAddress,
-        'gps_location': gpsLocation,
-        'total_hives': totalHives,
-        'total_frames': totalFrames,
-        'status': status,
-        'created_at': createdAt,
-      };
+    '_data_source': source,
+    'id': id,
+    'user_id': userId,
+    'location_name': locationName,
+    'area_address': areaAddress,
+    'gps_location': gpsLocation,
+    'total_hives': totalHives,
+    'total_frames': totalFrames,
+    'status': status,
+    'created_at': createdAt,
+  };
 }
 
 class HiveModel {
+  final String source;
   final String id;
   final String userId;
   final String apiaryId;
@@ -64,6 +69,7 @@ class HiveModel {
   final String createdAt;
 
   const HiveModel({
+    this.source = 'live',
     required this.id,
     required this.userId,
     required this.apiaryId,
@@ -79,6 +85,7 @@ class HiveModel {
 
   factory HiveModel.fromJson(Map<String, dynamic> json) {
     return HiveModel(
+      source: json['_data_source'] as String? ?? 'live',
       id: json['id'] as String? ?? '',
       userId: json['user_id'] as String? ?? '',
       apiaryId: json['apiary_id'] as String? ?? '',
@@ -94,16 +101,17 @@ class HiveModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'user_id': userId,
-        'apiary_id': apiaryId,
-        'name': name,
-        'box_number': boxNumber,
-        'hive_type': hiveType,
-        'bee_species': beeSpecies,
-        'num_frames': numFrames,
-        'status': status,
-        'installation_date': installationDate,
-        'created_at': createdAt,
-      };
+    '_data_source': source,
+    'id': id,
+    'user_id': userId,
+    'apiary_id': apiaryId,
+    'name': name,
+    'box_number': boxNumber,
+    'hive_type': hiveType,
+    'bee_species': beeSpecies,
+    'num_frames': numFrames,
+    'status': status,
+    'installation_date': installationDate,
+    'created_at': createdAt,
+  };
 }

@@ -1,0 +1,1368 @@
+{
+  "schema_version": 1,
+  "description": "Prepared illustrative data. Never live telemetry, actual inference, or evaluated metrics.",
+  "apiaries": {
+    "apiaries": [
+      {
+        "id": "demo-apiary-kandy",
+        "user_id": "demo-user",
+        "location_name": "Demo apiary, Kandy",
+        "area_address": "Illustrative apiary location",
+        "gps_location": "7.29,80.63",
+        "total_hives": 2,
+        "total_frames": 16,
+        "created_at": "2026-10-20T08:30:00Z",
+        "status": "Demo"
+      }
+    ]
+  },
+  "hives": {
+    "hives": [
+      {
+        "id": "demo-hive-1",
+        "apiary_id": "demo-apiary-kandy",
+        "user_id": "demo-user",
+        "name": "Demo hive 1",
+        "box_number": 1,
+        "num_frames": 8,
+        "created_at": "2026-10-20T08:30:00Z",
+        "status": "Demo",
+        "bee_species": "Apis cerana",
+        "hive_type": "Langstroth"
+      },
+      {
+        "id": "demo-hive-2",
+        "apiary_id": "demo-apiary-kandy",
+        "user_id": "demo-user",
+        "name": "Demo hive 2",
+        "box_number": 2,
+        "num_frames": 8,
+        "created_at": "2026-10-20T08:30:00Z",
+        "status": "Demo",
+        "bee_species": "Apis cerana",
+        "hive_type": "Langstroth"
+      }
+    ]
+  },
+  "weather": {
+    "location": {
+      "name": "Demo apiary, Kandy",
+      "region": "Central Province",
+      "latitude": 7.29,
+      "longitude": 80.63,
+      "localtime": "2026-10-20 14:00"
+    },
+    "current": {
+      "temperature_c": 29.2,
+      "humidity_percent": 88,
+      "feels_like_c": 32.1,
+      "wind_kph": 8.4,
+      "wind_direction": "SW",
+      "precipitation_mm": 1.2,
+      "uv_index": 4,
+      "condition": "Light rain",
+      "last_updated": "2026-10-20T08:30:00Z",
+      "last_updated_epoch": 1792485000,
+      "cloud_percent": 72,
+      "visibility_km": 8,
+      "pressure_mb": 1010,
+      "dew_point_c": 26.1
+    }
+  },
+  "impact": {
+    "weather": {
+      "location": {
+        "name": "Demo apiary, Kandy",
+        "region": "Central Province",
+        "latitude": 7.29,
+        "longitude": 80.63,
+        "localtime": "2026-10-20 14:00"
+      },
+      "current": {
+        "temperature_c": 29.2,
+        "humidity_percent": 88,
+        "feels_like_c": 32.1,
+        "wind_kph": 8.4,
+        "wind_direction": "SW",
+        "precipitation_mm": 1.2,
+        "uv_index": 4,
+        "condition": "Light rain",
+        "last_updated": "2026-10-20T08:30:00Z",
+        "last_updated_epoch": 1792485000,
+        "cloud_percent": 72,
+        "visibility_km": 8,
+        "pressure_mb": 1010,
+        "dew_point_c": 26.1
+      }
+    },
+    "analysis": {
+      "season": "Second inter-monsoon",
+      "season_period": "October-November",
+      "regional_context": "Demonstration of Sri Lankan seasonal context.",
+      "environmental_summary": "Demo rain and humidity suggest checking ventilation and flight activity.",
+      "bee_activity": {
+        "assessment": "Rain may interrupt flight",
+        "reason": "Illustrative observation; inspect flight activity directly."
+      },
+      "colony_growth": {
+        "assessment": "Not assessed",
+        "reason": "Population and brood observations are needed."
+      },
+      "food_availability": {
+        "assessment": "Unknown",
+        "reason": "Inspect local forage and food stores."
+      },
+      "population": {
+        "assessment": "Not measured",
+        "reason": "No population measurements in this example."
+      },
+      "development_suitability": {
+        "assessment": "Potential flight constraint",
+        "reason": "Illustrative rainfall observation."
+      },
+      "recommendations": [
+        "Inspect ventilation and moisture.",
+        "Check food stores during inspection.",
+        "Compare rain with observed flight activity."
+      ],
+      "data_quality": {
+        "demo": true,
+        "observed_at": "2026-10-20T08:30:00Z"
+      }
+    }
+  },
+  "forecast": {
+    "location": {
+      "name": "Demo apiary, Kandy",
+      "region": "Central Province",
+      "latitude": 7.29,
+      "longitude": 80.63,
+      "localtime": "2026-10-20 14:00"
+    },
+    "days": [
+      {
+        "date": "2026-10-20",
+        "maximum_temperature_c": 31.0,
+        "minimum_temperature_c": 24.2,
+        "average_temperature_c": 28.1,
+        "average_humidity_percent": 83,
+        "total_precipitation_mm": 2.0,
+        "maximum_wind_kph": 12.0,
+        "chance_of_rain_percent": 65,
+        "condition": "Demo showers",
+        "hours": [
+          {
+            "time": "2026-10-20 00:00",
+            "temperature_c": 27.2,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 03:00",
+            "temperature_c": 27.5,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 06:00",
+            "temperature_c": 27.8,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 09:00",
+            "temperature_c": 28.099999999999998,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 12:00",
+            "temperature_c": 28.4,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 15:00",
+            "temperature_c": 28.7,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 18:00",
+            "temperature_c": 29.0,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-20 21:00",
+            "temperature_c": 29.3,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          }
+        ],
+        "day": {
+          "maxtemp_c": 31.0,
+          "mintemp_c": 24.2,
+          "avgtemp_c": 28.1,
+          "avghumidity": 83,
+          "maxwind_kph": 12.0,
+          "totalprecip_mm": 2.0,
+          "daily_chance_of_rain": 65,
+          "condition": {
+            "text": "Demo light showers"
+          }
+        },
+        "hour": [
+          {
+            "time": "2026-10-20 00:00",
+            "temp_c": 27.2,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 03:00",
+            "temp_c": 27.5,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 06:00",
+            "temp_c": 27.8,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 09:00",
+            "temp_c": 28.099999999999998,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 12:00",
+            "temp_c": 28.4,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 15:00",
+            "temp_c": 28.7,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 18:00",
+            "temp_c": 29.0,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-20 21:00",
+            "temp_c": 29.3,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          }
+        ]
+      },
+      {
+        "date": "2026-10-21",
+        "maximum_temperature_c": 31.0,
+        "minimum_temperature_c": 24.2,
+        "average_temperature_c": 28.1,
+        "average_humidity_percent": 83,
+        "total_precipitation_mm": 2.0,
+        "maximum_wind_kph": 12.0,
+        "chance_of_rain_percent": 65,
+        "condition": "Demo showers",
+        "hours": [
+          {
+            "time": "2026-10-21 00:00",
+            "temperature_c": 27.2,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 03:00",
+            "temperature_c": 27.5,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 06:00",
+            "temperature_c": 27.8,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 09:00",
+            "temperature_c": 28.099999999999998,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 12:00",
+            "temperature_c": 28.4,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 15:00",
+            "temperature_c": 28.7,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 18:00",
+            "temperature_c": 29.0,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-21 21:00",
+            "temperature_c": 29.3,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          }
+        ],
+        "day": {
+          "maxtemp_c": 31.0,
+          "mintemp_c": 24.2,
+          "avgtemp_c": 28.1,
+          "avghumidity": 83,
+          "maxwind_kph": 12.0,
+          "totalprecip_mm": 2.0,
+          "daily_chance_of_rain": 65,
+          "condition": {
+            "text": "Demo light showers"
+          }
+        },
+        "hour": [
+          {
+            "time": "2026-10-21 00:00",
+            "temp_c": 27.2,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 03:00",
+            "temp_c": 27.5,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 06:00",
+            "temp_c": 27.8,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 09:00",
+            "temp_c": 28.099999999999998,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 12:00",
+            "temp_c": 28.4,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 15:00",
+            "temp_c": 28.7,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 18:00",
+            "temp_c": 29.0,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-21 21:00",
+            "temp_c": 29.3,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          }
+        ]
+      },
+      {
+        "date": "2026-10-22",
+        "maximum_temperature_c": 31.0,
+        "minimum_temperature_c": 24.2,
+        "average_temperature_c": 28.1,
+        "average_humidity_percent": 83,
+        "total_precipitation_mm": 2.0,
+        "maximum_wind_kph": 12.0,
+        "chance_of_rain_percent": 65,
+        "condition": "Demo showers",
+        "hours": [
+          {
+            "time": "2026-10-22 00:00",
+            "temperature_c": 27.2,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 03:00",
+            "temperature_c": 27.5,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 06:00",
+            "temperature_c": 27.8,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 09:00",
+            "temperature_c": 28.099999999999998,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 12:00",
+            "temperature_c": 28.4,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 15:00",
+            "temperature_c": 28.7,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 18:00",
+            "temperature_c": 29.0,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          },
+          {
+            "time": "2026-10-22 21:00",
+            "temperature_c": 29.3,
+            "humidity_percent": 82,
+            "precipitation_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain_percent": 65
+          }
+        ],
+        "day": {
+          "maxtemp_c": 31.0,
+          "mintemp_c": 24.2,
+          "avgtemp_c": 28.1,
+          "avghumidity": 83,
+          "maxwind_kph": 12.0,
+          "totalprecip_mm": 2.0,
+          "daily_chance_of_rain": 65,
+          "condition": {
+            "text": "Demo light showers"
+          }
+        },
+        "hour": [
+          {
+            "time": "2026-10-22 00:00",
+            "temp_c": 27.2,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 03:00",
+            "temp_c": 27.5,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 06:00",
+            "temp_c": 27.8,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 09:00",
+            "temp_c": 28.099999999999998,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 12:00",
+            "temp_c": 28.4,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 15:00",
+            "temp_c": 28.7,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 18:00",
+            "temp_c": 29.0,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          },
+          {
+            "time": "2026-10-22 21:00",
+            "temp_c": 29.3,
+            "humidity": 82,
+            "precip_mm": 0.2,
+            "wind_kph": 8.0,
+            "chance_of_rain": 65
+          }
+        ]
+      }
+    ]
+  },
+  "weather_history": {
+    "days": [
+      {
+        "date": "2026-10-14",
+        "average_temperature_c": 28.8,
+        "average_humidity_percent": 84,
+        "precipitation_mm": 2.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      },
+      {
+        "date": "2026-10-15",
+        "average_temperature_c": 28.2,
+        "average_humidity_percent": 85,
+        "precipitation_mm": 0.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      },
+      {
+        "date": "2026-10-16",
+        "average_temperature_c": 28.5,
+        "average_humidity_percent": 82,
+        "precipitation_mm": 1.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      },
+      {
+        "date": "2026-10-17",
+        "average_temperature_c": 28.8,
+        "average_humidity_percent": 83,
+        "precipitation_mm": 2.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      },
+      {
+        "date": "2026-10-18",
+        "average_temperature_c": 28.2,
+        "average_humidity_percent": 84,
+        "precipitation_mm": 0.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      },
+      {
+        "date": "2026-10-19",
+        "average_temperature_c": 28.5,
+        "average_humidity_percent": 85,
+        "precipitation_mm": 1.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      },
+      {
+        "date": "2026-10-20",
+        "average_temperature_c": 28.8,
+        "average_humidity_percent": 82,
+        "precipitation_mm": 2.0,
+        "maximum_wind_kph": 12.0,
+        "min_temperature_c": 24.2,
+        "max_temperature_c": 31.1
+      }
+    ],
+    "analysis": {
+      "summary": "Illustrative seven-day observations; not a climate trend."
+    }
+  },
+  "monitoring": {
+    "assessment": {
+      "generated_at": "2026-10-20T08:30:00Z",
+      "status": "preliminary",
+      "summary": "Demonstration monitoring example. Not a current hive assessment.",
+      "environmental_risk": "watch",
+      "disease_risk": "inconclusive",
+      "alerts": [
+        {
+          "id": "demo-humidity",
+          "severity": "warning",
+          "source": "Demo weather",
+          "title": "Moisture check",
+          "message": "Demo humidity is 88%. Inspect ventilation and moisture.",
+          "review_key": "demo-humidity-review"
+        },
+        {
+          "id": "demo-rain",
+          "severity": "warning",
+          "source": "Demo weather",
+          "title": "Rain watch",
+          "message": "Demo rain may interrupt flight; observe hive activity.",
+          "review_key": "demo-rain-review"
+        }
+      ],
+      "missing_inputs": [
+        "Verified live hive measurements"
+      ],
+      "evidence": {
+        "weather": "demo",
+        "sensors": "demo",
+        "model_a": "unavailable"
+      },
+      "rules_version": "demonstration-v1",
+      "rules": {},
+      "limitations": [
+        "Demonstration values are illustrative, not live readings.",
+        "Monitoring guidance does not confirm disease."
+      ]
+    },
+    "weather": {
+      "location": {
+        "name": "Demo apiary, Kandy",
+        "region": "Central Province",
+        "latitude": 7.29,
+        "longitude": 80.63,
+        "localtime": "2026-10-20 14:00"
+      },
+      "current": {
+        "temperature_c": 29.2,
+        "humidity_percent": 88,
+        "feels_like_c": 32.1,
+        "wind_kph": 8.4,
+        "wind_direction": "SW",
+        "precipitation_mm": 1.2,
+        "uv_index": 4,
+        "condition": "Light rain",
+        "last_updated": "2026-10-20T08:30:00Z",
+        "last_updated_epoch": 1792485000,
+        "cloud_percent": 72,
+        "visibility_km": 8,
+        "pressure_mb": 1010,
+        "dew_point_c": 26.1
+      }
+    },
+    "environment": {
+      "season": "Second inter-monsoon",
+      "season_period": "October-November",
+      "regional_context": "Demonstration of Sri Lankan seasonal context.",
+      "environmental_summary": "Demo rain and humidity suggest checking ventilation and flight activity.",
+      "bee_activity": {
+        "assessment": "Rain may interrupt flight",
+        "reason": "Illustrative observation; inspect flight activity directly."
+      },
+      "colony_growth": {
+        "assessment": "Not assessed",
+        "reason": "Population and brood observations are needed."
+      },
+      "food_availability": {
+        "assessment": "Unknown",
+        "reason": "Inspect local forage and food stores."
+      },
+      "population": {
+        "assessment": "Not measured",
+        "reason": "No population measurements in this example."
+      },
+      "development_suitability": {
+        "assessment": "Potential flight constraint",
+        "reason": "Illustrative rainfall observation."
+      },
+      "recommendations": [
+        "Inspect ventilation and moisture.",
+        "Check food stores during inspection.",
+        "Compare rain with observed flight activity."
+      ],
+      "data_quality": {
+        "demo": true,
+        "observed_at": "2026-10-20T08:30:00Z"
+      }
+    },
+    "sensor": {
+      "timestamp": "2026-10-20T08:30:00Z",
+      "temperature": 34.3,
+      "humidity": 64,
+      "weight": 24.6,
+      "bee_activity": 16
+    },
+    "weather_error": null
+  },
+  "environment_history": {
+    "records": [
+      {
+        "id": "demo-environment-example",
+        "hive_id": "demo-hive-1",
+        "saved_at": "2026-10-20T08:30:00Z",
+        "location_query": "Demo apiary, Kandy",
+        "record_type": "environment_assessment",
+        "assessment": {
+          "generated_at": "2026-10-20T08:30:00Z",
+          "status": "preliminary",
+          "summary": "Demonstration monitoring example. Not a current hive assessment.",
+          "environmental_risk": "watch",
+          "disease_risk": "inconclusive",
+          "alerts": [
+            {
+              "id": "demo-humidity",
+              "severity": "warning",
+              "source": "Demo weather",
+              "title": "Moisture check",
+              "message": "Demo humidity is 88%. Inspect ventilation and moisture.",
+              "review_key": "demo-humidity-review"
+            },
+            {
+              "id": "demo-rain",
+              "severity": "warning",
+              "source": "Demo weather",
+              "title": "Rain watch",
+              "message": "Demo rain may interrupt flight; observe hive activity.",
+              "review_key": "demo-rain-review"
+            }
+          ],
+          "missing_inputs": [
+            "Verified live hive measurements"
+          ],
+          "evidence": {
+            "weather": "demo",
+            "sensors": "demo",
+            "model_a": "unavailable"
+          },
+          "rules_version": "demonstration-v1",
+          "rules": {},
+          "limitations": [
+            "Demonstration values are illustrative, not live readings.",
+            "Monitoring guidance does not confirm disease."
+          ]
+        },
+        "weather": {
+          "location": {
+            "name": "Demo apiary, Kandy",
+            "region": "Central Province",
+            "latitude": 7.29,
+            "longitude": 80.63,
+            "localtime": "2026-10-20 14:00"
+          },
+          "current": {
+            "temperature_c": 29.2,
+            "humidity_percent": 88,
+            "feels_like_c": 32.1,
+            "wind_kph": 8.4,
+            "wind_direction": "SW",
+            "precipitation_mm": 1.2,
+            "uv_index": 4,
+            "condition": "Light rain",
+            "last_updated": "2026-10-20T08:30:00Z",
+            "last_updated_epoch": 1792485000,
+            "cloud_percent": 72,
+            "visibility_km": 8,
+            "pressure_mb": 1010,
+            "dew_point_c": 26.1
+          }
+        },
+        "environment": {
+          "season": "Second inter-monsoon",
+          "season_period": "October-November",
+          "regional_context": "Demonstration of Sri Lankan seasonal context.",
+          "environmental_summary": "Demo rain and humidity suggest checking ventilation and flight activity.",
+          "bee_activity": {
+            "assessment": "Rain may interrupt flight",
+            "reason": "Illustrative observation; inspect flight activity directly."
+          },
+          "colony_growth": {
+            "assessment": "Not assessed",
+            "reason": "Population and brood observations are needed."
+          },
+          "food_availability": {
+            "assessment": "Unknown",
+            "reason": "Inspect local forage and food stores."
+          },
+          "population": {
+            "assessment": "Not measured",
+            "reason": "No population measurements in this example."
+          },
+          "development_suitability": {
+            "assessment": "Potential flight constraint",
+            "reason": "Illustrative rainfall observation."
+          },
+          "recommendations": [
+            "Inspect ventilation and moisture.",
+            "Check food stores during inspection.",
+            "Compare rain with observed flight activity."
+          ],
+          "data_quality": {
+            "demo": true,
+            "observed_at": "2026-10-20T08:30:00Z"
+          }
+        },
+        "sensor": {
+          "timestamp": "2026-10-20T08:30:00Z",
+          "temperature": 34.3,
+          "humidity": 64,
+          "weight": 24.6,
+          "bee_activity": 16
+        },
+        "weather_error": null,
+        "persistence": "demo_fixture"
+      }
+    ]
+  },
+  "image_analysis": {
+    "model_a": {
+      "status": "complete",
+      "predicted_class": "healthy",
+      "class_scores": {
+        "healthy": 0.82,
+        "varroa_positive": 0.18
+      },
+      "model_version": "Demo bee screening example",
+      "inference_duration_ms": 145.0,
+      "inference_timestamp": "2026-10-20T08:30:00Z",
+      "image_identifier": "demo-bee-example",
+      "demo_image_asset": "lib/utils/images/05_bees_on_honeycomb.png",
+      "limitations": [
+        "Prepared demonstration only; not a prediction for your uploaded image.",
+        "Individual-bee screening does not validate a whole colony."
+      ]
+    },
+    "model_b": {
+      "status": "complete",
+      "model_version": "Demo frame structure example",
+      "detections": [
+        {
+          "class_name": "BeeHiveFrame",
+          "confidence": 0.87,
+          "bbox_xyxy": [
+            10,
+            15,
+            280,
+            210
+          ]
+        }
+      ],
+      "inference_duration_ms": 210.0,
+      "inference_timestamp": "2026-10-20T08:30:00Z",
+      "image_identifier": "demo-frame-example",
+      "demo_image_asset": "lib/utils/images/02_bee_activity_honeycomb.png",
+      "limitations": [
+        "Illustrative structural detection; not a disease diagnosis."
+      ]
+    },
+    "assessment": {
+      "generated_at": "2026-10-20T08:30:00Z",
+      "status": "preliminary",
+      "summary": "Demonstration monitoring example. Not a current hive assessment.",
+      "environmental_risk": "watch",
+      "disease_risk": "inconclusive",
+      "alerts": [
+        {
+          "id": "demo-humidity",
+          "severity": "warning",
+          "source": "Demo weather",
+          "title": "Moisture check",
+          "message": "Demo humidity is 88%. Inspect ventilation and moisture.",
+          "review_key": "demo-humidity-review"
+        },
+        {
+          "id": "demo-rain",
+          "severity": "warning",
+          "source": "Demo weather",
+          "title": "Rain watch",
+          "message": "Demo rain may interrupt flight; observe hive activity.",
+          "review_key": "demo-rain-review"
+        }
+      ],
+      "missing_inputs": [
+        "Verified live hive measurements"
+      ],
+      "evidence": {
+        "weather": "demo",
+        "sensors": "demo",
+        "model_a": "unavailable"
+      },
+      "rules_version": "demonstration-v1",
+      "rules": {},
+      "limitations": [
+        "Demonstration values are illustrative, not live readings.",
+        "Monitoring guidance does not confirm disease."
+      ]
+    },
+    "image_storage": "Demonstration example; local saves only."
+  },
+  "workspace": {
+    "monitoring": {
+      "assessment": {
+        "generated_at": "2026-10-20T08:30:00Z",
+        "status": "preliminary",
+        "summary": "Demonstration monitoring example. Not a current hive assessment.",
+        "environmental_risk": "watch",
+        "disease_risk": "inconclusive",
+        "alerts": [
+          {
+            "id": "demo-humidity",
+            "severity": "warning",
+            "source": "Demo weather",
+            "title": "Moisture check",
+            "message": "Demo humidity is 88%. Inspect ventilation and moisture.",
+            "review_key": "demo-humidity-review"
+          },
+          {
+            "id": "demo-rain",
+            "severity": "warning",
+            "source": "Demo weather",
+            "title": "Rain watch",
+            "message": "Demo rain may interrupt flight; observe hive activity.",
+            "review_key": "demo-rain-review"
+          }
+        ],
+        "missing_inputs": [
+          "Verified live hive measurements"
+        ],
+        "evidence": {
+          "weather": "demo",
+          "sensors": "demo",
+          "model_a": "unavailable"
+        },
+        "rules_version": "demonstration-v1",
+        "rules": {},
+        "limitations": [
+          "Demonstration values are illustrative, not live readings.",
+          "Monitoring guidance does not confirm disease."
+        ]
+      },
+      "weather": {
+        "location": {
+          "name": "Demo apiary, Kandy",
+          "region": "Central Province",
+          "latitude": 7.29,
+          "longitude": 80.63,
+          "localtime": "2026-10-20 14:00"
+        },
+        "current": {
+          "temperature_c": 29.2,
+          "humidity_percent": 88,
+          "feels_like_c": 32.1,
+          "wind_kph": 8.4,
+          "wind_direction": "SW",
+          "precipitation_mm": 1.2,
+          "uv_index": 4,
+          "condition": "Light rain",
+          "last_updated": "2026-10-20T08:30:00Z",
+          "last_updated_epoch": 1792485000,
+          "cloud_percent": 72,
+          "visibility_km": 8,
+          "pressure_mb": 1010,
+          "dew_point_c": 26.1
+        }
+      },
+      "environment": {
+        "season": "Second inter-monsoon",
+        "season_period": "October-November",
+        "regional_context": "Demonstration of Sri Lankan seasonal context.",
+        "environmental_summary": "Demo rain and humidity suggest checking ventilation and flight activity.",
+        "bee_activity": {
+          "assessment": "Rain may interrupt flight",
+          "reason": "Illustrative observation; inspect flight activity directly."
+        },
+        "colony_growth": {
+          "assessment": "Not assessed",
+          "reason": "Population and brood observations are needed."
+        },
+        "food_availability": {
+          "assessment": "Unknown",
+          "reason": "Inspect local forage and food stores."
+        },
+        "population": {
+          "assessment": "Not measured",
+          "reason": "No population measurements in this example."
+        },
+        "development_suitability": {
+          "assessment": "Potential flight constraint",
+          "reason": "Illustrative rainfall observation."
+        },
+        "recommendations": [
+          "Inspect ventilation and moisture.",
+          "Check food stores during inspection.",
+          "Compare rain with observed flight activity."
+        ],
+        "data_quality": {
+          "demo": true,
+          "observed_at": "2026-10-20T08:30:00Z"
+        }
+      },
+      "sensor": {
+        "timestamp": "2026-10-20T08:30:00Z",
+        "temperature": 34.3,
+        "humidity": 64,
+        "weight": 24.6,
+        "bee_activity": 16
+      },
+      "weather_error": null
+    },
+    "records": [
+      {
+        "id": "demo-environment-example",
+        "hive_id": "demo-hive-1",
+        "saved_at": "2026-10-20T08:30:00Z",
+        "location_query": "Demo apiary, Kandy",
+        "record_type": "environment_assessment",
+        "assessment": {
+          "generated_at": "2026-10-20T08:30:00Z",
+          "status": "preliminary",
+          "summary": "Demonstration monitoring example. Not a current hive assessment.",
+          "environmental_risk": "watch",
+          "disease_risk": "inconclusive",
+          "alerts": [
+            {
+              "id": "demo-humidity",
+              "severity": "warning",
+              "source": "Demo weather",
+              "title": "Moisture check",
+              "message": "Demo humidity is 88%. Inspect ventilation and moisture.",
+              "review_key": "demo-humidity-review"
+            },
+            {
+              "id": "demo-rain",
+              "severity": "warning",
+              "source": "Demo weather",
+              "title": "Rain watch",
+              "message": "Demo rain may interrupt flight; observe hive activity.",
+              "review_key": "demo-rain-review"
+            }
+          ],
+          "missing_inputs": [
+            "Verified live hive measurements"
+          ],
+          "evidence": {
+            "weather": "demo",
+            "sensors": "demo",
+            "model_a": "unavailable"
+          },
+          "rules_version": "demonstration-v1",
+          "rules": {},
+          "limitations": [
+            "Demonstration values are illustrative, not live readings.",
+            "Monitoring guidance does not confirm disease."
+          ]
+        },
+        "weather": {
+          "location": {
+            "name": "Demo apiary, Kandy",
+            "region": "Central Province",
+            "latitude": 7.29,
+            "longitude": 80.63,
+            "localtime": "2026-10-20 14:00"
+          },
+          "current": {
+            "temperature_c": 29.2,
+            "humidity_percent": 88,
+            "feels_like_c": 32.1,
+            "wind_kph": 8.4,
+            "wind_direction": "SW",
+            "precipitation_mm": 1.2,
+            "uv_index": 4,
+            "condition": "Light rain",
+            "last_updated": "2026-10-20T08:30:00Z",
+            "last_updated_epoch": 1792485000,
+            "cloud_percent": 72,
+            "visibility_km": 8,
+            "pressure_mb": 1010,
+            "dew_point_c": 26.1
+          }
+        },
+        "environment": {
+          "season": "Second inter-monsoon",
+          "season_period": "October-November",
+          "regional_context": "Demonstration of Sri Lankan seasonal context.",
+          "environmental_summary": "Demo rain and humidity suggest checking ventilation and flight activity.",
+          "bee_activity": {
+            "assessment": "Rain may interrupt flight",
+            "reason": "Illustrative observation; inspect flight activity directly."
+          },
+          "colony_growth": {
+            "assessment": "Not assessed",
+            "reason": "Population and brood observations are needed."
+          },
+          "food_availability": {
+            "assessment": "Unknown",
+            "reason": "Inspect local forage and food stores."
+          },
+          "population": {
+            "assessment": "Not measured",
+            "reason": "No population measurements in this example."
+          },
+          "development_suitability": {
+            "assessment": "Potential flight constraint",
+            "reason": "Illustrative rainfall observation."
+          },
+          "recommendations": [
+            "Inspect ventilation and moisture.",
+            "Check food stores during inspection.",
+            "Compare rain with observed flight activity."
+          ],
+          "data_quality": {
+            "demo": true,
+            "observed_at": "2026-10-20T08:30:00Z"
+          }
+        },
+        "sensor": {
+          "timestamp": "2026-10-20T08:30:00Z",
+          "temperature": 34.3,
+          "humidity": 64,
+          "weight": 24.6,
+          "bee_activity": 16
+        },
+        "weather_error": null,
+        "persistence": "demo_fixture"
+      },
+      {
+        "id": "demo-image-example",
+        "hive_id": "demo-hive-1",
+        "record_type": "image_assessment",
+        "saved_at": "2026-10-20T08:30:00Z",
+        "location_query": "Demo apiary, Kandy",
+        "model_a": {
+          "status": "complete",
+          "predicted_class": "healthy",
+          "class_scores": {
+            "healthy": 0.82,
+            "varroa_positive": 0.18
+          },
+          "model_version": "Demo bee screening example",
+          "inference_duration_ms": 145.0,
+          "inference_timestamp": "2026-10-20T08:30:00Z",
+          "image_identifier": "demo-bee-example",
+          "demo_image_asset": "lib/utils/images/05_bees_on_honeycomb.png",
+          "limitations": [
+            "Prepared demonstration only; not a prediction for your uploaded image.",
+            "Individual-bee screening does not validate a whole colony."
+          ]
+        },
+        "model_b": {
+          "status": "complete",
+          "model_version": "Demo frame structure example",
+          "detections": [
+            {
+              "class_name": "BeeHiveFrame",
+              "confidence": 0.87,
+              "bbox_xyxy": [
+                10,
+                15,
+                280,
+                210
+              ]
+            }
+          ],
+          "inference_duration_ms": 210.0,
+          "inference_timestamp": "2026-10-20T08:30:00Z",
+          "image_identifier": "demo-frame-example",
+          "demo_image_asset": "lib/utils/images/02_bee_activity_honeycomb.png",
+          "limitations": [
+            "Illustrative structural detection; not a disease diagnosis."
+          ]
+        },
+        "assessment": {
+          "generated_at": "2026-10-20T08:30:00Z",
+          "status": "preliminary",
+          "summary": "Demonstration monitoring example. Not a current hive assessment.",
+          "environmental_risk": "watch",
+          "disease_risk": "inconclusive",
+          "alerts": [
+            {
+              "id": "demo-humidity",
+              "severity": "warning",
+              "source": "Demo weather",
+              "title": "Moisture check",
+              "message": "Demo humidity is 88%. Inspect ventilation and moisture.",
+              "review_key": "demo-humidity-review"
+            },
+            {
+              "id": "demo-rain",
+              "severity": "warning",
+              "source": "Demo weather",
+              "title": "Rain watch",
+              "message": "Demo rain may interrupt flight; observe hive activity.",
+              "review_key": "demo-rain-review"
+            }
+          ],
+          "missing_inputs": [
+            "Verified live hive measurements"
+          ],
+          "evidence": {
+            "weather": "demo",
+            "sensors": "demo",
+            "model_a": "unavailable"
+          },
+          "rules_version": "demonstration-v1",
+          "rules": {},
+          "limitations": [
+            "Demonstration values are illustrative, not live readings.",
+            "Monitoring guidance does not confirm disease."
+          ]
+        },
+        "image_storage": "Demonstration example; local saves only.",
+        "persistence": "demo_fixture"
+      }
+    ],
+    "sensor_history": [
+      {
+        "timestamp": "2026-10-20T08:30:00Z",
+        "temperature": 34.3,
+        "humidity": 64,
+        "weight": 24.6,
+        "bee_activity": 16
+      }
+    ],
+    "sensor_error": null,
+    "observations": [
+      {
+        "id": "demo-observation",
+        "saved_at": "2026-10-20T08:30:00Z",
+        "hive_id": "demo-hive-1",
+        "notes": "Demo inspection: check ventilation and food stores.",
+        "forage_observed": true,
+        "observed_on": "2026-10-20",
+        "queen": "seen",
+        "brood": "present",
+        "food_stores": "check needed",
+        "forage": "observed",
+        "brood_frames": 3
+      }
+    ],
+    "care_plans": [
+      {
+        "id": "demo-plan",
+        "saved_at": "2026-10-20T08:30:00Z",
+        "title": "Check ventilation",
+        "action": "Inspect ventilation",
+        "status": "planned",
+        "notes": "Demonstration follow-up.",
+        "due_on": "2026-10-22",
+        "advisor": "Demo inspection guidance"
+      }
+    ],
+    "alert_reviews": [],
+    "preferences": {
+      "auto_refresh": true,
+      "refresh_seconds": 20,
+      "in_app_alerts": true
+    },
+    "models": {
+      "model_a": {
+        "available": false,
+        "message": "Demonstration mode"
+      },
+      "model_b": {
+        "available": false,
+        "message": "Demonstration mode"
+      }
+    }
+  },
+  "model_report": {
+    "summary": {},
+    "history": [],
+    "history_status": "unavailable",
+    "history_help": "No fabricated epoch history is supplied in demonstration mode.",
+    "evaluation": null,
+    "evaluation_status": "unavailable",
+    "evaluation_message": "Verified evaluation unavailable offline."
+  }
+}

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from app.core.security import get_current_user_id
-from app.routes.image_inference import router
+from app.routes.IT23183186_image_inference import router
 
 
 class StubImageModels:
@@ -122,3 +122,59 @@ def test_authentication_is_required():
         files={"image": ("outside.png", image_upload(), "image/png")},
     )
     assert response.status_code == 401
+
+
+def test_combined_images_include_backend_weather_assessment(monkeypatch):
+    from datetime import datetime, timezone
+    from app.routes import IT23183186_environment as environment
+
+    async def weather(q):
+        assert q == "6.9,79.8"
+        return {"location": {"latitude": 6.9, "longitude": 79.8}, "current": {
+            "temperature_c": 40, "humidity_percent": 65, "precipitation_mm": 0,
+            "last_updated_epoch": datetime.now(timezone.utc).timestamp(), "last_updated": "2026-10-20 12:00",
+        }}
+    monkeypatch.setattr(environment, "current_weather", weather)
+    response = make_client().post("/api/v1/inference/analyze", data={"q": "6.9,79.8"}, files={
+        "outside_image": ("bee.png", image_upload(), "image/png"),
+        "inside_image": ("frame.png", image_upload(), "image/png"),
+    })
+    assert response.status_code == 200
+    result = response.json()
+    assert result["assessment"]["environmental_risk"] == "high"
+    assert result["assessment"]["disease_risk"] == "inconclusive"
+    assert result["model_a"]["predicted_class"] == "healthy"
+    assert result["model_b"]["detections"]
+
+
+def test_backend_measures_inference_duration_separately_from_timestamp():
+    response = make_client().post('/api/v1/inference/analyze', files={'outside_image': ('bee.png', image_upload(), 'image/png')})
+    result = response.json()['model_a']
+    assert result['inference_duration_ms'] >= 0
+    assert result['inference_duration_ms'] < 10000
+    assert result['inference_timestamp']
+    assert result['class_scores']['healthy'] == .8
+
+
+def test_database_outage_does_not_discard_successful_image_inference(monkeypatch):
+    from app.services import IT23183186_environment_history as history
+    def fail(*args):
+        raise RuntimeError('database offline')
+    monkeypatch.setattr(history, 'hive_location', fail)
+    response = make_client().post('/api/v1/inference/analyze', files={'outside_image': ('bee.png', image_upload(), 'image/png')}, data={'hive_id':'owned-hive','save_result':'true'})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload['model_a']['status'] == 'complete'
+    assert payload['model_a']['predicted_class'] == 'healthy'
+    assert 'save_error' in payload
+    assert 'saved_record_id' not in payload
+
+
+def test_unknown_hive_is_not_hidden_by_demo_or_image_only_fallback(monkeypatch):
+    from fastapi import HTTPException
+    from app.services import IT23183186_environment_history as history
+    def reject(*args):
+        raise HTTPException(404,'Hive not found')
+    monkeypatch.setattr(history,'hive_location',reject)
+    response=make_client().post('/api/v1/inference/analyze', files={'outside_image': ('bee.png', image_upload(), 'image/png')}, data={'hive_id':'unknown-hive'})
+    assert response.status_code == 404

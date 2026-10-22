@@ -2,8 +2,31 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
+import math
+
+
+def summarize_history(days):
+    """Describe measured history without claiming a seasonal or population trend."""
+    valid = lambda value: isinstance(value, (int, float)) and math.isfinite(value)
+    temperatures = [d["average_temperature_c"] for d in days if valid(d.get("average_temperature_c"))]
+    humidity = [d["average_humidity_percent"] for d in days if valid(d.get("average_humidity_percent"))]
+    rainfall = [d["precipitation_mm"] for d in days if valid(d.get("precipitation_mm"))]
+    wet_days = sum(value > 0 for value in rainfall)
+    return {
+        "days_returned": len(days),
+        "rainfall_days_available": len(rainfall),
+        "total_precipitation_mm": round(sum(rainfall), 2) if rainfall else None,
+        "wet_days": wet_days if rainfall else None,
+        "mean_temperature_c": round(sum(temperatures) / len(temperatures), 2) if temperatures else None,
+        "mean_humidity_percent": round(sum(humidity) / len(humidity), 2) if humidity else None,
+        "interpretation": (
+            f"Rain was recorded on {wet_days} of {len(rainfall)} days with available rainfall observations. Wet periods may reduce foraging opportunities; compare with direct flight and food-store observations."
+            if rainfall else "Insufficient historical rainfall observations."
+        ),
+        "limitation": "This short observation window is not a seasonal climate trend and cannot estimate flowering, colony growth or population.",
+    }
 
 
 def get_sri_lankan_season(month: int) -> dict[str, str]:
@@ -51,7 +74,7 @@ def analyze_environment(
             local_observation = datetime.fromisoformat(observed_at.replace(" ", "T"))
         except ValueError:
             local_observation = None
-    resolved_month = month or (local_observation.month if local_observation else datetime.now().month)
+    resolved_month = month or (local_observation.month if local_observation else (datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)).month)
     season = get_sri_lankan_season(resolved_month)
     regional_context = _regional_context(latitude, longitude)
 
@@ -120,6 +143,12 @@ def analyze_environment(
         ]
     )
     return {
+        "population": {"assessment": "Not measured", "reason": "Season and weather alone cannot estimate colony population; repeated bee/brood observations are required."},
+        "development_suitability": {
+            "assessment": "Potential flight constraint" if rainfall_mm is not None and rainfall_mm > 0 else "Inconclusive",
+            "reason": "Rain can interrupt foraging. Temperature, humidity and calendar season alone do not establish favorable colony development or available food.",
+        },
+        "seasonal_outlook": "Season describes regional rainfall timing, not a population forecast. Compare recent rainfall with observed flowering, food stores and brood before judging colony growth.",
         "season": season["name"],
         "season_period": season["period"],
         "regional_context": regional_context,

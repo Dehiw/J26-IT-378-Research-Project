@@ -1,0 +1,23 @@
+{
+  "training_complete_artifacts_present": false,
+  "epochs_recorded": 1,
+  "latest_validation": {
+    "phase": "head",
+    "epoch": 1,
+    "train_loss": 0.5592371210281951,
+    "val_loss": 0.5209303968033548,
+    "val_threshold": 0.37999999999999995,
+    "val_accuracy": 0.685501066098081,
+    "val_positive_precision": 0.4008559201141227,
+    "val_positive_recall": 0.623059866962306,
+    "val_positive_f1": 0.4878472222222222,
+    "val_macro_f1": 0.6304620726495727,
+    "val_roc_auc": 0.7157684677325242,
+    "seconds": 240.09299999999348
+  },
+  "final_test_evaluation_available": false,
+  "graphs": [
+    "training_progress.png",
+    "validation_metrics.png"
+  ]
+}

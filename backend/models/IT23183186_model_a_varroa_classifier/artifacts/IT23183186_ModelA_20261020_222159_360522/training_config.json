@@ -1,0 +1,31 @@
+{
+  "batch_size": 32,
+  "best_epoch": 8,
+  "best_phase": "fine_tune_last_blocks",
+  "best_validation": {
+    "accuracy": 0.8278251599147122,
+    "macro_f1": 0.7533201840894148,
+    "positive_f1": 0.6177514792899408,
+    "positive_precision": 0.6624365482233503,
+    "positive_recall": 0.5787139689578714,
+    "roc_auc": 0.8228000155599642,
+    "threshold": 0.605
+  },
+  "checkpoint": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\PROJECT_V1\\J26-IT-378-Research-Project\\backend\\models\\IT23183186_model_a_varroa_classifier\\artifacts\\IT23183186_ModelA_20261020_222159_360522\\IT23183186_ModelA_MobileNetV2.pt",
+  "cpu_threads": 8,
+  "device": "cpu",
+  "early_stopping_patience": 3,
+  "finetune_blocks": 2,
+  "finetune_epochs_max": 8,
+  "head_epochs_max": 5,
+  "numpy_version": "2.2.6",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "seed": 2026,
+  "sklearn_version": "1.7.1",
+  "torch_version": "2.7.1+cpu",
+  "torchvision_version": "0.22.1+cpu",
+  "train_manifest": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\DATAESET\\VarroaDataset_prepared\\IT23183186_ModelA_20261020_170719\\manifests\\train.csv",
+  "validation_manifest": "C:\\Users\\User\\OneDrive\\Desktop\\Y4S1 NOTES\\Reserach\\DATAESET\\VarroaDataset_prepared\\IT23183186_ModelA_20261020_170719\\manifests\\val.csv",
+  "workers": 0
+}

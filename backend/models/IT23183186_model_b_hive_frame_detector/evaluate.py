@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 from typing import Any
@@ -48,11 +49,29 @@ def main() -> None:
     report: dict[str, Any] = {
         "dataset_yaml": str(data_yaml),
         "split": "test",
+        "evaluation_date": datetime.now(timezone.utc).isoformat(),
         "checkpoint": str(weights),
         "class_names": class_names,
         "metrics": {key: float(value) for key, value in metrics.results_dict.items()},
         "interpretation_limit": "FAIRHiveFrames classes describe hive-frame structures; this model is not a bee-disease classifier.",
     }
+    # Ultralytics stores detection confusion counts as [predicted, true].
+    # Export [actual, predicted] to match the dashboard, retaining background.
+    confusion = getattr(metrics, "confusion_matrix", None)
+    matrix = getattr(confusion, "matrix", None)
+    ordered_names = list(class_names.values()) if isinstance(class_names, dict) else class_names
+    if matrix is not None:
+        labels = ordered_names + (["background"] if len(matrix) == len(ordered_names) + 1 else [])
+        if matrix.shape == (len(labels), len(labels)):
+            report["confusion_matrix"] = matrix.T.astype(int).tolist()
+            report["confusion_matrix_labels_order"] = labels
+    box = getattr(metrics, "box", None)
+    indices = getattr(box, "ap_class_index", [])
+    if box is not None and all(hasattr(box, name) for name in ("p", "r", "f1")):
+        report["per_class"] = {
+            ordered_names[int(class_id)]: {"precision": float(box.p[i]), "recall": float(box.r[i]), "f1-score": float(box.f1[i])}
+            for i, class_id in enumerate(indices)
+        }
     output_dir = args.project.expanduser().resolve() / args.name
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / "test_evaluation.json"
