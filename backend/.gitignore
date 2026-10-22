@@ -9,3 +9,7 @@ firebase-service-account.json
 # IT23185302 Bee Camera ML Dataset
 backend/models/IT23185302_model_bee_camera_model/dataset/
 backend/models/IT23185302_model_bee_camera_model/runs/
+
+# IT23185302 Bee Camera ML Dataset
+backend/models/IT23185302_model_bee_camera_model/dataset/
+backend/models/IT23185302_model_bee_camera_model/runs/
